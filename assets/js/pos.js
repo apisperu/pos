@@ -1320,8 +1320,8 @@ if (auth == undefined) {
 
         $.fn.editCategory = function (index) {
             $('#Categories').modal('hide');
-            $('#categoryName').val(allCategories[index].name);
-            $('#category_id').val(allCategories[index]._id);
+            $('#categoryName').val(allCategories[index].doc.name);
+            $('#category_id').val(allCategories[index].doc._id);
             $('#newCategory').modal('show');
         }
 
@@ -1554,8 +1554,8 @@ if (auth == undefined) {
 
                 category_list += `<tr>
      
-            <td>${category.name}</td>
-            <td><span class="btn-group"><button onClick="$(this).editCategory(${index})" class="btn btn-warning"><i class="fa fa-edit"></i></button><button onClick="$(this).deleteCategory(${category._id})" class="btn btn-danger"><i class="fa fa-trash"></i></button></span></td></tr>`;
+            <td>${category.doc.name}</td>
+            <td><span class="btn-group"><button onClick="$(this).editCategory(${index})" class="btn btn-warning"><i class="fa fa-edit"></i></button><button onClick="$(this).deleteCategory(\'${category.doc._id}\')" class="btn btn-danger"><i class="fa fa-trash"></i></button></span></td></tr>`;
             });
 
             if (counter == allCategories.length) {

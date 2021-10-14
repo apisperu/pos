@@ -4,19 +4,15 @@ const bodyParser = require( "body-parser" );
 const Datastore = require( "nedb" );
 const async = require( "async" );
 
+const PouchDB = require('pouchdb');
+
 
 app.use( bodyParser.json() );
 
 module.exports = app;
 
- 
-let categoryDB = new Datastore( {
-    filename: process.env.APPDATA+"/POS/server/databases/categories.db",
-    autoload: true
-} );
+let categoryDB = new PouchDB('categories');
 
-
-categoryDB.ensureIndex({ fieldName: '_id', unique: true });
 app.get( "/", function ( req, res ) {
     res.send( "Category API" );
 } );
@@ -24,46 +20,65 @@ app.get( "/", function ( req, res ) {
 
   
 app.get( "/all", function ( req, res ) {
-    categoryDB.find( {}, function ( err, docs ) {
-        res.send( docs );
-    } );
+    categoryDB.allDocs({
+        include_docs: true
+    }).then(function (result) {
+        res.send( result.rows );
+    }).catch(function (err) {
+        res.status( 500 ).send( err );
+        console.log(err);
+    });
 } );
 
  
-app.post( "/category", function ( req, res ) {
-    let newCategory = req.body;
-    newCategory._id = Math.floor(Date.now() / 1000); 
-    categoryDB.insert( newCategory, function ( err, category) {
-        if ( err ) res.status( 500 ).send( err );
-        else res.sendStatus( 200 );
-    } );
+app.post( "/category", function ( req, res ) {    
+    let id = Math.floor(Date.now() / 1000);
+
+    categoryDB.put({
+        _id: id.toString(),
+        name: req.body.name
+    }).then(function (result) {
+        res.sendStatus( 200 )
+    }).catch(function (err) {
+        res.status( 500 ).send( err );
+        console.log(err);
+    });
 } );
 
 
 
 app.delete( "/category/:categoryId", function ( req, res ) {
-    categoryDB.remove( {
-        _id: parseInt(req.params.categoryId)
-    }, function ( err, numRemoved ) {
-        if ( err ) res.status( 500 ).send( err );
-        else res.sendStatus( 200 );
-    } );
+    let id = req.params.categoryId;
+
+    categoryDB.get(id).then(function(cat) {
+        return categoryDB.remove(cat);
+    }).then(function (result) {
+        res.sendStatus( 200 );
+    }).catch(function (err) {
+        res.status( 500 ).send( err );
+        console.log(err);
+    });
 } );
 
  
 
  
 app.put( "/category", function ( req, res ) {
-    categoryDB.update( {
-        _id: parseInt(req.body.id)
-    }, req.body, {}, function (
-        err,
-        numReplaced,
-        category
-    ) {
-        if ( err ) res.status( 500 ).send( err );
-        else res.sendStatus( 200 );
-    } );
+
+    let id = req.body.id;
+
+    categoryDB.get(id).then(function(cat) {
+        return categoryDB.put({
+        _id: id,
+        _rev: cat._rev,
+        name: req.body,name
+        });
+    }).then(function(response) {
+        res.sendStatus( 200 );
+    }).catch(function (err) {
+        res.status( 500 ).send( err );
+        console.log(err);
+    });
 });
 
 

@@ -3,24 +3,80 @@ const server = require( "http" ).Server( app );
 const bodyParser = require( "body-parser" );
 const Datastore = require( "nedb" );
 const async = require( "async" );
+const PouchDB = require('pouchdb');
 
 app.use( bodyParser.json() );
 
 module.exports = app;
 
- 
-let customerDB = new Datastore( {
-    filename: process.env.APPDATA+"/POS/server/databases/customers.db",
-    autoload: true
-} );
-
-
-customerDB.ensureIndex({ fieldName: '_id', unique: true });
-
+let customerDB = new PouchDB('db/customers');
 
 app.get( "/", function ( req, res ) {
     res.send( "Customer API" );
 } );
+
+ 
+app.get( "/all", function ( req, res ) {
+	customerDB.allDocs({
+	     include_docs: true
+    }).then(function (result) {
+        res.send( result.rows );
+    }).catch(function (err) {
+        res.status( 500 ).send( err );
+        console.log(err);
+    });
+
+} );
+
+ 
+app.post( "/customer", function ( req, res ) {
+    let id = Math.floor(Date.now() / 1000);
+    let newCustomer = req.body;
+
+    customerDB.put({
+        ...newCustomer,
+        _id: id.toString(),
+    }).then(function (result) {
+        res.sendStatus( 200 )
+    }).catch(function (err) {
+        res.status( 500 ).send( err );
+        console.log(err);
+    })
+} );
+
+
+app.delete( "/customer/:customerId", function ( req, res ) {
+    let id = req.params.customerId;
+
+    customerDB.get(id).then(function( cus ) {
+        return customerDB.remove( cus );
+    }).then(function (result) {
+        res.sendStatus( 200 );
+    }).catch(function ( err ) {
+        res.status( 500 ).send( err );
+        console.log( err );
+    })
+} );
+
+ 
+app.put( "/customer", function ( req, res ) {
+    let id = req.body.id;
+    let newCustomer = req.body;
+
+    customerDB.get(id).then(function( cus ) {
+        return customerDB.put({
+            ...newCustomer,
+            _id: id,
+            _rev: cus._rev
+        });
+    }).then(function( response ) {
+        res.sendStatus( 200 );
+    }).catch(function( err ) {
+        res.status( 500 ).send( err );
+        console.log( err );
+    })
+});
+
 
 
 app.get( "/customer/:customerId", function ( req, res ) {
@@ -35,51 +91,7 @@ app.get( "/customer/:customerId", function ( req, res ) {
     }
 } );
 
- 
-app.get( "/all", function ( req, res ) {
-    customerDB.find( {}, function ( err, docs ) {
-        res.send( docs );
-    } );
-} );
 
  
-app.post( "/customer", function ( req, res ) {
-    var newCustomer = req.body;
-    customerDB.insert( newCustomer, function ( err, customer ) {
-        if ( err ) res.status( 500 ).send( err );
-        else res.sendStatus( 200 );
-    } );
-} );
-
-
-
-app.delete( "/customer/:customerId", function ( req, res ) {
-    customerDB.remove( {
-        _id: req.params.customerId
-    }, function ( err, numRemoved ) {
-        if ( err ) res.status( 500 ).send( err );
-        else res.sendStatus( 200 );
-    } );
-} );
-
- 
-
- 
-app.put( "/customer", function ( req, res ) {
-    let customerId = req.body._id;
-
-    customerDB.update( {
-        _id: customerId
-    }, req.body, {}, function (
-        err,
-        numReplaced,
-        customer
-    ) {
-        if ( err ) res.status( 500 ).send( err );
-        else res.sendStatus( 200 );
-    } );
-});
-
-
 
  

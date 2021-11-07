@@ -1,24 +1,19 @@
 const app = require( "express" )();
 const server = require( "http" ).Server( app );
 const bodyParser = require( "body-parser" );
-const Datastore = require( "nedb" );
 const async = require( "async" );
-
 const PouchDB = require('pouchdb');
-
 
 app.use( bodyParser.json() );
 
 module.exports = app;
 
-let categoryDB = new PouchDB('categories');
+let categoryDB = new PouchDB('db/categories');
 
 app.get( "/", function ( req, res ) {
     res.send( "Category API" );
 } );
 
-
-  
 app.get( "/all", function ( req, res ) {
     categoryDB.allDocs({
         include_docs: true
@@ -29,7 +24,6 @@ app.get( "/all", function ( req, res ) {
         console.log(err);
     });
 } );
-
  
 app.post( "/category", function ( req, res ) {    
     let id = Math.floor(Date.now() / 1000);
@@ -45,8 +39,6 @@ app.post( "/category", function ( req, res ) {
     });
 } );
 
-
-
 app.delete( "/category/:categoryId", function ( req, res ) {
     let id = req.params.categoryId;
 
@@ -60,9 +52,6 @@ app.delete( "/category/:categoryId", function ( req, res ) {
     });
 } );
 
- 
-
- 
 app.put( "/category", function ( req, res ) {
 
     let id = req.body.id;
@@ -71,7 +60,7 @@ app.put( "/category", function ( req, res ) {
         return categoryDB.put({
         _id: id,
         _rev: cat._rev,
-        name: req.body,name
+        name: req.body.name
         });
     }).then(function(response) {
         res.sendStatus( 200 );
@@ -80,7 +69,4 @@ app.put( "/category", function ( req, res ) {
         console.log(err);
     });
 });
-
-
-
  

@@ -27,7 +27,7 @@
                         
                             <div class="btn-group p_one">
                             <button id="productModal" data-toggle="modal" data-target="#Products" type="button" class="btn btn-default waves-effect waves-light">
-                                    <span class="btn-label"><i class=" 	glyphicon glyphicon-barcode"></i> </span>  Products   
+                                    <span class="btn-label"><i class=" 	glyphicon glyphicon-barcode"></i> </span>  Productos   
                             </button>
                             <button id="newProductModal" data-toggle="modal" data-target="#newProduct" type="button" class="btn btn-warning waves-effect waves-light">
                                     <i class="fa fa-plus"></i> 
@@ -36,7 +36,7 @@
 
                             <div class="btn-group p_two">
                             <button id="categoryModal" data-toggle="modal" data-target="#Categories" type="button" class="btn btn-default waves-effect waves-light">
-                                    <span class="btn-label"><i class="glyphicon glyphicon-th"></i> </span>  Categories   
+                                    <span class="btn-label"><i class="glyphicon glyphicon-th"></i> </span>  Categorías   
                             </button>
                             <button id="newCategoryModal" data-toggle="modal" data-target="#newCategory" type="button" class="btn btn-warning waves-effect waves-light">
                                 <i class="fa fa-plus"></i> 
@@ -44,11 +44,11 @@
                             </div>
                    
                             <button id="viewRefOrders" data-toggle="modal" data-target="#holdOrdersModal" type="button" class="btn btn-info waves-effect waves-light">
-                                    <span class="btn-label"><i class="fa fa-shopping-basket"></i> </span> Open Tabs
+                                    <span class="btn-label"><i class="fa fa-shopping-basket"></i> </span> Pedidos Abiertos
                             </button>
             
                             <button id="viewCustomerOrders" data-toggle="modal" data-target="#customerModal" type="button" onclick="$(this).getCustomerOrders()" class="btn btn-info waves-effect waves-light">
-                                    <span class="btn-label"><i class="fa fa-user"></i> </span> Customer Orders
+                                    <span class="btn-label"><i class="fa fa-user"></i> </span> Pedidos de los clientes
                             </button>
                         
                     </div>
@@ -65,7 +65,7 @@
                           </button>
 
                             <button id="transactions" type="button" class="btn btn-default waves-effect waves-light p_three">
-                            <span class="btn-label"><i class=" 	glyphicon glyphicon-credit-card"></i> </span>  Transactions 
+                            <span class="btn-label"><i class=" 	glyphicon glyphicon-credit-card"></i> </span>  Transacciones 
                             </button>
 
                             <button id="pointofsale" type="button" class="btn btn-default waves-effect waves-light">
@@ -74,7 +74,7 @@
 
                             <div class="btn-group p_four">
                                 <button id="usersModal" data-toggle="modal" data-target="#Users" type="button" class="btn btn-default waves-effect waves-light">
-                                        <span class="btn-label"><i class=" 	glyphicon glyphicon-user"></i> </span>  Users  
+                                        <span class="btn-label"><i class=" 	glyphicon glyphicon-user"></i> </span>  Usuarios  
                                 </button>
                                 <button id="add-user" data-toggle="modal"   type="button" class="btn btn-dark waves-effect waves-light">
                                         <i class="fa fa-plus"></i> 
@@ -106,7 +106,7 @@
             <div class="col-md-12">
                 <div class="card-box"> 
                     <div class="row">               
-                        <h3 class="col-md-2">Transactions</h3> 
+                        <h3 class="col-md-2">Transacciones</h3> 
                         <div class="col-md-1">
                             <span>Till</span>
                             <select id="tills" class="form-control">                              
@@ -139,7 +139,7 @@
                             <div class="col-md-5">
                                 <div class="row">
                                     <div class="col-md-8" id="productSales">
-                                            <h4>Products</h4>
+                                            <h4>Productos</h4>
                                             <hr>
                                             <table class="table tablesaw-enhanced" id="productsSold">
                                                 <thead>
@@ -163,7 +163,7 @@
                                             </div>
                                        
                                             <div id="total_transactions" class="btn-warning">
-                                                <h5>TRANSACTIONS</h5>
+                                                <h5>TRANSACCIONES</h5>
                                                 <div id="counter">0</div>
                                             </div>
                                 
@@ -173,7 +173,7 @@
                                             </div>
 
                                             <div id="total_products" class="btn-default">
-                                                <h5>PRODUCTS</h5>
+                                                <h5>PRODUCTOS</h5>
                                                 <div id="counter">0</div>
                                             </div>
                                                                          
@@ -238,9 +238,9 @@
                           <thead>
                           <tr>
                               <th>#</th>
-                              <th width="150px">Item</th>
-                              <th width="170px">Qty</th>
-                              <th>Price</th>
+                              <th width="150px">Producto</th>
+                              <th width="170px">Cant.</th>
+                              <th>Precio</th>
                               <th width="5px">
                                   <button onclick="$(this).cancelOrder()" class="btn btn-danger btn-xs"><i class="fa fa-times"></i></button>
                               </th>
@@ -257,15 +257,15 @@
                   <hr>
                  <div class="m-t-5">
                      <div class="row">
-                         <div class="col-md-3">Total Item(s)</div>
+                         <div class="col-md-3">Total Producto(s)</div>
                          <div class="col-md-3">: <sapn id="total">0</sapn></div>
-                         <div class="col-md-3">Price :</div>
+                         <div class="col-md-3">Precio :</div>
                          <div class="col-md-3">: <span id="price">0.0</span></div>
                      </div>
                      <div class="row">
-                         <div class="col-md-3">Discount</div>
+                         <div class="col-md-3">Descuento</div>
                          <div class="col-md-3"><input class="form-control" type="number" id="inputDiscount" oninput="$(this).calculateCart();"></div>
-                         <div class="col-md-3">Gross Price (inc <span id="taxInfo"></span>% Tax)</div>
+                         <div class="col-md-3">Precio bruto (inc <span id="taxInfo"></span>% Impuesto)</div>
                          <div class="col-md-3"><h3 id="gross_price">0.00</h3></div>
                      </div>
   
@@ -278,15 +278,15 @@
                     </button>
 
                       <button  onclick="$(this).cancelOrder()" type="button" class="btn btn-danger waves-effect waves-light">
-                          <span class="btn-label"><i class="fa fa-ban"></i></span>Cancel
+                          <span class="btn-label"><i class="fa fa-ban"></i></span>Cancelar
                       </button>
   
                       <button type="button" id="hold" class="btn btn-default waves-effect waves-light">
-                          <span class="btn-label"><i class="fa fa-hand-paper-o"></i></span>Hold
+                          <span class="btn-label"><i class="fa fa-hand-paper-o"></i></span>En espera
                       </button>
   
                       <button type="button" id="payButton" class="btn btn-success waves-effect waves-light">
-                          <span class="btn-label"><i class="fa fa-money"></i></span>Pay
+                          <span class="btn-label"><i class="fa fa-money"></i></span>Pagar
                       </button>
                   </div>
                   <hr>
@@ -297,7 +297,7 @@
               <div class="card-box">
                   <div class="row">
                       <div class="col-md-4">
-                          <input type="text" id="search" class="form-control" placeholder="Search product by name or sku">
+                          <input type="text" id="search" class="form-control" placeholder="Buscar producto por nombre o sku">
                       </div>
                       <div class="col-md-8">
                           <div class="" id="categories">
@@ -547,7 +547,7 @@
                         <input type="hidden" name="img" id="img">
                         <input type="hidden" name="remove" id="remove_img">
                         <div class="form-group">
-                            <label for="userName">Category</label>
+                            <label for="userName">Categoría</label>
                             <select name="category" class="form-control" id="category"></select>
                         </div>
                         <div class="form-group">
@@ -584,16 +584,16 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                        <h4 class="modal-title" id="mySmallModalLabel">Category
+                        <h4 class="modal-title" id="mySmallModalLabel">Categoría
                             <img  class="loading m-t-5" style="margin-left: 35%" height="50px" src="assets/images/loading.gif" alt="">
                         </h4>
                     </div>
                     <div class="modal-body">
                         <form id="saveCategory">
                             <div class="form-group">
-                                <label for="userName">Name</label>
+                                <label for="userName">Nombre</label>
                                 <input id="category_id" type="hidden" name="id">
-                                <input id="categoryName" type="text" required="required"  name="name" placeholder="Enter a category name" class="form-control" >
+                                <input id="categoryName" type="text" required="required"  name="name" placeholder="Ingrese un nombre de categoría" class="form-control" >
                             </div>
                           
                             <input type="submit" id="submitCategory" class="btn btn-primary btn-block waves-effect waves-light">
@@ -610,22 +610,22 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                        <h4 class="modal-title" id="mySmallModalLabel">Products
+                        <h4 class="modal-title" id="mySmallModalLabel">Productos
                             <img  class="loading m-t-5" style="margin-left: 35%" height="50px" src="assets/images/loading.gif" alt="">
-                            <button class="btn btn-white pull-right" id="print_list">Download</button>
+                            <button class="btn btn-white pull-right" id="print_list">Descargar</button>
                         </h4>                        
                     </div>
                      <div class="modal-body" id="all_products" style="padding: 20px; padding-right: 40px;"> 
                         <table class="table table-bordered" id="productList">
                             <thead>
                                 <tr>                                                                      
-                                    <th>Barcode</th>
-                                    <th>Item</th>
-                                    <th>Name</th>                                      
-                                    <th>Price</th>
+                                    <th>Código de barras</th>
+                                    <th>Producto</th>
+                                    <th>Nombre</th>                                      
+                                    <th>Precio</th>
                                     <th>Stock</th>
-                                    <th>Category</th>
-                                    <th>Action</th>
+                                    <th>Categoría</th>
+                                    <th>Acción</th>
                                 </tr>
                             </thead>
                             <tbody id="product_list"></tbody>
@@ -644,7 +644,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                    <h4 class="modal-title" id="mySmallModalLabel">Users
+                    <h4 class="modal-title" id="mySmallModalLabel">Usuarios
                         <img  class="loading m-t-5" style="margin-left: 35%" height="50px" src="assets/images/loading.gif" alt="">
                      </h4>                        
                 </div>
@@ -674,7 +674,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                        <h4 class="modal-title" id="mySmallModalLabel">Categories
+                        <h4 class="modal-title" id="mySmallModalLabel">Categorías
                             <img  class="loading m-t-5" style="margin-left: 35%" height="50px" src="assets/images/loading.gif" alt="">
                         </h4>
                     </div>
@@ -682,8 +682,8 @@
                         <table class="table table-bordered" id="categoryList">
                             <thead>
                                 <tr> 
-                                    <th>Name</th>                                      
-                                    <th>Action</th>
+                                    <th>Nombre</th>                                      
+                                    <th>Acción</th>
                                 </tr>
                             </thead>
                             <tbody id="category_list"></tbody>
@@ -731,19 +731,19 @@
                             <hr>
     
                             <div class="form-group">
-                                  <span><input type="checkbox" name="perm_products" id="perm_products"> Manage Products and Stock </span>
+                                  <span><input type="checkbox" name="perm_products" id="perm_products"> Administrar Productos y Stock </span>
                             </div>
                             <div class="form-group">
-                                <span><input type="checkbox" name="perm_categories" id="perm_categories"> Manage Product Categories </span>
+                                <span><input type="checkbox" name="perm_categories" id="perm_categories"> Administrar Categorías de Productos </span>
                           </div>
                           <div class="form-group">
-                            <span><input type="checkbox" name="perm_transactions" id="perm_transactions"> View Transactions </span>
+                            <span><input type="checkbox" name="perm_transactions" id="perm_transactions"> Ver Transacciones </span>
                            </div>
                                 <div class="form-group">
-                                    <span><input type="checkbox" name="perm_users" id="perm_users"> Manage Users and Permissions </span>
+                                    <span><input type="checkbox" name="perm_users" id="perm_users"> Administrar Usuarios y Permisos </span>
                             </div>
                             <div class="form-group">
-                                <span><input type="checkbox" name="perm_settings" id="perm_settings"> Manage Settings </span>
+                                <span><input type="checkbox" name="perm_settings" id="perm_settings"> Administrar Configuraciones </span>
                             </div>
     
                         </div>
@@ -764,14 +764,14 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                <h4 class="modal-title" id="myLargeModalLabel">Open Orders</h4>
+                <h4 class="modal-title" id="myLargeModalLabel">Pedidos Abiertos</h4>
             </div>
             <div class="modal-body">
-                <input type="text" id="holdOrderInput" placeholder="Search order by reference" class="holdOrderInput form-control">
+                <input type="text" id="holdOrderInput" placeholder="Buscar pedido por referencia" class="holdOrderInput form-control">
                 <div class="holdOrderKeyboard"></div>
                 <br>
                 <div class="row" style="height: 460px;overflow-x: hidden;overflow-y:scroll" id="randerHoldOrders">
-                    <p>please wait <span class="dot"></span> </p>  
+                    <p>espere por favor <span class="dot"></span> </p>  
                 </div>
             </div>
         </div>
@@ -787,14 +787,14 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                <h4 class="modal-title" id="myLargeModalLabel">Customer Orders</h4>
+                <h4 class="modal-title" id="myLargeModalLabel">Pedidos de los clientes</h4>
             </div>
             <div class="modal-body">
-                <input type="text" id="holdCustomerOrderInput" placeholder="Search order by customer name" class="holdCustomerOrderInput form-control">
+                <input type="text" id="holdCustomerOrderInput" placeholder="Buscar pedido por nombre del cliente" class="holdCustomerOrderInput form-control">
                 <div class="customerOrderKeyboard"></div>
                 <br>
                 <div class="row" style="height: 460px; overflow: scroll;" id="randerCustomerOrders">
-                    <p>please wait <span class="dot"></span> </p>
+                    <p>espere por favor <span class="dot"></span> </p>
                 </div>
             </div>
         </div>

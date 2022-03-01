@@ -1,42 +1,38 @@
-# Store Point of Sale
- Desktop Point of Sale app built with electron
+# Tienda Punto de Venta
+ Aplicación de punto de venta de escritorio creada con electron
  
-  **Features:**
+  **Características:**
 
-- Can be used by multiple PC's on a network with one central database.
-- Receipt Printing.
-- Search for product by barcode.
-- Staff accounts and permissions. 
-- Products and Categories.
-- Basic Stock Management.
-- Open Tabs (Orders).
-- Customer Database. 
-- Transaction History. 
-- Filter Transactions by Till, Cashier or Status. 
-- Filter Transactions by Date Range. 
+- Puede ser utilizado por múltiples PC en una red con una base de datos central.
+- Impresión de recibos.
+- Búsqueda de producto por código de barras.
+- Cuentas y permisos del personal.
+- Productos y Categorías.
+- Gestión básica de stock.
+- Pestañas abiertas (Pedidos).
+- Base de datos de cliente.
+- Historial de transacciones.
+- Filtrar Transacciones por Caja, Cajero o Estado.
+- Filtrar transacciones por rango de fechas.
 
- **To use on Windows:**
- [Download](http://www.storepointofsale.com/download/v1/StorePOS.msi) the MSI Installer
+ **Para usar en Windows:**
+ [Descargar](http://google.com) el instalador de MSI
 
-The default username and password is  **admin**
+El nombre de usuario y la contraseña predeterminados son **admin**
 
-  **Looking for a Desktop Invoicing app?**
-  
- Check out the [Offline Invoicing](https://github.com/tngoman/Offline_Invoicing) app for freelancers.
+**Para personalizar/crear su propio instalador**
 
-**To Customize/Create your own installer**
+- Clonar este proyecto.
+- Abra la terminal y navegue a la carpeta clonada.
+- Ejecute "npm install" para instalar las dependencias.
+- Ejecute "npm run electron".
 
-- Clone this project.
-- Open terminal and navigate into the cloned folder.
-- Run "npm install" to install dependencies.
-- Run "npm run electron". 
+![POS](https://github.com/apisperu/pos-electron/blob/master/screenshots/pos.jpg)
 
-![POS](https://github.com/tngoman/Store-POS/blob/master/screenshots/pos.jpg)
+![Transacciones](https://github.com/apisperu/pos-electron/blob/master/screenshots/transactions.jpg)
 
-![Transactions](https://github.com/tngoman/Store-POS/blob/master/screenshots/transactions.jpg)
+![Recibo](https://github.com/apisperu/pos-electron/blob/master/screenshots/receipt.jpg)
 
-![Receipt](https://github.com/tngoman/Store-POS/blob/master/screenshots/receipt.jpg)
+![Permisos](https://github.com/apisperu/pos-electron/blob/master/screenshots/permissions.jpg)
 
-![Permissions](https://github.com/tngoman/Store-POS/blob/master/screenshots/permissions.jpg)
-
-![Users](https://github.com/tngoman/Store-POS/blob/master/screenshots/users.jpg)
+![Usuarios](https://github.com/apisperu/pos-electron/blob/master/screenshots/users.jpg)

@@ -1,0 +1,5 @@
+2022/02/28-18:59:08.324013 7f2dc4acc640 Recovering log #97
+2022/02/28-18:59:08.324092 7f2dc4acc640 Level-0 table #99: started
+2022/02/28-18:59:08.329681 7f2dc4acc640 Level-0 table #99: 287 bytes OK
+2022/02/28-18:59:08.344000 7f2dc4acc640 Delete type=0 #97
+2022/02/28-18:59:08.344077 7f2dc4acc640 Delete type=3 #95

@@ -26,6 +26,8 @@
     "debug" "^4.1.1"
     "env-paths" "^2.2.0"
     "fs-extra" "^8.1.0"
+    "global-agent" "^2.0.2"
+    "global-tunnel-ng" "^2.7.1"
     "got" "^9.6.0"
     "progress" "^2.0.3"
     "sanitize-filename" "^1.6.2"
@@ -266,6 +268,7 @@
   "resolved" "https://registry.npmjs.org/asar/-/asar-2.1.0.tgz"
   "version" "2.1.0"
   dependencies:
+    "@types/glob" "^7.1.1"
     "chromium-pickle-js" "^0.2.0"
     "commander" "^2.20.0"
     "cuint" "^0.2.2"
@@ -367,6 +370,13 @@
   "version" "0.2.5"
   dependencies:
     "underscore" "~1.4.4"
+
+"bindings@^1.5.0":
+  "integrity" "sha512-p2q/t/mhvuOj/UeLlV6566GD/guowlr0hHxClI0W9m7MWYkL1F0hLo+0Aexs9HSPCtR1SXQ0TD3MMKrXZajbiQ=="
+  "resolved" "https://registry.npmjs.org/bindings/-/bindings-1.5.0.tgz"
+  "version" "1.5.0"
+  dependencies:
+    "file-uri-to-path" "1.0.0"
 
 "blob@0.0.5":
   "integrity" "sha512-gaqbzQPqOoamawKg0LGVd7SzLgXS+JH61oWprSLH+P+abTczqJbhTR8CmJ2u9/bUYNmHTGJx/UEmn6doAvvuig=="
@@ -599,6 +609,7 @@
     "anymatch" "^2.0.0"
     "async-each" "^1.0.1"
     "braces" "^2.3.2"
+    "fsevents" "^1.2.7"
     "glob-parent" "^3.1.0"
     "inherits" "^2.0.3"
     "is-binary-path" "^1.0.0"
@@ -1471,6 +1482,11 @@
   "resolved" "https://registry.npmjs.org/fflate/-/fflate-0.4.8.tgz"
   "version" "0.4.8"
 
+"file-uri-to-path@1.0.0":
+  "integrity" "sha512-0Zt+s3L7Vf1biwWZ29aARiVYLx7iMGnEUl9x33fbB/j3jR81u/O2LbqK+Bm1CDSNDKVtJ/YjwY7TUd5SkeLQLw=="
+  "resolved" "https://registry.npmjs.org/file-uri-to-path/-/file-uri-to-path-1.0.0.tgz"
+  "version" "1.0.0"
+
 "fill-range@^4.0.0":
   "integrity" "sha1-1USBHUKPmOsGpj3EAtJAPDKMOPc="
   "resolved" "https://registry.npmjs.org/fill-range/-/fill-range-4.0.0.tgz"
@@ -1545,6 +1561,14 @@
   "integrity" "sha1-FQStJSMVjKpA20onh8sBQRmU6k8="
   "resolved" "https://registry.npmjs.org/fs.realpath/-/fs.realpath-1.0.0.tgz"
   "version" "1.0.0"
+
+"fsevents@^1.2.7":
+  "integrity" "sha512-oWb1Z6mkHIskLzEJ/XWX0srkpkTQ7vaopMQkyaEIoq0fmtFVxOthb8cCxeT+p3ynTdkk/RZwbgG4brR5BeWECw=="
+  "resolved" "https://registry.npmjs.org/fsevents/-/fsevents-1.2.13.tgz"
+  "version" "1.2.13"
+  dependencies:
+    "bindings" "^1.5.0"
+    "nan" "^2.12.1"
 
 "function-bind@^1.1.1":
   "integrity" "sha512-yIovAzMX49sF8Yl58fSCWJ5svSLuaibPxXQJFLmBObTuCr0Mf1KiPopGM9NiFjiYBCbfaa2Fh6breQ6ANVTI0A=="
@@ -2151,6 +2175,8 @@
   "integrity" "sha1-h3Gq4HmbZAdrdmQPygWPnBDjPss="
   "resolved" "https://registry.npmjs.org/jsonfile/-/jsonfile-4.0.0.tgz"
   "version" "4.0.0"
+  dependencies:
+    "graceful-fs" "^4.1.6"
   optionalDependencies:
     "graceful-fs" "^4.1.6"
 
@@ -2161,7 +2187,11 @@
   dependencies:
     "atob" "^2.1.2"
     "btoa" "^1.2.1"
+    "canvg" "^3.0.6"
+    "core-js" "^3.6.0"
+    "dompurify" "^2.2.0"
     "fflate" "^0.4.8"
+    "html2canvas" "^1.0.0-rc.5"
   optionalDependencies:
     "canvg" "^3.0.6"
     "core-js" "^3.6.0"
@@ -2569,6 +2599,11 @@
     "type-is" "^1.6.4"
     "xtend" "^4.0.0"
 
+"nan@^2.12.1":
+  "integrity" "sha512-M2ufzIiINKCuDfBSAUr1vWQ+vuVcA9kqx8JJUsbQi6yf1uGRyb7HfpdfUr5qLXf3B/t8dPvcjhKMmlfnP47EzQ=="
+  "resolved" "https://registry.npmjs.org/nan/-/nan-2.14.2.tgz"
+  "version" "2.14.2"
+
 "nanomatch@^1.2.9":
   "integrity" "sha512-fpoe2T0RbHwBTBUOftAfBPaDEi06ufaUai0mE6Yn1kacc3SnTErfb/h+X94VXzI64rKFHYImXSvdwGGCmwOqCA=="
   "resolved" "https://registry.npmjs.org/nanomatch/-/nanomatch-1.2.13.tgz"
@@ -2617,7 +2652,7 @@
   "resolved" "https://registry.npmjs.org/node-gyp-build/-/node-gyp-build-4.1.1.tgz"
   "version" "4.1.1"
 
-"nodemon@^1.19.3":
+"nodemon@^1.14.12":
   "integrity" "sha512-VGPaqQBNk193lrJFotBU8nvWZPqEZY2eIzymy2jjY0fJ9qIsxA0sxQ8ATPl0gZC645gijYEc1jtZvpS8QWzJGQ=="
   "resolved" "https://registry.npmjs.org/nodemon/-/nodemon-1.19.4.tgz"
   "version" "1.19.4"
@@ -2879,6 +2914,106 @@
   "integrity" "sha1-AerA/jta9xoqbAL+q7jB/vfgDqs="
   "resolved" "https://registry.npmjs.org/posix-character-classes/-/posix-character-classes-0.1.1.tgz"
   "version" "0.1.1"
+
+"pouchdb-abstract-mapreduce@7.2.2":
+  "integrity" "sha512-7HWN/2yV2JkwMnGnlp84lGvFtnm0Q55NiBUdbBcaT810+clCGKvhssBCrXnmwShD1SXTwT83aszsgiSfW+SnBA=="
+  "resolved" "https://registry.npmjs.org/pouchdb-abstract-mapreduce/-/pouchdb-abstract-mapreduce-7.2.2.tgz"
+  "version" "7.2.2"
+  dependencies:
+    "pouchdb-binary-utils" "7.2.2"
+    "pouchdb-collate" "7.2.2"
+    "pouchdb-collections" "7.2.2"
+    "pouchdb-errors" "7.2.2"
+    "pouchdb-fetch" "7.2.2"
+    "pouchdb-mapreduce-utils" "7.2.2"
+    "pouchdb-md5" "7.2.2"
+    "pouchdb-utils" "7.2.2"
+
+"pouchdb-binary-utils@7.2.2":
+  "integrity" "sha512-shacxlmyHbUrNfE6FGYpfyAJx7Q0m91lDdEAaPoKZM3SzAmbtB1i+OaDNtYFztXjJl16yeudkDb3xOeokVL3Qw=="
+  "resolved" "https://registry.npmjs.org/pouchdb-binary-utils/-/pouchdb-binary-utils-7.2.2.tgz"
+  "version" "7.2.2"
+  dependencies:
+    "buffer-from" "1.1.1"
+
+"pouchdb-collate@7.2.2":
+  "integrity" "sha512-/SMY9GGasslknivWlCVwXMRMnQ8myKHs4WryQ5535nq1Wj/ehpqWloMwxEQGvZE1Sda3LOm7/5HwLTcB8Our+w=="
+  "resolved" "https://registry.npmjs.org/pouchdb-collate/-/pouchdb-collate-7.2.2.tgz"
+  "version" "7.2.2"
+
+"pouchdb-collections@7.2.2":
+  "integrity" "sha512-6O9zyAYlp3UdtfneiMYuOCWdUCQNo2bgdjvNsMSacQX+3g8WvIoFQCYJjZZCpTttQGb+MHeRMr8m2U95lhJTew=="
+  "resolved" "https://registry.npmjs.org/pouchdb-collections/-/pouchdb-collections-7.2.2.tgz"
+  "version" "7.2.2"
+
+"pouchdb-errors@7.2.2":
+  "integrity" "sha512-6GQsiWc+7uPfgEHeavG+7wuzH3JZW29Dnrvz8eVbDFE50kVFxNDVm3EkYHskvo5isG7/IkOx7PV7RPTA3keG3g=="
+  "resolved" "https://registry.npmjs.org/pouchdb-errors/-/pouchdb-errors-7.2.2.tgz"
+  "version" "7.2.2"
+  dependencies:
+    "inherits" "2.0.4"
+
+"pouchdb-fetch@7.2.2":
+  "integrity" "sha512-lUHmaG6U3zjdMkh8Vob9GvEiRGwJfXKE02aZfjiVQgew+9SLkuOxNw3y2q4d1B6mBd273y1k2Lm0IAziRNxQnA=="
+  "resolved" "https://registry.npmjs.org/pouchdb-fetch/-/pouchdb-fetch-7.2.2.tgz"
+  "version" "7.2.2"
+  dependencies:
+    "abort-controller" "3.0.0"
+    "fetch-cookie" "0.10.1"
+    "node-fetch" "2.6.0"
+
+"pouchdb-find@^7.2.2":
+  "integrity" "sha512-BmFeFVQ0kHmDehvJxNZl9OmIztCjPlZlVSdpijuFbk/Fi1EFPU1BAv3kLC+6DhZuOqU/BCoaUBY9sn66pPY2ag=="
+  "resolved" "https://registry.npmjs.org/pouchdb-find/-/pouchdb-find-7.2.2.tgz"
+  "version" "7.2.2"
+  dependencies:
+    "pouchdb-abstract-mapreduce" "7.2.2"
+    "pouchdb-collate" "7.2.2"
+    "pouchdb-errors" "7.2.2"
+    "pouchdb-fetch" "7.2.2"
+    "pouchdb-md5" "7.2.2"
+    "pouchdb-selector-core" "7.2.2"
+    "pouchdb-utils" "7.2.2"
+
+"pouchdb-mapreduce-utils@7.2.2":
+  "integrity" "sha512-rAllb73hIkU8rU2LJNbzlcj91KuulpwQu804/F6xF3fhZKC/4JQMClahk+N/+VATkpmLxp1zWmvmgdlwVU4HtQ=="
+  "resolved" "https://registry.npmjs.org/pouchdb-mapreduce-utils/-/pouchdb-mapreduce-utils-7.2.2.tgz"
+  "version" "7.2.2"
+  dependencies:
+    "argsarray" "0.0.1"
+    "inherits" "2.0.4"
+    "pouchdb-collections" "7.2.2"
+    "pouchdb-utils" "7.2.2"
+
+"pouchdb-md5@7.2.2":
+  "integrity" "sha512-c/RvLp2oSh8PLAWU5vFBnp6ejJABIdKqboZwRRUrWcfGDf+oyX8RgmJFlYlzMMOh4XQLUT1IoaDV8cwlsuryZw=="
+  "resolved" "https://registry.npmjs.org/pouchdb-md5/-/pouchdb-md5-7.2.2.tgz"
+  "version" "7.2.2"
+  dependencies:
+    "pouchdb-binary-utils" "7.2.2"
+    "spark-md5" "3.0.1"
+
+"pouchdb-selector-core@7.2.2":
+  "integrity" "sha512-XYKCNv9oiNmSXV5+CgR9pkEkTFqxQGWplnVhO3W9P154H08lU0ZoNH02+uf+NjZ2kjse7Q1fxV4r401LEcGMMg=="
+  "resolved" "https://registry.npmjs.org/pouchdb-selector-core/-/pouchdb-selector-core-7.2.2.tgz"
+  "version" "7.2.2"
+  dependencies:
+    "pouchdb-collate" "7.2.2"
+    "pouchdb-utils" "7.2.2"
+
+"pouchdb-utils@7.2.2":
+  "integrity" "sha512-XmeM5ioB4KCfyB2MGZXu1Bb2xkElNwF1qG+zVFbQsKQij0zvepdOUfGuWvLRHxTOmt4muIuSOmWZObZa3NOgzQ=="
+  "resolved" "https://registry.npmjs.org/pouchdb-utils/-/pouchdb-utils-7.2.2.tgz"
+  "version" "7.2.2"
+  dependencies:
+    "argsarray" "0.0.1"
+    "clone-buffer" "1.0.0"
+    "immediate" "3.3.0"
+    "inherits" "2.0.4"
+    "pouchdb-collections" "7.2.2"
+    "pouchdb-errors" "7.2.2"
+    "pouchdb-md5" "7.2.2"
+    "uuid" "8.1.0"
 
 "pouchdb@^7.2.2":
   "integrity" "sha512-5gf5nw5XH/2H/DJj8b0YkvG9fhA/4Jt6kL0Y8QjtztVjb1y4J19Rg4rG+fUbXu96gsUrlyIvZ3XfM0b4mogGmw=="

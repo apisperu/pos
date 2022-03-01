@@ -866,7 +866,7 @@ if (auth == undefined) {
 
 
         $.get(api + 'on-hold', function (data) {
-            holdOrderList = data;
+            holdOrderList = data.docs;
             holdOrderlocation.empty();
             clearInterval(dotInterval);
             $(this).randerHoldOrders(holdOrderList, holdOrderlocation, 1);
@@ -875,7 +875,7 @@ if (auth == undefined) {
 
         $.fn.getHoldOrders = function () {
             $.get(api + 'on-hold', function (data) {
-                holdOrderList = data;
+                holdOrderList = data.docs;
                 clearInterval(dotInterval);
                 holdOrderlocation.empty();
                 $(this).randerHoldOrders(holdOrderList, holdOrderlocation, 1);
@@ -1042,7 +1042,7 @@ if (auth == undefined) {
         $.fn.getCustomerOrders = function () {
             $.get(api + 'customer-orders', function (data) {
                 clearInterval(dotInterval);
-                customerOrderList = data;
+                customerOrderList = data.docs;
                 customerOrderLocation.empty();
                 $(this).randerHoldOrders(customerOrderList, customerOrderLocation, 2);
             });
@@ -1941,9 +1941,9 @@ function loadTransactions() {
 
 
     $.get(api + query, function (transactions) {
+        transactions = transactions.docs;
 
         if (transactions.length > 0) {
-
 
             $('#transaction_list').empty();
             $('#transactionList').DataTable().destroy();
@@ -2131,6 +2131,8 @@ $.fn.viewTransaction = function (index) {
 
     transaction_index = index;
 
+    //dxxxxxxxxxx actualizar transaccion
+    let rev = allTransactions[index]._rev;
     let discount = allTransactions[index].discount;
     let customer = allTransactions[index].customer == 0 ? 'Walk in Customer' : allTransactions[index].customer.username;
     let refNumber = allTransactions[index].ref_number != "" ? allTransactions[index].ref_number : allTransactions[index].order;

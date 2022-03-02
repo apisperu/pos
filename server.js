@@ -4,6 +4,8 @@ let express = require("express"),
   server = http.createServer(app),
   bodyParser = require("body-parser");
 
+app.use(express.json());
+
 const PORT = process.env.PORT || 8001;
 
 console.log("Server started");

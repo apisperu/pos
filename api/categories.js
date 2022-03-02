@@ -1,13 +1,5 @@
 const app = require( "express" )();
-const server = require( "http" ).Server( app );
-const bodyParser = require( "body-parser" );
-const async = require( "async" );
 const PouchDB = require('pouchdb');
-
-app.use( bodyParser.json() );
-
-module.exports = app;
-
 let categoryDB = new PouchDB('db/categories');
 
 app.get( "/", function ( req, res ) {
@@ -70,3 +62,4 @@ app.put( "/category", function ( req, res ) {
     });
 });
  
+module.exports = app;

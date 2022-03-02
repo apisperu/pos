@@ -251,7 +251,7 @@ if (auth == undefined) {
                 loadCategoryList();
                 $('#category').html(`<option value="0">Select</option>`);
                 allCategories.forEach(category => {
-                    $('#category').append(`<option value="${category._id}">${category.name}</option>`);
+                    $('#category').append(`<option value="${category._id}">${category.doc.name}</option>`);
                 });
             });
         }

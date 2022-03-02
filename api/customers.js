@@ -1,20 +1,10 @@
 const app = require( "express" )();
-const server = require( "http" ).Server( app );
-const bodyParser = require( "body-parser" );
-const Datastore = require( "nedb" );
-const async = require( "async" );
 const PouchDB = require('pouchdb');
-
-app.use( bodyParser.json() );
-
-module.exports = app;
-
 let customerDB = new PouchDB('db/customers');
 
 app.get( "/", function ( req, res ) {
     res.send( "Customer API" );
 } );
-
  
 app.get( "/all", function ( req, res ) {
 	customerDB.allDocs({
@@ -25,9 +15,7 @@ app.get( "/all", function ( req, res ) {
         res.status( 500 ).send( err );
         console.log(err);
     });
-
 } );
-
  
 app.post( "/customer", function ( req, res ) {
     let id = Math.floor(Date.now() / 1000);
@@ -44,7 +32,6 @@ app.post( "/customer", function ( req, res ) {
     })
 } );
 
-
 app.delete( "/customer/:customerId", function ( req, res ) {
     let id = req.params.customerId;
 
@@ -58,7 +45,6 @@ app.delete( "/customer/:customerId", function ( req, res ) {
     })
 } );
 
- 
 app.put( "/customer", function ( req, res ) {
     let id = req.body.id;
     let newCustomer = req.body;
@@ -77,8 +63,6 @@ app.put( "/customer", function ( req, res ) {
     })
 });
 
-
-
 app.get( "/customer/:customerId", function ( req, res ) {
     if ( !req.params.customerId ) {
         res.status( 500 ).send( "ID field is required." );
@@ -91,7 +75,4 @@ app.get( "/customer/:customerId", function ( req, res ) {
     }
 } );
 
-
- 
-
- 
+module.exports = app;

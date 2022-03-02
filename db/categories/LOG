@@ -1,5 +1,5 @@
-2022/03/01-14:23:12.655953 7efde37ca640 Recovering log #236
-2022/03/01-14:23:12.660324 7efde37ca640 Level-0 table #239: started
-2022/03/01-14:23:12.665405 7efde37ca640 Level-0 table #239: 237 bytes OK
-2022/03/01-14:23:12.683558 7efde37ca640 Delete type=0 #236
-2022/03/01-14:23:12.683778 7efde37ca640 Delete type=3 #234
+2022/03/02-13:14:21.215 4cbc Recovering log #6
+2022/03/02-13:14:21.215 4cbc Level-0 table #8: started
+2022/03/02-13:14:21.220 4cbc Level-0 table #8: 545 bytes OK
+2022/03/02-13:14:21.228 4cbc Delete type=0 #6
+2022/03/02-13:14:21.230 4cbc Delete type=3 #4

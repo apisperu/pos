@@ -251,7 +251,7 @@ if (auth == undefined) {
                 loadCategoryList();
                 $('#category').html(`<option value="0">Select</option>`);
                 allCategories.forEach(category => {
-                    $('#category').append(`<option value="${category._id}">${category.doc.name}</option>`);
+                    $('#category').append(`<option value="${category.id}">${category.doc.name}</option>`);
                 });
             });
         }
@@ -513,7 +513,6 @@ if (auth == undefined) {
         $.fn.deleteFromCart = function (index) {
             cart.splice(index, 1);
             $(this).renderTable(cart);
-
         }
 
 
@@ -1511,10 +1510,7 @@ if (auth == undefined) {
 
                 counter++;
 
-                let category = allCategories.filter(function (category) {
-                    return category._id == product.category;
-                });
-
+                let category = allCategories.filter( category => category.id == product.category);
 
                 product_list += `<tr>
             <td><img id="`+ product._id + `"></td>
@@ -1522,7 +1518,7 @@ if (auth == undefined) {
             <td>${product.name}</td>
             <td>${settings.symbol}${product.price}</td>
             <td>${product.stock == 1 ? product.quantity : 'N/A'}</td>
-            <td>${category.length > 0 ? category[0].name : ''}</td>
+            <td>${category.length > 0 ? category[0].doc.name : ''}</td>
             <td class="nobr"><span class="btn-group"><button onClick="$(this).editProduct(${index})" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></button><button onClick="$(this).deleteProduct(${product._id})" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button></span></td></tr>`;
 
                 if (counter == allProducts.length) {
@@ -1557,7 +1553,7 @@ if (auth == undefined) {
             let counter = 0;
             $('#category_list').empty();
             $('#categoryList').DataTable().destroy();
-
+          
             allCategories.forEach((category, index) => {
 
                 counter++;

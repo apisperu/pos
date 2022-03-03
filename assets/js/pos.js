@@ -1553,7 +1553,7 @@ if (auth == undefined) {
             let counter = 0;
             $('#category_list').empty();
             $('#categoryList').DataTable().destroy();
-
+          
             allCategories.forEach((category, index) => {
 
                 counter++;

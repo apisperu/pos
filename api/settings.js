@@ -1,11 +1,8 @@
 const app = require( "express")();
-const server = require( "http" ).Server( app );
-const bodyParser = require( "body-parser" );
-const Datastore = require( "nedb" );
 const multer = require("multer");
-const fileUpload = require('express-fileupload');
 const fs = require('fs');
-
+const PouchDB = require('pouchdb');
+let settingsDB = new PouchDB('db/settings');
 
 const storage = multer.diskStorage({
     destination:  process.env.APPDATA+'/POS/uploads',
@@ -16,34 +13,20 @@ const storage = multer.diskStorage({
 
 let upload = multer({storage: storage});
 
-app.use( bodyParser.json() );
-
-module.exports = app;
-
- 
-let settingsDB = new Datastore( {
-    filename: process.env.APPDATA+"/POS/server/databases/settings.db",
-    autoload: true
-} );
-
-
-
 app.get( "/", function ( req, res ) {
     res.send( "Settings API" );
 } );
 
-
-  
-app.get( "/get", function ( req, res ) {
-    settingsDB.findOne( {
-        _id: 1
-}, function ( err, docs ) {
-        res.send( docs );
-    } );
+app.get( "/all", function ( req, res ) {
+    settingsDB.get('1').then(function (result) {
+        res.send( result );
+    }).catch(function (err) {
+        res.status( 500 ).send( err );
+        console.log(err);
+    });
 } );
-
  
-app.post( "/post", upload.single('imagename'), function ( req, res ) {
+app.post( "/", upload.single('imagename'), function ( req, res ) {
 
     let image = '';
 
@@ -70,7 +53,7 @@ app.post( "/post", upload.single('imagename'), function ( req, res ) {
     
   
     let Settings = {  
-        _id: 1,
+        _id: '1',
         settings: {
             "app": req.body.app,
             "store": req.body.store,
@@ -82,30 +65,37 @@ app.post( "/post", upload.single('imagename'), function ( req, res ) {
             "percentage": req.body.percentage,
             "charge_tax": req.body.charge_tax,
             "footer": req.body.footer,
-            "img": image
+            "img": image,
+            "serie": req.body.serie,
+            "numero": req.body.numero,
+            "token": req.body.token
         }       
     }
-
+   
     if(req.body.id == "") { 
-        settingsDB.insert( Settings, function ( err, settings ) {
-            if ( err ) res.status( 500 ).send( err );
-            else res.send( settings );
+        settingsDB.put({ _id: 1, Settings }).then(function (result) {
+            res.sendStatus( 200 )
+        }).catch(function (err) {
+            res.status( 500 ).send( err );
+            console.log(err);
         });
     }
     else { 
-        settingsDB.update( {
-            _id: 1
-        }, Settings, {}, function (
-            err,
-            numReplaced,
-            settings
-        ) {
-            if ( err ) res.status( 500 ).send( err );
-            else res.sendStatus( 200 );
-        } );
-
+        
+        settingsDB.get('1').then(function( response ) {
+            return settingsDB.put({
+                ...Settings,
+                _id: '1',
+                _rev: response._rev
+            });
+        }).then(function (result) {
+            res.sendStatus( 200 )
+        }).catch(function (err) {
+            res.status( 500 ).send( err );
+            console.log(err);
+        });
     }
 
 });
 
- 
+module.exports = app;

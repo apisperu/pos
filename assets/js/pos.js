@@ -142,7 +142,7 @@ if (auth == undefined) {
     });
 
 
-    $.get(api + 'settings/get', function (data) {
+    $.get(api + 'settings/all', function (data) {
         settings = data.settings;
     });
 
@@ -1648,7 +1648,7 @@ if (auth == undefined) {
             else {
                 storage.set('settings', formData);
 
-                $(this).attr('action', api + 'settings/post');
+                $(this).attr('action', api + 'settings');
                 $(this).attr('method', 'POST');
 
 
@@ -1860,6 +1860,10 @@ if (auth == undefined) {
                 $("#app option").filter(function () {
                     return $(this).text() == settings.app;
                 }).prop("selected", true);
+
+                $("#serie").val(settings.serie);
+                $("#numero").val(settings.numero);
+                $("#token").val(settings.token);
             }
 
 

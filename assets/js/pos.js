@@ -200,7 +200,7 @@ if (auth == undefined) {
         function loadProducts() {
 
             $.get(api + 'inventory/products', function (data) {
-
+                
                 data.forEach(item => {
                     item.price = parseFloat(item.price).toFixed(2);
                 });
@@ -1241,28 +1241,28 @@ if (auth == undefined) {
 
 
         $.fn.editProduct = function (index) {
-
+           
             $('#Products').modal('hide');
 
             $("#category option").filter(function () {
-                return $(this).val() == allProducts[index].category;
+                return $(this).val() == allProducts[index].doc.category;
             }).prop("selected", true);
 
-            $('#productName').val(allProducts[index].name);
-            $('#product_price').val(allProducts[index].price);
-            $('#quantity').val(allProducts[index].quantity);
+            $('#productName').val(allProducts[index].doc.name);
+            $('#product_price').val(allProducts[index].doc.price);
+            $('#quantity').val(allProducts[index].doc.quantity);
 
-            $('#product_id').val(allProducts[index]._id);
-            $('#img').val(allProducts[index].img);
+            $('#product_id').val(allProducts[index].doc._id);
+            $('#img').val(allProducts[index].doc.img);
 
-            if (allProducts[index].img != "") {
+            if (allProducts[index].doc.img != "") {
 
                 $('#imagename').hide();
-                $('#current_img').html(`<img src="${img_path + allProducts[index].img}" alt="">`);
+                $('#current_img').html(`<img src="${img_path + allProducts[index].doc.img}" alt="">`);
                 $('#rmv_img').show();
             }
 
-            if (allProducts[index].stock == 0) {
+            if (allProducts[index].doc.stock == 0) {
                 $('#stock').prop("checked", true);
             }
 
@@ -1507,16 +1507,16 @@ if (auth == undefined) {
             $('#productList').DataTable().destroy();
 
             products.forEach((product, index) => {
-
+                product = product.doc;
                 counter++;
 
                 let category = allCategories.filter( category => category.id == product.category);
-
+                
                 product_list += `<tr>
             <td><img id="`+ product._id + `"></td>
             <td><img style="max-height: 50px; max-width: 50px; border: 1px solid #ddd;" src="${product.img == "" ? "./assets/images/default.jpg" : img_path + product.img}" id="product_img"></td>
             <td>${product.name}</td>
-            <td>${settings.symbol}${product.price}</td>
+            <td>${settings.symbol} ${product.price}</td>
             <td>${product.stock == 1 ? product.quantity : 'N/A'}</td>
             <td>${category.length > 0 ? category[0].doc.name : ''}</td>
             <td class="nobr"><span class="btn-group"><button onClick="$(this).editProduct(${index})" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></button><button onClick="$(this).deleteProduct(${product._id})" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button></span></td></tr>`;
@@ -1524,8 +1524,8 @@ if (auth == undefined) {
                 if (counter == allProducts.length) {
 
                     $('#product_list').html(product_list);
-
                     products.forEach(pro => {
+                        pro = pro.doc;
                         $("#" + pro._id + "").JsBarcode(pro._id, {
                             width: 2,
                             height: 25,

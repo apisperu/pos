@@ -131,14 +131,24 @@ app.post( "/product", upload.single('imagename'), function ( req, res ) {
 
 });
  
-// app.delete( "/product/:productId", function ( req, res ) {
-//     inventoryDB.remove( {
-//         _id: parseInt(req.params.productId)
-//     }, function ( err, numRemoved ) {
-//         if ( err ) res.status( 500 ).send( err );
-//         else res.sendStatus( 200 );
-//     } );
-// } ); 
+app.delete( "/product/:productId", function ( req, res ) {
+    // inventoryDB.remove( {
+    //     _id: parseInt(req.params.productId)
+    // }, function ( err, numRemoved ) {
+    //     if ( err ) res.status( 500 ).send( err );
+    //     else res.sendStatus( 200 );
+    // } );
+    let id = req.params.productId;
+
+    inventoryDB.get(id).then(function(response) {
+        return inventoryDB.remove(response);
+    }).then(function (result) {
+        res.sendStatus( 200 );
+    }).catch(function (err) {
+        res.status( 500 ).send( err );
+        console.log(err);
+    });
+} ); 
 
 // app.post( "/product/sku", function ( req, res ) {
 //     var request = req.body;

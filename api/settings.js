@@ -73,7 +73,7 @@ app.post( "/", upload.single('imagename'), function ( req, res ) {
     }
    
     if(req.body.id == "") { 
-        settingsDB.put({ _id: 1, Settings }).then(function (result) {
+        settingsDB.put({ _id: '1', ...Settings }).then(function (result) {
             res.sendStatus( 200 )
         }).catch(function (err) {
             res.status( 500 ).send( err );

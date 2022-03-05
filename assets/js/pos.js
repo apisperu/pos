@@ -202,6 +202,7 @@ if (auth == undefined) {
             $.get(api + 'inventory/products', function (data) {
                 
                 data.forEach(item => {
+                    item = item.doc;
                     item.price = parseFloat(item.price).toFixed(2);
                 });
 
@@ -213,7 +214,7 @@ if (auth == undefined) {
                 $('#categories').html(`<button type="button" id="all" class="btn btn-categories btn-white waves-effect waves-light">Todos</button> `);
 
                 data.forEach(item => {
-
+                    item = item.doc;
                     if (!categories.includes(item.category)) {
                         categories.push(item.category);
                     }
@@ -226,7 +227,7 @@ if (auth == undefined) {
                                         <div class="name" id="product_name">${item.name}</div> 
                                         <span class="sku">${item.sku}</span>
                                         <span class="stock">STOCK </span><span class="count">${item.stock == 1 ? item.quantity : 'N/A'}</span></div>
-                                        <sp class="text-success text-center"><b data-plugin="counterup">${settings.symbol + item.price}</b> </sp>
+                                        <sp class="text-success text-center"><b data-plugin="counterup">${settings.symbol}  ${item.price}</b> </sp>
                             </div>
                         </div>`;
                     $('#parent').append(item_info);
@@ -312,7 +313,7 @@ if (auth == undefined) {
             let req = {
                 skuCode: $("#skuCode").val()
             }
-
+            
             $.ajax({
                 url: api + 'inventory/product/sku',
                 type: 'POST',
@@ -321,7 +322,6 @@ if (auth == undefined) {
                 cache: false,
                 processData: false,
                 success: function (data) {
-
                     if (data._id != undefined && data.quantity >= 1) {
                         $(this).addProductToCart(data);
                         $("#searchBarCode").get(0).reset();
@@ -352,27 +352,44 @@ if (auth == undefined) {
                         )
                     }
 
-                }, error: function (data) {
-                    if (data.status === 422) {
-                        $(this).showValidationError(data);
-                        $("#basic-addon2").append(
-                            $('<i>', { class: 'glyphicon glyphicon-remove' })
-                        )
-                    }
-                    else if (data.status === 404) {
-                        $("#basic-addon2").empty();
-                        $("#basic-addon2").append(
-                            $('<i>', { class: 'glyphicon glyphicon-remove' })
-                        )
-                    }
-                    else {
-                        $(this).showServerError();
-                        $("#basic-addon2").empty();
-                        $("#basic-addon2").append(
-                            $('<i>', { class: 'glyphicon glyphicon-warning-sign' })
-                        )
-                    }
                 }
+                // error: function (data) {
+                //     
+                // }
+            }).fail( function( jqXHR, textStatus, errorThrown ) {
+
+                if (jqXHR.status === 500) {
+                    // $(this).showValidationError(data);
+                    // $("#basic-addon2").append(
+                    //     $('<i>', { class: 'glyphicon glyphicon-remove' })
+                    // )
+
+                    Swal.fire(
+                        'Not Found!',
+                        '<b>' + $("#skuCode").val() + '</b> is not a valid barcode!',
+                        'warning'
+                    );
+
+                    $("#searchBarCode").get(0).reset();
+                    $("#basic-addon2").empty();
+                    $("#basic-addon2").append(
+                        $('<i>', { class: 'glyphicon glyphicon-ok' })
+                    )
+
+                }
+                // else if (jqXHR.status === 404) {
+                //     $("#basic-addon2").empty();
+                //     $("#basic-addon2").append(
+                //         $('<i>', { class: 'glyphicon glyphicon-remove' })
+                //     )
+                // }
+                // else {
+                //     $(this).showServerError();
+                //     $("#basic-addon2").empty();
+                //     $("#basic-addon2").append(
+                //         $('<i>', { class: 'glyphicon glyphicon-warning-sign' })
+                //     )
+                // }
             });
 
         }

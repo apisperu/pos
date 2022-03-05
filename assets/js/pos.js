@@ -1620,12 +1620,13 @@ if (auth == undefined) {
 
             Swal.fire({
                 title: '¿Está seguro?',
-                text: "You are about to log out.",
+                text: "Estas a punto de desconectarte.",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Logout'
+                confirmButtonText: 'Cerrar Sesión',
+                cancelButtonText: 'Cancelar'
             }).then((result) => {
 
                 if (result.value) {
@@ -2340,9 +2341,9 @@ $('#reportrange').on('apply.daterangepicker', function (ev, picker) {
 
 function authenticate() {
     $('#loading').append(
-        `<div id="load"><form id="account"><div class="form-group"><input type="text" placeholder="Username" name="username" class="form-control"></div>
-        <div class="form-group"><input type="password" placeholder="Password" name="password" class="form-control"></div>
-        <div class="form-group"><input type="submit" class="btn btn-block btn-default" value="Login"></div></form>`
+        `<div id="load"><form id="account"><div class="form-group"><input type="text" placeholder="Ingrese el nombre de usuario" name="username" class="form-control"></div>
+        <div class="form-group"><input type="password" placeholder="Ingrese la contraseña" name="password" class="form-control"></div>
+        <div class="form-group"><input type="submit" class="btn btn-block btn-default" value="Iniciar Sesión"></div></form>`
     );
 }
 

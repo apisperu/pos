@@ -83,7 +83,7 @@ $(document).ready(function(){
             $("#cardInfo .input-group-addon").text("Check Info");
        }else if(this.id == 'card'){
            $("#cardInfo").show();
-           $("#cardInfo .input-group-addon").text("Card Info");
+           $("#cardInfo .input-group-addon").text("Info. de la tarjeta");
        }else if(this.id == 'cash'){
            $("#cardInfo").hide();
        }

@@ -150,6 +150,7 @@ if (auth == undefined) {
     $.get(api + 'users/all', function (users) {
         allUsers = [...users];
     });
+    
 
 
 
@@ -538,11 +539,11 @@ if (auth == undefined) {
             item = cart[i];
 
             let product = allProducts.filter(function (selected) {
-                return selected._id == parseInt(item.id);
+                return selected.doc._id == parseInt(item.id);
             });
-
-            if (product[0].stock == 1) {
-                if (item.quantity < product[0].quantity) {
+      
+            if (product[0].doc.stock == 1) {
+                if (item.quantity < product[0].doc.quantity) {
                     item.quantity += 1;
                     $(this).renderTable(cart);
                 }

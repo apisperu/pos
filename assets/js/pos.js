@@ -143,7 +143,7 @@ if (auth == undefined) {
     });
 
 
-    $.get(api + 'settings/get', function (data) {
+    $.get(api + 'settings/all', function (data) {
         settings = data.settings;
     });
 
@@ -151,6 +151,7 @@ if (auth == undefined) {
     $.get(api + 'users/all', function (users) {
         allUsers = [...users];
     });
+    
 
 
 
@@ -201,8 +202,9 @@ if (auth == undefined) {
         function loadProducts() {
 
             $.get(api + 'inventory/products', function (data) {
-
+                
                 data.forEach(item => {
+                    item = item.doc;
                     item.price = parseFloat(item.price).toFixed(2);
                 });
 
@@ -214,7 +216,7 @@ if (auth == undefined) {
                 $('#categories').html(`<button type="button" id="all" class="btn btn-categories btn-white waves-effect waves-light">Todos</button> `);
 
                 data.forEach(item => {
-
+                    item = item.doc;
                     if (!categories.includes(item.category)) {
                         categories.push(item.category);
                     }
@@ -227,7 +229,7 @@ if (auth == undefined) {
                                         <div class="name" id="product_name">${item.name}</div> 
                                         <span class="sku">${item.sku}</span>
                                         <span class="stock">STOCK </span><span class="count">${item.stock == 1 ? item.quantity : 'N/A'}</span></div>
-                                        <sp class="text-success text-center"><b data-plugin="counterup">${settings.symbol + item.price}</b> </sp>
+                                        <sp class="text-success text-center"><b data-plugin="counterup">${settings.symbol}  ${item.price}</b> </sp>
                             </div>
                         </div>`;
                     $('#parent').append(item_info);
@@ -252,7 +254,7 @@ if (auth == undefined) {
                 loadCategoryList();
                 $('#category').html(`<option value="0">Select</option>`);
                 allCategories.forEach(category => {
-                    $('#category').append(`<option value="${category._id}">${category.doc.name}</option>`);
+                    $('#category').append(`<option value="${category.id}">${category.doc.name}</option>`);
                 });
             });
         }
@@ -313,7 +315,7 @@ if (auth == undefined) {
             let req = {
                 skuCode: $("#skuCode").val()
             }
-
+            
             $.ajax({
                 url: api + 'inventory/product/sku',
                 type: 'POST',
@@ -322,7 +324,6 @@ if (auth == undefined) {
                 cache: false,
                 processData: false,
                 success: function (data) {
-
                     if (data._id != undefined && data.quantity >= 1) {
                         $(this).addProductToCart(data);
                         $("#searchBarCode").get(0).reset();
@@ -353,27 +354,44 @@ if (auth == undefined) {
                         )
                     }
 
-                }, error: function (data) {
-                    if (data.status === 422) {
-                        $(this).showValidationError(data);
-                        $("#basic-addon2").append(
-                            $('<i>', { class: 'glyphicon glyphicon-remove' })
-                        )
-                    }
-                    else if (data.status === 404) {
-                        $("#basic-addon2").empty();
-                        $("#basic-addon2").append(
-                            $('<i>', { class: 'glyphicon glyphicon-remove' })
-                        )
-                    }
-                    else {
-                        $(this).showServerError();
-                        $("#basic-addon2").empty();
-                        $("#basic-addon2").append(
-                            $('<i>', { class: 'glyphicon glyphicon-warning-sign' })
-                        )
-                    }
                 }
+                // error: function (data) {
+                //     
+                // }
+            }).fail( function( jqXHR, textStatus, errorThrown ) {
+
+                if (jqXHR.status === 500) {
+                    // $(this).showValidationError(data);
+                    // $("#basic-addon2").append(
+                    //     $('<i>', { class: 'glyphicon glyphicon-remove' })
+                    // )
+
+                    Swal.fire(
+                        'Not Found!',
+                        '<b>' + $("#skuCode").val() + '</b> is not a valid barcode!',
+                        'warning'
+                    );
+
+                    $("#searchBarCode").get(0).reset();
+                    $("#basic-addon2").empty();
+                    $("#basic-addon2").append(
+                        $('<i>', { class: 'glyphicon glyphicon-ok' })
+                    )
+
+                }
+                // else if (jqXHR.status === 404) {
+                //     $("#basic-addon2").empty();
+                //     $("#basic-addon2").append(
+                //         $('<i>', { class: 'glyphicon glyphicon-remove' })
+                //     )
+                // }
+                // else {
+                //     $(this).showServerError();
+                //     $("#basic-addon2").empty();
+                //     $("#basic-addon2").append(
+                //         $('<i>', { class: 'glyphicon glyphicon-warning-sign' })
+                //     )
+                // }
             });
 
         }
@@ -514,7 +532,6 @@ if (auth == undefined) {
         $.fn.deleteFromCart = function (index) {
             cart.splice(index, 1);
             $(this).renderTable(cart);
-
         }
 
 
@@ -523,11 +540,11 @@ if (auth == undefined) {
             item = cart[i];
 
             let product = allProducts.filter(function (selected) {
-                return selected._id == parseInt(item.id);
+                return selected.doc._id == parseInt(item.id);
             });
-
-            if (product[0].stock == 1) {
-                if (item.quantity < product[0].quantity) {
+      
+            if (product[0].doc.stock == 1) {
+                if (item.quantity < product[0].doc.quantity) {
                     item.quantity += 1;
                     $(this).renderTable(cart);
                 }
@@ -1243,28 +1260,28 @@ if (auth == undefined) {
 
 
         $.fn.editProduct = function (index) {
-
+           
             $('#Products').modal('hide');
 
             $("#category option").filter(function () {
-                return $(this).val() == allProducts[index].category;
+                return $(this).val() == allProducts[index].doc.category;
             }).prop("selected", true);
 
-            $('#productName').val(allProducts[index].name);
-            $('#product_price').val(allProducts[index].price);
-            $('#quantity').val(allProducts[index].quantity);
+            $('#productName').val(allProducts[index].doc.name);
+            $('#product_price').val(allProducts[index].doc.price);
+            $('#quantity').val(allProducts[index].doc.quantity);
 
-            $('#product_id').val(allProducts[index]._id);
-            $('#img').val(allProducts[index].img);
+            $('#product_id').val(allProducts[index].doc._id);
+            $('#img').val(allProducts[index].doc.img);
 
-            if (allProducts[index].img != "") {
+            if (allProducts[index].doc.img != "") {
 
                 $('#imagename').hide();
-                $('#current_img').html(`<img src="${img_path + allProducts[index].img}" alt="">`);
+                $('#current_img').html(`<img src="${img_path + allProducts[index].doc.img}" alt="">`);
                 $('#rmv_img').show();
             }
 
-            if (allProducts[index].stock == 0) {
+            if (allProducts[index].doc.stock == 0) {
                 $('#stock').prop("checked", true);
             }
 
@@ -1509,28 +1526,25 @@ if (auth == undefined) {
             $('#productList').DataTable().destroy();
 
             products.forEach((product, index) => {
-
+                product = product.doc;
                 counter++;
 
-                let category = allCategories.filter(function (category) {
-                    return category._id == product.category;
-                });
-
-
+                let category = allCategories.filter( category => category.id == product.category);
+                
                 product_list += `<tr>
             <td><img id="`+ product._id + `"></td>
             <td><img style="max-height: 50px; max-width: 50px; border: 1px solid #ddd;" src="${product.img == "" ? "./assets/images/default.jpg" : img_path + product.img}" id="product_img"></td>
             <td>${product.name}</td>
-            <td>${settings.symbol}${product.price}</td>
+            <td>${settings.symbol} ${product.price}</td>
             <td>${product.stock == 1 ? product.quantity : 'N/A'}</td>
-            <td>${category.length > 0 ? category[0].name : ''}</td>
+            <td>${category.length > 0 ? category[0].doc.name : ''}</td>
             <td class="nobr"><span class="btn-group"><button onClick="$(this).editProduct(${index})" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></button><button onClick="$(this).deleteProduct(${product._id})" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button></span></td></tr>`;
 
                 if (counter == allProducts.length) {
 
                     $('#product_list').html(product_list);
-
                     products.forEach(pro => {
+                        pro = pro.doc;
                         $("#" + pro._id + "").JsBarcode(pro._id, {
                             width: 2,
                             height: 25,
@@ -1558,7 +1572,7 @@ if (auth == undefined) {
             let counter = 0;
             $('#category_list').empty();
             $('#categoryList').DataTable().destroy();
-
+          
             allCategories.forEach((category, index) => {
 
                 counter++;
@@ -1653,7 +1667,7 @@ if (auth == undefined) {
             else {
                 storage.set('settings', formData);
 
-                $(this).attr('action', api + 'settings/post');
+                $(this).attr('action', api + 'settings');
                 $(this).attr('method', 'POST');
 
 
@@ -1865,6 +1879,10 @@ if (auth == undefined) {
                 $("#app option").filter(function () {
                     return $(this).text() == settings.app;
                 }).prop("selected", true);
+
+                $("#serie").val(settings.serie);
+                $("#numero").val(settings.numero);
+                $("#token").val(settings.token);
             }
 
 

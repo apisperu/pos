@@ -134,6 +134,7 @@ app.delete( "/product/:productId", function ( req, res ) {
 app.post( "/product/sku", function ( req, res ) {
     var request = req.body;
 
+
     inventoryDB.get(request.skuCode).then(function (result) {
         res.send( result );
     }).catch(function (err) {

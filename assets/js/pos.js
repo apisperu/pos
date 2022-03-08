@@ -10,6 +10,7 @@ let sold_items = [];
 let item;
 let auth;
 let holdOrder = 0;
+let holdOrderRev = 0;
 let vat = 0;
 let perms = null;
 let deleteId = 0;
@@ -1619,12 +1620,13 @@ if (auth == undefined) {
 
             Swal.fire({
                 title: '¿Está seguro?',
-                text: "You are about to log out.",
+                text: "Estas a punto de desconectarte.",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Logout'
+                confirmButtonText: 'Cerrar Sesión',
+                cancelButtonText: 'Cancelar'
             }).then((result) => {
 
                 if (result.value) {
@@ -2003,12 +2005,32 @@ function loadTransactions() {
                                 <td>${trans.order}</td>
                                 <td class="nobr">${moment(trans.date).format('YYYY MMM DD hh:mm:ss')}</td>
                                 <td>${settings.symbol + trans.total}</td>
-                                <td>${trans.paid == "" ? "" : settings.symbol + trans.paid}</td>
-                                <td>${trans.change ? settings.symbol + Math.abs(trans.change).toFixed(2) : ''}</td>
+                                <!--<td>${trans.paid == "" ? "" : settings.symbol + trans.paid}</td>-->
+                                <!--<td>${trans.change ? settings.symbol + Math.abs(trans.change).toFixed(2) : ''}</td>-->
                                 <td>${trans.paid == "" ? "" : trans.payment_type == 0 ? "Cash" : 'Card'}</td>
-                                <td>${trans.till}</td>
+                                <!--<td>${trans.till}</td>-->
                                 <td>${trans.user}</td>
-                                <td>${trans.paid == "" ? '<button class="btn btn-dark"><i class="fa fa-search-plus"></i></button>' : '<button onClick="$(this).viewTransaction(' + index + ')" class="btn btn-info"><i class="fa fa-search-plus"></i></button></td>'}</tr>
+                                <td class="text-center">
+                                ${trans.paid == "" ? '<button class="btn btn-dark"><i class="fa fa-search-plus"></i></button>' : '<button onClick="$(this).viewTransaction(' + index + ')" class="btn btn-info"><i class="fa fa-search-plus"></i></button>'}
+                                </td>
+
+                                <td class="text-center">
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">        
+                                            <span class="glyphicon glyphicon-option-vertical" aria-hidden="true"></span>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a href="#">Descargar XML</a></li>
+                                            <li><a href="#">Descargar PDF</a></li>
+                                            <li><a href="#">Descargar CDR</a></li>
+                                            <li role="separator" class="divider"></li>
+                                            <li><a href="#">Cambiar Estado</a></li>
+                                            <li><a href="#">Reenviar a Sunat</a></li>
+                                            <li><a href="#">Dar de Baja</a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                                </tr>
                     `;
 
                 if (counter == transactions.length) {
@@ -2319,9 +2341,9 @@ $('#reportrange').on('apply.daterangepicker', function (ev, picker) {
 
 function authenticate() {
     $('#loading').append(
-        `<div id="load"><form id="account"><div class="form-group"><input type="text" placeholder="Username" name="username" class="form-control"></div>
-        <div class="form-group"><input type="password" placeholder="Password" name="password" class="form-control"></div>
-        <div class="form-group"><input type="submit" class="btn btn-block btn-default" value="Login"></div></form>`
+        `<div id="load"><form id="account"><div class="form-group"><input type="text" placeholder="Ingrese el nombre de usuario" name="username" class="form-control"></div>
+        <div class="form-group"><input type="password" placeholder="Ingrese la contraseña" name="password" class="form-control"></div>
+        <div class="form-group"><input type="submit" class="btn btn-block btn-default" value="Iniciar Sesión"></div></form>`
     );
 }
 

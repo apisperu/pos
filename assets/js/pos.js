@@ -843,14 +843,14 @@ if (auth == undefined) {
                 user: user.fullname,
                 user_id: user._id
             }
-
-            if (holdOrderRev) {
-                data._rev = holdOrderRev
-            }
+ 
+            // if (holdOrderRev) {
+            //     data._rev = holdOrderRev
+            // }
 
 
             $.ajax({
-                url: api + 'new',
+                url: api + 'transactions/new',
                 type: method,
                 data: JSON.stringify(data),
                 contentType: 'application/json; charset=utf-8',
@@ -874,7 +874,7 @@ if (auth == undefined) {
                 }, error: function (data) {
                     $(".loading").hide();
                     $("#dueModal").modal('toggle');
-                    swal("Something went wrong!", 'Please refresh this page and try again');
+                    Swal("Something went wrong!", 'Please refresh this page and try again');
 
                 }
             });
@@ -886,7 +886,7 @@ if (auth == undefined) {
         }
 
 
-        $.get(api + 'on-hold', function (data) {
+        $.get(api + 'transactions/on-hold', function (data) {
             holdOrderList = data.docs;
             holdOrderlocation.empty();
             clearInterval(dotInterval);

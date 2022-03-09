@@ -10,6 +10,7 @@ let sold_items = [];
 let item;
 let auth;
 let holdOrder = 0;
+let holdOrderRev = null;
 let vat = 0;
 let perms = null;
 let deleteId = 0;
@@ -262,11 +263,11 @@ if (auth == undefined) {
         function loadCustomers() {
 
             $.get(api + 'customers/all', function (customers) {
-
+                
                 $('#customer').html(`<option value="0" selected="selected">Walk in customer</option>`);
 
                 customers.forEach(cust => {
-
+                    cust = cust.doc;
                     let customer = `<option value='{"id": ${cust._id}, "name": "${cust.name}"}'>${cust.name}</option>`;
                     $('#customer').append(customer);
                 });
@@ -843,11 +844,10 @@ if (auth == undefined) {
                 user: user.fullname,
                 user_id: user._id
             }
- 
-            // if (holdOrderRev) {
-            //     data._rev = holdOrderRev
-            // }
-
+           
+            if (holdOrderRev) {
+                data._rev = holdOrderRev
+            }
 
             $.ajax({
                 url: api + 'transactions/new',
@@ -895,7 +895,7 @@ if (auth == undefined) {
 
 
         $.fn.getHoldOrders = function () {
-            $.get(api + 'on-hold', function (data) {
+            $.get(api + 'transactions/on-hold', function (data) {
                 holdOrderList = data.docs;
                 clearInterval(dotInterval);
                 holdOrderlocation.empty();
@@ -905,6 +905,7 @@ if (auth == undefined) {
 
 
         $.fn.randerHoldOrders = function (data, renderLocation, orderType) {
+    
             $.each(data, function (index, order) {
                 $(this).calculatePrice(order);
                 renderLocation.append(
@@ -968,6 +969,7 @@ if (auth == undefined) {
 
                 holdOrder = holdOrderList[index]._id;
                 holdOrderRev = holdOrderList[index]._rev;
+         
                 cart = [];
                 $.each(holdOrderList[index].items, function (index, product) {
                     item = {
@@ -1010,7 +1012,7 @@ if (auth == undefined) {
 
 
         $.fn.deleteOrder = function (index, type) {
-
+            
             switch (type) {
                 case 1: deleteId = holdOrderList[index]._id;
                     break;
@@ -1030,19 +1032,15 @@ if (auth == undefined) {
                 cancelButtonColor: '#d33',
                 confirmButtonText: 'Yes, delete it!'
             }).then((result) => {
-
+                
                 if (result.value) {
-
                     $.ajax({
-                        url: api + 'delete',
+                        url: api + 'transactions/delete',
                         type: 'POST',
                         data: JSON.stringify(data),
                         contentType: 'application/json; charset=utf-8',
                         cache: false,
                         success: function (data) {
-
-                            $(this).getHoldOrders();
-                            $(this).getCustomerOrders();
 
                             Swal.fire(
                                 'Deleted!',
@@ -1056,13 +1054,18 @@ if (auth == undefined) {
                         }
                     });
                 }
-            });
+            })
+            .then(() => {
+                //volvemos a renderizar las ordenes 
+                $(this).getHoldOrders();
+                $(this).getCustomerOrders();
+            })
         }
 
 
 
         $.fn.getCustomerOrders = function () {
-            $.get(api + 'customer-orders', function (data) {
+            $.get(api + 'transactions/customer-orders', function (data) {
                 clearInterval(dotInterval);
                 customerOrderList = data.docs;
                 customerOrderLocation.empty();
@@ -1723,8 +1726,6 @@ if (auth == undefined) {
             e.preventDefault();
             let formData = $(this).serializeObject();
 
-            console.log(formData);
-
             if (ownUserEdit) {
                 if (formData.password != atob(user.password)) {
                     if (formData.password != formData.pass) {
@@ -1965,7 +1966,7 @@ function loadTransactions() {
 
     let counter = 0;
     let transaction_list = '';
-    let query = `by-date?start=${start_date}&end=${end_date}&user=${by_user}&status=${by_status}&till=${by_till}`;
+    let query = `transactions/by-date?start=${start_date}&end=${end_date}&user=${by_user}&status=${by_status}&till=${by_till}`;
 
 
     $.get(api + query, function (transactions) {

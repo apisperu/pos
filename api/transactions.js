@@ -163,6 +163,7 @@ app.post("/new", function(req, res) {
 
 
 app.put("/new", function(req, res) {
+
   let oderId = req.body._id.toString();
   let newTransaction = req.body;
   
@@ -176,6 +177,7 @@ app.put("/new", function(req, res) {
   //     if ( err ) res.status( 500 ).send( err );
   //     else res.sendStatus( 200 );
   // } );
+
 
   transactionsDB.put({
     ...newTransaction,

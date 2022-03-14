@@ -85,6 +85,7 @@ app.post( "/login", function ( req, res ) {
 
 app.get( "/all", function ( req, res ) {
     usersDB.find( {}, function ( err, docs ) {
+        console.log('es aqui', docs)
         res.send( docs );
     } );
 } );

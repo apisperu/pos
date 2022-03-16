@@ -1,15 +1,10 @@
 let app = require("express")();
 let server = require("http").Server(app);
-let bodyParser = require("body-parser");
 let Inventory = require("./inventory");
 const PouchDB = require('pouchdb');
 const PouchdbFind = require('pouchdb-find');
 
 PouchDB.plugin(PouchdbFind);
-
-app.use(bodyParser.json());
-
-module.exports = app;
 
 let transactionsDB = new PouchDB('db/transactions');
 
@@ -138,7 +133,6 @@ app.get("/by-date", function(req, res) {
 
 app.post("/new", function(req, res) {
   let newTransaction = req.body;
-
   // transactionsDB.insert(newTransaction, function(err, transaction) {    
   //   if (err) res.status(500).send(err);
   //   else {
@@ -169,6 +163,7 @@ app.post("/new", function(req, res) {
 
 
 app.put("/new", function(req, res) {
+
   let oderId = req.body._id.toString();
   let newTransaction = req.body;
   
@@ -198,13 +193,19 @@ app.put("/new", function(req, res) {
 
 app.post( "/delete", function ( req, res ) {
  let transaction = req.body;
-  transactionsDB.remove( {
-      _id: transaction.orderId
-  }, function ( err, numRemoved ) {
-      if ( err ) res.status( 500 ).send( err );
-      else res.sendStatus( 200 );
-  } );
-} );
+ 
+  // transactionsDB.remove( {
+  //     _id: transaction.orderId
+  // }, function ( err, numRemoved ) {
+  //     if ( err ) res.status( 500 ).send( err );
+  //     else res.sendStatus( 200 );
+  // } );
+
+  transactionsDB.get(transaction.orderId)
+    .then(doc => transactionsDB.remove(doc))
+    .catch(err => console.log(err));
+
+});
 
 
 
@@ -213,3 +214,5 @@ app.get("/:transactionId", function(req, res) {
     if (doc) res.send(doc[0]);
   });
 });
+
+module.exports = app;

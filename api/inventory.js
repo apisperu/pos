@@ -134,6 +134,7 @@ app.delete( "/product/:productId", function ( req, res ) {
 app.post( "/product/sku", function ( req, res ) {
     var request = req.body;
 
+
     inventoryDB.get(request.skuCode).then(function (result) {
         res.send( result );
     }).catch(function (err) {
@@ -142,35 +143,35 @@ app.post( "/product/sku", function ( req, res ) {
     });
 } );
 
-// app.decrementInventory = function ( products ) {
+app.decrementInventory = function ( products ) {
+    async.eachSeries(products, function (transactionProduct, callback){
 
-//     async.eachSeries( products, function ( transactionProduct, callback ) {
-//         inventoryDB.findOne( {
-//             _id: parseInt(transactionProduct.id)
-//         }, function (
-//             err,
-//             product
-//         ) {
-    
-//             if ( !product || !product.quantity ) {
-//                 callback();
-//             } else {
-//                 let updatedQuantity =
-//                     parseInt( product.quantity) -
-//                     parseInt( transactionProduct.quantity );
+        inventoryDB.get(transactionProduct.id)
+            .then( product => {
+                if (!product || !product.quantity) callback();
+                let updateQuantity = parseInt(product.quantity) - parseInt( transactionProduct.quantity);
+                return { product, updateQuantity };
+            })
+            .then(result => {
+                updateProduct(result.product, result.updateQuantity)
+            }).catch((err) => {
+            console.log(err);
+          });
 
-//                 inventoryDB.update( {
-//                         _id: parseInt(product._id)
-//                     }, {
-//                         $set: {
-//                             quantity: updatedQuantity
-//                         }
-//                     }, {},
-//                     callback
-//                 );
-//             }
-//         } );
-//     } );
-// };
+    });
+};
+
+const updateProduct = (product, updateQuantity) => {
+
+    inventoryDB.get(product._id).then(doc => {
+
+    //modificamos quantity
+    doc.quantity = updateQuantity;
+
+    return inventoryDB.put({ ...doc, _id: doc._id, _rev: doc._rev });
+
+    }).catch(err => console.log(err));
+
+}
 
 module.exports = app;

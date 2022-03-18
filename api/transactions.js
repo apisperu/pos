@@ -8,6 +8,9 @@ PouchDB.plugin(PouchdbFind);
 
 let transactionsDB = new PouchDB('db/transactions');
 
+// transactionsDB.createIndex({
+//   index: {fields: ['_id']}
+// });
 
 app.get("/", function(req, res) {
   res.send("Transactions API");
@@ -47,7 +50,8 @@ app.get("/on-hold", function(req, res) {
 
 app.get("/customer-orders", function(req, res) {
   transactionsDB.find({
-    selector: { $and: [{ customer: {$ne: "0"} }, { status: 0}, { ref_number: ""}]}
+    selector: { $and: [{ customer: {$ne: 1} }, { status: 0}]}
+    // selector: { $and: [{ customer: {$ne: 0} }, { status: 0}, { ref_number: ""}]}
   }).then(function (result) {
     res.send(result)
   })
@@ -132,6 +136,7 @@ app.get("/by-date", function(req, res) {
 
 
 app.post("/new", function(req, res) {
+ 
   let newTransaction = req.body;
   // transactionsDB.insert(newTransaction, function(err, transaction) {    
   //   if (err) res.status(500).send(err);
@@ -166,7 +171,6 @@ app.put("/new", function(req, res) {
 
   let oderId = req.body._id.toString();
   let newTransaction = req.body;
-  
   // transactionsDB.update( {
   //     _id: oderId
   // }, req.body, {}, function (
@@ -178,16 +182,28 @@ app.put("/new", function(req, res) {
   //     else res.sendStatus( 200 );
   // } );
 
-
-  transactionsDB.put({
-    ...newTransaction,
-    _id: oderId,
-  }).then(function (result) {
-    res.sendStatus( 200 )
+  transactionsDB.get(oderId).then(doc => {
+    return transactionsDB.put({
+      _id: '_id',
+      _rev: doc._rev,
+      ...newTransaction
+    });
+  }).then(function(response) {
+    // handle response
   }).catch(function (err) {
-      res.status( 500 ).send( err );
-      console.log(err);
+    console.log(err);
   });
+
+
+  // transactionsDB.put({
+  //   ...newTransaction,
+  //   _id: oderId,
+  // }).then(function (result) {
+  //   res.sendStatus( 200 )
+  // }).catch(function (err) {
+  //     res.status( 500 ).send( err );
+  //     console.log(err);
+  // });
 });
 
 

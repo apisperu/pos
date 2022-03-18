@@ -147,13 +147,9 @@ if (auth == undefined) {
         settings = data.settings;
     });
 
-
     $.get(api + 'users/all', function (users) {
         allUsers = [...users];
     });
-    
-
-
 
     $(document).ready(function () {
 
@@ -857,7 +853,6 @@ if (auth == undefined) {
                 cache: false,
                 processData: false,
                 success: function (data) {
-
                     cart = [];
                     $('#viewTransaction').html('');
                     $('#viewTransaction').html(receipt);
@@ -1476,7 +1471,6 @@ if (auth == undefined) {
 
 
                 allUsers = [...users];
-
                 users.forEach((user, index) => {
 
                     state = [];
@@ -1728,7 +1722,7 @@ if (auth == undefined) {
             let formData = $(this).serializeObject();
 
             if (ownUserEdit) {
-                if (formData.password != atob(user.password)) {
+                if (formData.password !== atob(user.password)) {
                     if (formData.password != formData.pass) {
                         Swal.fire(
                             'Oops!',
@@ -1981,16 +1975,14 @@ function loadTransactions() {
             allTransactions = [...transactions];
 
             transactions.forEach((trans, index) => {
-
                 sales += parseFloat(trans.total);
                 transact++;
-
-
 
                 trans.items.forEach(item => {
                     sold_items.push(item);
                 });
 
+                
 
                 if (!tills.includes(trans.till)) {
                     tills.push(trans.till);
@@ -2032,9 +2024,8 @@ function loadTransactions() {
                                 </td>
                                 </tr>
                     `;
-
+                
                 if (counter == transactions.length) {
-
                     $('#total_sales #counter').text(settings.symbol + parseFloat(sales).toFixed(2));
                     $('#total_transactions #counter').text(transact);
 
@@ -2064,17 +2055,15 @@ function loadTransactions() {
                             price: price
                         });
                     }
-
+                   
                     loadSoldProducts();
-
-
+                    
                     if (by_user == 0 && by_till == 0) {
-
                         userFilter(users);
                         tillFilter(tills);
                     }
-
-
+                
+                    
                     $('#transaction_list').html(transaction_list);
                     $('#transactionList').DataTable({
                         "order": [[1, "desc"]]
@@ -2124,14 +2113,14 @@ function loadSoldProducts() {
     $('#product_sales').empty();
 
     sold.forEach((item, index) => {
-
         items += item.qty;
         products++;
 
         let product = allProducts.filter(function (selected) {
+            selected = selected.doc;
             return selected._id == item.id;
         });
-
+    
         counter++;
 
         sold_list += `<tr>
@@ -2140,7 +2129,6 @@ function loadSoldProducts() {
             <td>${product[0].stock == 1 ? product.length > 0 ? product[0].quantity : '' : 'N/A'}</td>
             <td>${settings.symbol + (item.qty * parseFloat(item.price)).toFixed(2)}</td>
             </tr>`;
-
         if (counter == sold.length) {
             $('#total_items #counter').text(items);
             $('#total_products #counter').text(products);
@@ -2154,12 +2142,12 @@ function userFilter(users) {
 
     $('#users').empty();
     $('#users').append(`<option value="0">All</option>`);
-
+    
     users.forEach(user => {
         let u = allUsers.filter(function (usr) {
             return usr._id == user;
         });
-
+        
         $('#users').append(`<option value="${user}">${u[0].fullname}</option>`);
     });
 

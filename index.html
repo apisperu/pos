@@ -225,7 +225,7 @@
                       </div>
                       <div class="input-group m-t-5">
                           <form action="" id="searchBarCode">
-                              <input type="text" required id="skuCode" name="skuCode" class="form-control" placeholder="Scan barcode or type the number then hit enter" aria-label="Recipient's username" aria-describedby="basic-addon2">
+                              <input type="text" required id="skuCode" name="skuCode" class="form-control" placeholder="Escanee el código de barras o escriba el número y luego presione enter" aria-label="Recipient's username" aria-describedby="basic-addon2">
                               <input type="submit" style="display:none;">
                           </form>
                           <span class="input-group-addon" id="basic-addon2">
@@ -482,12 +482,18 @@
               </div>
               <div class="modal-footer">
                   <div class="row">
-                      <div class="col-md-6">
+                      <div class="col-md-3">
                         <div class="btn btn-primary btn-block btn-lg waves-effect waves-light">Vuelto <span id="change_curr"></span><span id="change"></span> </div>
                       </div>
-                      <div class="col-md-6">
-                        <button type="button" id="confirmPayment" class="btn btn-default btn-block btn-lg waves-effect waves-light">Confirmar Pago</button>
-                    </div>
+                        <div class="col-md-3">
+                            <button type="button" id="confirmPayment" class="btn btn-default btn-block btn-lg waves-effect waves-light">Venta <b>Ticket</b></button>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="button" id="confirmPaymentBoleta" class="btn btn-default btn-block btn-lg waves-effect waves-light">Venta <b>Boleta</b></button>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="button" id="confirmPaymentFactura" class="btn btn-default btn-block btn-lg waves-effect waves-light">Venta <b>Factura</b></button>
+                        </div>
                   </div>
                   
                   
@@ -835,9 +841,9 @@
                         <div class="form-group">
                         <label for="app">Aplicación</label>
                         <select name="app" id="app" class="form-control">
-                            <option>Punto de venta independiente</option>
-                            <option>Network Point of Sale Terminal</option>
-                            <option>Network Point of Sale Server</option>                                            
+                            <option value="Standalone Point of Sale">Punto de venta independiente</option>
+                            <option value="Network Point of Sale Terminal">Red Punto de Venta Terminal</option>
+                            <option value="Network Point of Sale Server">Red Punto de Venta Servidor</option>                                            
                         </select>
                  </div>
 

@@ -46,8 +46,8 @@ let customerOrderList = [];
 let ownUserEdit = null;
 let totalPrice = 0;
 let orderTotal = 0;
-let auth_error = 'Incorrect username or password';
-let auth_empty = 'Please enter a username and password';
+let auth_error = 'Nombre de usuario o contraseña incorrecta';
+let auth_empty = 'Por favor ingrese un nombre de usuario y contraseña';
 let holdOrderlocation = $("#randerHoldOrders");
 let customerOrderLocation = $("#randerCustomerOrders");
 let storage = new Store();
@@ -145,6 +145,10 @@ if (auth == undefined) {
 
     $.get(api + 'settings/all', function (data) {
         settings = data.settings;
+        
+        if (data._attachments && data._attachments.logo) {
+           settings.logo = 'data:' + data._attachments.logo.content_type + ';base64,' + data._attachments.logo.data;
+        }
     });
 
     $.get(api + 'users/all', function (users) {
@@ -202,6 +206,10 @@ if (auth == undefined) {
                 data.forEach(item => {
                     item = item.doc;
                     item.price = parseFloat(item.price).toFixed(2);
+
+                    if (item._attachments && item._attachments.image) {
+                        item.image = 'data:' + item._attachments.image.content_type + ';base64,' + item._attachments.image.data;
+                    }
                 });
 
                 allProducts = [...data];
@@ -220,7 +228,7 @@ if (auth == undefined) {
                     let item_info = `<div class="col-lg-2 box ${item.category}"
                                 onclick="$(this).addToCart(${item._id}, ${item.quantity}, ${item.stock})">
                             <div class="widget-panel widget-style-2 ">                    
-                            <div id="image"><img src="${item.img == "" ? "./assets/images/default.jpg" : img_path + item.img}" id="product_img" alt=""></div>                    
+                            <div id="image"><img src="${item.image}" id="product_img" alt=""></div>                    
                                         <div class="text-muted m-t-5 text-center">
                                         <div class="name" id="product_name">${item.name}</div> 
                                         <span class="sku">${item.sku}</span>
@@ -613,7 +621,7 @@ if (auth == undefined) {
                 $("#paymentModel").modal('toggle');
             } else {
                 Swal.fire(
-                    'Oops!',
+                    '¡Uy!',
                     'There is nothing to pay!',
                     'warning'
                 );
@@ -629,7 +637,7 @@ if (auth == undefined) {
                 $("#dueModal").modal('toggle');
             } else {
                 Swal.fire(
-                    'Oops!',
+                    '¡Uy!',
                     'There is nothing to hold!',
                     'warning'
                 );
@@ -1108,6 +1116,8 @@ if (auth == undefined) {
 
 
         $("#confirmPayment").hide();
+        $("#confirmPaymentBoleta").hide();
+        $("#confirmPaymentFactura").hide();
 
         $("#cardInfo").hide();
 
@@ -1472,7 +1482,8 @@ if (auth == undefined) {
 
                 allUsers = [...users];
                 users.forEach((user, index) => {
-
+                    user = user.doc;
+                    
                     state = [];
                     let class_name = '';
 
@@ -1529,7 +1540,7 @@ if (auth == undefined) {
                 
                 product_list += `<tr>
             <td><img id="`+ product._id + `"></td>
-            <td><img style="max-height: 50px; max-width: 50px; border: 1px solid #ddd;" src="${product.img == "" ? "./assets/images/default.jpg" : img_path + product.img}" id="product_img"></td>
+            <td style="text-align: center;"><img style="max-height: 50px; max-width: 50px; border: 1px solid #ddd;" src="${product.image}" id="product_img"></td>
             <td>${product.name}</td>
             <td>${settings.symbol} ${product.price}</td>
             <td>${product.stock == 1 ? product.quantity : 'N/A'}</td>
@@ -1648,7 +1659,7 @@ if (auth == undefined) {
                 mac_address = mac;
             });
 
-            formData['app'] = $('#app').find('option:selected').text();
+            formData['app'] = $('#app').val();
             formData['mac'] = mac_address;
             formData['till'] = 1;
 
@@ -1656,7 +1667,7 @@ if (auth == undefined) {
 
             if (formData.percentage != "" && !$.isNumeric(formData.percentage)) {
                 Swal.fire(
-                    'Oops!',
+                    '¡Uy!',
                     'Please make sure the tax value is a number',
                     'warning'
                 );
@@ -1692,20 +1703,20 @@ if (auth == undefined) {
 
             if (formData.till == 0 || formData.till == 1) {
                 Swal.fire(
-                    'Oops!',
+                    '¡Uy!',
                     'Please enter a number greater than 1.',
                     'warning'
                 );
             }
             else {
                 if (isNumeric(formData.till)) {
-                    formData['app'] = $('#app').find('option:selected').text();
+                    formData['app'] = $('#app').val();
                     storage.set('settings', formData);
                     ipcRenderer.send('app-reload', '');
                 }
                 else {
                     Swal.fire(
-                        'Oops!',
+                        '¡Uy!',
                         'Till number must be a number!',
                         'warning'
                     );
@@ -1725,7 +1736,7 @@ if (auth == undefined) {
                 if (formData.password !== atob(user.password)) {
                     if (formData.password != formData.pass) {
                         Swal.fire(
-                            'Oops!',
+                            '¡Uy!',
                             'Passwords do not match!',
                             'warning'
                         );
@@ -1736,7 +1747,7 @@ if (auth == undefined) {
                 if (formData.password != atob(allUsers[user_index].password)) {
                     if (formData.password != formData.pass) {
                         Swal.fire(
-                            'Oops!',
+                            '¡Uy!',
                             'Passwords do not match!',
                             'warning'
                         );
@@ -1787,7 +1798,7 @@ if (auth == undefined) {
 
 
         $('#app').change(function () {
-            if ($(this).find('option:selected').text() == 'Network Point of Sale Terminal') {
+            if ($(this).val() == 'Network Point of Sale Terminal') {
                 $('#net_settings_form').show(500);
                 $('#settings_form').hide(500);
                 macaddress.one(function (err, mac) {
@@ -1865,9 +1876,9 @@ if (auth == undefined) {
                 if (settings.charge_tax == 'on') {
                     $('#charge_tax').prop("checked", true);
                 }
-                if (settings.img != "") {
+                if (settings.logo) {
                     $('#logoname').hide();
-                    $('#current_logo').html(`<img src="${img_path + settings.img}" alt="">`);
+                    $('#current_logo').html(`<img src="${settings.logo}" alt="">`);
                     $('#rmv_logo').show();
                 }
 
@@ -2365,7 +2376,7 @@ $('body').on("submit", "#account", function (e) {
                 }
                 else {
                     Swal.fire(
-                        'Oops!',
+                        '¡Uy!',
                         auth_error,
                         'warning'
                     );

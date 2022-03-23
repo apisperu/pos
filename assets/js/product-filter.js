@@ -114,8 +114,12 @@ $(document).ready(function(){
         }
         if(change <= 0){
             $("#confirmPayment").show();
+            $("#confirmPaymentBoleta").show();
+            $("#confirmPaymentFactura").show();
         }else{
             $("#confirmPayment").hide();
+            $("#confirmPaymentBoleta").hide();
+            $("#confirmPaymentFactura").hide();
         }
     }
 

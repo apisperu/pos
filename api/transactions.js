@@ -6,7 +6,7 @@ const PouchdbFind = require('pouchdb-find');
 
 PouchDB.plugin(PouchdbFind);
 
-let transactionsDB = new PouchDB('db/transactions');
+let transactionsDB = new PouchDB(process.env.DB_HOST + 'transactions');
 
 // transactionsDB.createIndex({
 //   index: {fields: ['_id']}
@@ -16,7 +16,7 @@ app.get("/", function(req, res) {
   res.send("Transactions API");
 });
 
- 
+
 // app.get("/all", function(req, res) {
 //   transactionsDB.allDocs({
 //       include_docs: true

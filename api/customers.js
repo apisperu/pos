@@ -1,6 +1,6 @@
 const app = require( "express" )();
 const PouchDB = require('pouchdb');
-let customerDB = new PouchDB('db/customers');
+let customerDB = new PouchDB(process.env.DB_HOST + 'customers');
 
 app.get( "/", function ( req, res ) {
     res.send( "Customer API" );

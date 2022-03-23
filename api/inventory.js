@@ -3,30 +3,15 @@ const server = require( "http" ).Server( app );
 const bodyParser = require( "body-parser" );
 const Datastore = require( "nedb" );
 const async = require( "async" );
-const fileUpload = require('express-fileupload');
 const multer = require("multer");
 const fs = require('fs');
 
 const PouchDB = require('pouchdb');
-let inventoryDB = new PouchDB('db/inventory');
+let inventoryDB = new PouchDB(process.env.DB_HOST + 'inventory');
 
-const storage = multer.diskStorage({
-    destination: process.env.APPDATA+'/POS/uploads',
-    filename: function(req, file, callback){
-        callback(null, Date.now() + '.jpg'); // 
-    }
-});
-
-let upload = multer({storage: storage});
+let upload = multer();
 
 app.use(bodyParser.json());
- 
-// let inventoryDB = new Datastore( {
-//     filename: process.env.APPDATA+"/POS/server/databases/inventory.db",
-//     autoload: true
-// } );
-
-// inventoryDB.ensureIndex({ fieldName: '_id', unique: true });
 
 app.get( "/", function ( req, res ) {
     res.send( "Inventory API" );
@@ -47,7 +32,8 @@ app.get( "/product/:productId", function ( req, res ) {
 
 app.get( "/products", function ( req, res ) {
     inventoryDB.allDocs({
-        include_docs: true
+        include_docs: true,
+        attachments: true
     }).then(function (result) {
         res.send( result.rows );
     }).catch(function (err) {
@@ -56,30 +42,30 @@ app.get( "/products", function ( req, res ) {
     });
 } );
 
-app.post( "/product", upload.single('imagename'), function ( req, res ) {
+app.post( "/product", upload.single('imagename'), async function ( req, res ) {
 
-    let image = '';
+    // let image = '';
 
-    if(req.body.img != "") {
-        image = req.body.img;        
-    }
+    // if(req.body.img != "") {
+    //     image = req.body.img;        
+    // }
 
-    if(req.file) {
-        image = req.file.filename;  
-    }
+    // if(req.file) {
+    //     image = req.file.filename;  
+    // }
  
-    if(req.body.remove == 1) {
-        const path = './resources/app/public/uploads/product_image/'+ req.body.img;
-        try {
-          fs.unlinkSync(path)
-        } catch(err) {
-          console.error(err)
-        }
+    // if(req.body.remove == 1) {
+    //     const path = './resources/app/public/uploads/product_image/'+ req.body.img;
+    //     try {
+    //       fs.unlinkSync(path)
+    //     } catch(err) {
+    //       console.error(err)
+    //     }
 
-        if(!req.file) {
-            image = '';
-        }
-    }
+    //     if(!req.file) {
+    //         image = '';
+    //     }
+    // }
     
     let Product = {
         _id: (req.body.id).toString(),
@@ -87,34 +73,75 @@ app.post( "/product", upload.single('imagename'), function ( req, res ) {
         category: req.body.category,
         quantity: req.body.quantity == "" ? 0 : req.body.quantity,
         name: req.body.name,
-        stock: req.body.stock == "on" ? 0 : 1,    
-        img: image        
+        stock: req.body.stock == "on" ? 0 : 1
     }
 
-    if(req.body.id == "") { 
-        Product._id = (Math.floor(Date.now() / 1000)).toString();
-        inventoryDB.put({ ...Product }).then(function (result) {
-            res.sendStatus( 200 )
-        }).catch(function (err) {
-            res.status( 500 ).send( err );
-            console.log(err);
-        });
+    
+    if(req.file) {
+        Product._attachments = {
+            'image': {
+                content_type: req.file.mimetype,
+                data: req.file.buffer
+            }
+        }
     }
-    else { 
-        inventoryDB.get((req.body.id).toString()).then(function(response) {
-            return inventoryDB.put({
-            _id: req.body.id.toString(),
-            _rev: response._rev,
-            ...Product,
-            });
-        }).then(function(response) {
+
+    if (req.body.id) {
+        if(req.body.remove === "1") {
+            try {
+                var pro = await inventoryDB.get((req.body.id).toString());
+                await inventoryDB.removeAttachment((req.body.id).toString(), 'image', pro._rev);
+            } catch (err) {
+                res.status( 500 ).send( err );
+                console.log(err);
+            }
+        }
+
+        try {
+            var pro = await inventoryDB.get((req.body.id).toString());
+            await inventoryDB.put({ ...pro, ...Product });
             res.sendStatus( 200 );
-        }).catch(function (err) {
+        } catch (err) {
             res.status( 500 ).send( err );
             console.log(err);
-        });
-
+        }
+    } else {
+        
+        try {
+            Product._id = (Math.floor(Date.now() / 1000)).toString();
+            await inventoryDB.put({ ...Product })
+            res.sendStatus( 200 )
+        } catch (err) {
+            res.status( 500 ).send( err );
+            console.log(err);
+        }
     }
+
+
+    // if(req.body.id == "") { 
+    //     Product._id = (Math.floor(Date.now() / 1000)).toString();
+    //     inventoryDB.put({ ...Product }).then(function (result) {
+    //         res.sendStatus( 200 )
+    //     }).catch(function (err) {
+    //         res.status( 500 ).send( err );
+    //         console.log(err);
+    //     });
+    // }
+    // else { 
+    //     inventoryDB.get((req.body.id).toString()).then(function(response) {
+    //         return inventoryDB.put({
+    //         _id: req.body.id.toString(),
+    //         _rev: response._rev,
+    //         ...Product,
+    //         });
+    //     }).then(function(response) {
+    //         res.sendStatus( 200 );
+    //     }).catch(function (err) {
+    //         res.status( 500 ).send( err );
+    //         console.log(err);
+    //     });
+
+    // }
 
 });
  

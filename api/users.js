@@ -14,15 +14,6 @@ PouchDB.plugin(PouchdbFind);
 
 let usersDB = new PouchDB(process.env.DB_HOST + 'users');
 
-// let usersDB = new Datastore( {
-//     filename: process.env.APPDATA+"/POS/server/databases/users.db",
-//     autoload: true
-// } );
-
-
-// usersDB.ensureIndex({ fieldName: '_id', unique: true });
-
-
 app.get( "/", function ( req, res ) {
     res.send( "Users API" );
 } );
@@ -132,51 +123,76 @@ app.delete( "/user/:userId", function ( req, res ) {
 } );
 
  
-app.post( "/post" , function ( req, res ) {   
-    console.log(req.body);return;
+app.post( "/post" , async function ( req, res ) {   
     let User = { 
-            "username": req.body.username,
-            "password": btoa(req.body.password),
-            "fullname": req.body.fullname,
-            "perm_products": req.body.perm_products == "on" ? 1 : 0,
-            "perm_categories": req.body.perm_categories == "on" ? 1 : 0,
-            "perm_transactions": req.body.perm_transactions == "on" ? 1 : 0,
-            "perm_users": req.body.perm_users == "on" ? 1 : 0,
-            "perm_settings": req.body.perm_settings == "on" ? 1 : 0,
-            "status": ""
+        "username": req.body.username,
+        "password": btoa(req.body.password),
+        "fullname": req.body.fullname,
+        "perm_products": req.body.perm_products == "on" ? 1 : 0,
+        "perm_categories": req.body.perm_categories == "on" ? 1 : 0,
+        "perm_transactions": req.body.perm_transactions == "on" ? 1 : 0,
+        "perm_users": req.body.perm_users == "on" ? 1 : 0,
+        "perm_settings": req.body.perm_settings == "on" ? 1 : 0
+    }
+
+
+    if (req.body.id) {
+
+        try {
+            var user = await usersDB.get((req.body.id).toString());
+            if (!User.password) {
+                delete User.password;
+            }
+            await usersDB.put({ ...user, ...User });
+            res.sendStatus( 200 );
+        } catch (err) {
+            res.status( 500 ).send( err );
+            console.log(err);
         }
-
-    if(req.body.id == "") { 
-       User._id = Math.floor(Date.now() / 1000);
-       usersDB.insert( User, function ( err, user ) {
-            if ( err ) res.status( 500 ).send( req );
-            else res.send( user );
-        });
+    } else {
+        
+        try {
+            User._id = (Math.floor(Date.now() / 1000)).toString();
+            await usersDB.put({ ...User, "status": "" })
+            res.sendStatus( 200 )
+        } catch (err) {
+            res.status( 500 ).send( err );
+            console.log(err);
+        }
     }
-    else { 
-        usersDB.update( {
-            _id: parseInt(req.body.id)
-                    }, {
-                        $set: {
-                            username: req.body.username,
-                            password: btoa(req.body.password),
-                            fullname: req.body.fullname,
-                            perm_products: req.body.perm_products == "on" ? 1 : 0,
-                            perm_categories: req.body.perm_categories == "on" ? 1 : 0,
-                            perm_transactions: req.body.perm_transactions == "on" ? 1 : 0,
-                            perm_users: req.body.perm_users == "on" ? 1 : 0,
-                            perm_settings: req.body.perm_settings == "on" ? 1 : 0
-                        }
-                    }, {}, function (
-            err,
-            numReplaced,
-            user
-        ) {
-            if ( err ) res.status( 500 ).send( err );
-            else res.sendStatus( 200 );
-        } );
 
-    }
+
+    // if(req.body.id == "") { 
+    //    User._id = Math.floor(Date.now() / 1000);
+    //    usersDB.insert( User, function ( err, user ) {
+    //         if ( err ) res.status( 500 ).send( req );
+    //         else res.send( user );
+    //     });
+    // }
+    // else { 
+    //     usersDB.update( {
+    //         _id: parseInt(req.body.id)
+    //                 }, {
+    //                     $set: {
+    //                         username: req.body.username,
+    //                         password: btoa(req.body.password),
+    //                         fullname: req.body.fullname,
+    //                         perm_products: req.body.perm_products == "on" ? 1 : 0,
+    //                         perm_categories: req.body.perm_categories == "on" ? 1 : 0,
+    //                         perm_transactions: req.body.perm_transactions == "on" ? 1 : 0,
+    //                         perm_users: req.body.perm_users == "on" ? 1 : 0,
+    //                         perm_settings: req.body.perm_settings == "on" ? 1 : 0
+    //                     }
+    //                 }, {}, function (
+    //         err,
+    //         numReplaced,
+    //         user
+    //     ) {
+    //         if ( err ) res.status( 500 ).send( err );
+    //         else res.sendStatus( 200 );
+    //     } );
+
+    // }
 
 });
 

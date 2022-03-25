@@ -8,10 +8,6 @@ PouchDB.plugin(PouchdbFind);
 
 let transactionsDB = new PouchDB(process.env.DB_HOST + 'transactions');
 
-// transactionsDB.createIndex({
-//   index: {fields: ['_id']}
-// });
-
 app.get("/", function(req, res) {
   res.send("Transactions API");
 });
@@ -37,13 +33,6 @@ app.get("/on-hold", function(req, res) {
   }).then(function (result) {
     res.send(result)
   })
-
-  // transactionsDB.find(
-  //   { $and: [{ ref_number: {$ne: ""}}, { status: 0  }]},    
-  //   function(err, docs) {
-  //     if (docs) res.send(docs);
-  //   }
-  // );
 });
 
 
@@ -70,7 +59,6 @@ app.get("/by-date", function(req, res) {
 
   let startDate = new Date(req.query.start);
   let endDate = new Date(req.query.end);
-
   
   if(req.query.user == 0 && req.query.till == 0) {
     transactionsDB.find({
@@ -88,7 +76,7 @@ app.get("/by-date", function(req, res) {
 
   if(req.query.user != 0 && req.query.till == 0) {
     transactionsDB.find({
-      selector: { $and: [{ date: { $gte: startDate.toJSON(), $lte: endDate.toJSON() }}, { status: parseInt(req.query.status) }, { user_id: parseInt(req.query.user) }] }
+      selector: { $and: [{ date: { $gte: startDate.toJSON(), $lte: endDate.toJSON() }}, { status: parseInt(req.query.status) }, { user_id: req.query.user }] }
     }).then(function (result) {
       res.send(result)
     })
@@ -118,7 +106,7 @@ app.get("/by-date", function(req, res) {
 
   if(req.query.user != 0 && req.query.till != 0) {
     transactionsDB.find({
-      selector: { $and: [{ date: { $gte: startDate.toJSON(), $lte: endDate.toJSON() }}, { status: parseInt(req.query.status) }, { till: parseInt(req.query.till) }, { user_id: parseInt(req.query.user) }] }
+      selector: { $and: [{ date: { $gte: startDate.toJSON(), $lte: endDate.toJSON() }}, { status: parseInt(req.query.status) }, { till: parseInt(req.query.till) }, { user_id: req.query.user }] }
     }).then(function (result) {
       res.send(result)
     })

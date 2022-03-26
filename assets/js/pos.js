@@ -14,7 +14,6 @@ let holdOrderRev = 0;
 let vat = 0;
 let perms = null;
 let deleteId = 0;
-let paymentType = 0;
 let receipt = '';
 let totalVat = 0;
 let subTotal = 0;
@@ -262,7 +261,6 @@ if (auth == undefined) {
                 });
             });
         }
-
 
         function loadCustomers() {
 
@@ -670,21 +668,11 @@ if (auth == undefined) {
             let change = $("#change").text() == "" ? "" : parseFloat($("#change").text()).toFixed(2);
             let refNumber = $("#refNumber").val();
             let orderNumber = holdOrder;
-            let type = "";
+            let paymentType = JSON.parse($("#paymentType").val())
+            let type = paymentType.name;
             let tax_row = "";
+            let documentType = JSON.parse($("#documentType").val())
 
-
-            switch (paymentType) {
-
-                case 1: type = "Cheque";
-                    break;
-
-                case 2: type = "Card";
-                    break;
-
-                default: type = "Cash";
-
-            }
 
 
             if (paid != "") {
@@ -750,9 +738,10 @@ if (auth == undefined) {
         ${settings.img == "" ? settings.img : '<img style="max-width: 50px;max-width: 100px;" src ="' + settings.logo + '" /><br>'}
             <span style="font-size: 22px;">${settings.store}</span> <br>
             ${settings.address_one} <br>
-            ${settings.address_two} <br>
-            ${settings.contact != '' ? 'Tel: ' + settings.contact + '<br>' : ''} 
-            ${settings.tax != '' ? 'Vat No: ' + settings.tax + '<br>' : ''} 
+            ${settings.address_two ? settings.address_two + '<br>' : '' }
+            ${settings.contact != '' ? 'Teléfono: ' + settings.contact + '<br>' : ''} 
+            ${settings.vat_no != '' ? 'RUC ' + settings.vat_no + '<br>' : ''} 
+            <span style="font-size: 15px; text-transform: uppercase;">${documentType.name}</span> <br />
         </p>
         <hr>
         <left>
@@ -825,6 +814,10 @@ if (auth == undefined) {
                 }
             }
 
+            if ($('#paymentInfo').val()) {
+                paymentType.info = $('#paymentInfo').val();
+            }
+
 
             let data = {
                 order: orderNumber,
@@ -837,8 +830,7 @@ if (auth == undefined) {
                 order_type: 1,
                 items: cart,
                 date: currentTime,
-                payment_type: type,
-                payment_info: $("#paymentInfo").val(),
+                payment_type: paymentType,
                 total: orderTotal,
                 paid: paid,
                 change: change,
@@ -846,7 +838,8 @@ if (auth == undefined) {
                 till: platform.till,
                 mac: platform.mac,
                 user: user.fullname,
-                user_id: user._id
+                user_id: user._id,
+                document_type: documentType,
             }
            
             if (holdOrderRev) {
@@ -1866,7 +1859,7 @@ if (auth == undefined) {
                 $("#address_one").val(settings.address_one);
                 $("#address_two").val(settings.address_two);
                 $("#contact").val(settings.contact);
-                $("#tax").val(settings.tax);
+                $("#vat_no").val(settings.vat_no);
                 $("#symbol").val(settings.symbol);
                 $("#percentage").val(settings.percentage);
                 $("#footer").val(settings.footer);
@@ -1884,13 +1877,22 @@ if (auth == undefined) {
                     return $(this).text() == settings.app;
                 }).prop("selected", true);
 
-                $("#serie").val(settings.serie);
-                $("#numero").val(settings.numero);
+                let ticket = settings.document_types.find(s => s.code === "12");
+                let boleta = settings.document_types.find(s => s.code === "03");
+                let factura = settings.document_types.find(s => s.code === "01");
+                
+
+                $("#serie_t").val(ticket.serie);
+                $("#next_correlative_t").val(ticket.next_correlative);
+
+                $("#serie_b").val(boleta.serie);
+                $("#next_correlative_b").val(boleta.next_correlative);
+
+                $("#serie_f").val(factura.serie);
+                $("#next_correlative_f").val(factura.next_correlative);
+
                 $("#token").val(settings.token);
             }
-
-
-
 
         });
 
@@ -2008,7 +2010,7 @@ function loadTransactions() {
                                 <td>${settings.symbol + trans.total}</td>
                                 <!--<td>${trans.paid == "" ? "" : settings.symbol + trans.paid}</td>-->
                                 <!--<td>${trans.change ? settings.symbol + Math.abs(trans.change).toFixed(2) : ''}</td>-->
-                                <td>${trans.paid == "" ? "" : trans.payment_type == 0 ? "Cash" : 'Card'}</td>
+                                <td>${trans.paid == "" ? "" : trans.payment_type.name}</td>
                                 <!--<td>${trans.till}</td>-->
                                 <td>${trans.user}</td>
                                 <td class="text-center">
@@ -2182,7 +2184,7 @@ $.fn.viewTransaction = function (index) {
     let customer = allTransactions[index].customer == 0 ? 'Seleccione un cliente' : allTransactions[index].customer.username;
     let refNumber = allTransactions[index].ref_number != "" ? allTransactions[index].ref_number : allTransactions[index].order;
     let orderNumber = allTransactions[index].order;
-    let type = "";
+    let type = allTransactions[index].payment_type.name;
     let tax_row = "";
     let items = "";
     let products = allTransactions[index].items;
@@ -2191,16 +2193,6 @@ $.fn.viewTransaction = function (index) {
         items += "<tr><td>" + item.product_name + "</td><td>" + item.quantity + "</td><td>" + settings.symbol + parseFloat(item.price).toFixed(2) + "</td></tr>";
 
     });
-
-
-    switch (allTransactions[index].payment_type) {
-
-        case 2: type = "Card";
-            break;
-
-        default: type = "Cash";
-
-    }
 
 
     if (allTransactions[index].paid != "") {
@@ -2236,11 +2228,12 @@ $.fn.viewTransaction = function (index) {
     receipt = `<div style="font-size: 10px;">                            
         <p style="text-align: center;">
         ${settings.img == "" ? settings.img : '<img style="max-width: 50px;max-width: 100px;" src ="' + settings.logo + '" /><br>'}
-            <span style="font-size: 22px;">${settings.store}</span> <br>
+            <span style="font-size: 17px;">${settings.store}</span> <br>
             ${settings.address_one} <br>
-            ${settings.address_two} <br>
-            ${settings.contact != '' ? 'Tel: ' + settings.contact + '<br>' : ''} 
-            ${settings.tax != '' ? 'Vat No: ' + settings.tax + '<br>' : ''} 
+            ${settings.address_two ? settings.address_two + '<br>' : '' }
+            ${settings.contact != '' ? 'Teléfono: ' + settings.contact + '<br>' : ''} 
+            ${settings.vat_no != '' ? 'RUC ' + settings.vat_no + '<br>' : ''}
+            <span style="font-size: 15px; text-transform: uppercase;">${allTransactions[index].document_type.name}</span> <br />
     </p>
     <hr>
     <left>

@@ -76,7 +76,8 @@ $(document).ready(function(){
 
 
     var $list = $('.list-group-item').click(function () {
-       $list.removeClass('active');
+    //    $list.removeClass('active');
+       $(this).siblings('.list-group-item').removeClass('active');
        $(this).addClass('active');
        if(this.id == 'check'){
             $("#cardInfo").show();

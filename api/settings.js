@@ -28,14 +28,19 @@ app.post( "/", upload.single('imagename'), async function ( req, res ) {
             "address_one": req.body.address_one,
             "address_two":req.body.address_two,
             "contact": req.body.contact,
-            "tax": req.body.tax,
+            "vat_no": req.body.vat_no,
             "symbol": req.body.symbol,
             "percentage": req.body.percentage,
             "charge_tax": req.body.charge_tax,
             "footer": req.body.footer,
             "serie": req.body.serie,
-            "numero": req.body.numero,
-            "token": req.body.token
+            "next_correlative": req.body.next_correlative,
+            "token": req.body.token,
+            "document_types": [
+                { "code": "12", "name": "Ticket", "serie": req.body.serie_t, "next_correlative": req.body.next_correlative_t},
+                { "code": "03", "name": "Boleta Electrónica", "serie": req.body.serie_b, "next_correlative": req.body.next_correlative_b },
+                { "code": "01", "name": "Factura Electrónica", "serie": req.body.serie_f, "next_correlative": req.body.next_correlative_f }
+            ]
         }       
     }
 

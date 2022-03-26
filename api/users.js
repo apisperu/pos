@@ -1,15 +1,10 @@
 const app = require( "express")();
-// const server = require( "http" ).Server( app );
-// const bodyParser = require( "body-parser" );
 const PouchDB = require('pouchdb');
-// const Datastore = require( "nedb" );
 const btoa = require('btoa');
-// app.use( bodyParser.json() );
 
 const PouchdbFind = require('pouchdb-find');
 
 PouchDB.plugin(PouchdbFind);
-
 
 
 let usersDB = new PouchDB(process.env.DB_HOST + 'users');
@@ -160,39 +155,6 @@ app.post( "/post" , async function ( req, res ) {
             console.log(err);
         }
     }
-
-
-    // if(req.body.id == "") { 
-    //    User._id = Math.floor(Date.now() / 1000);
-    //    usersDB.insert( User, function ( err, user ) {
-    //         if ( err ) res.status( 500 ).send( req );
-    //         else res.send( user );
-    //     });
-    // }
-    // else { 
-    //     usersDB.update( {
-    //         _id: parseInt(req.body.id)
-    //                 }, {
-    //                     $set: {
-    //                         username: req.body.username,
-    //                         password: btoa(req.body.password),
-    //                         fullname: req.body.fullname,
-    //                         perm_products: req.body.perm_products == "on" ? 1 : 0,
-    //                         perm_categories: req.body.perm_categories == "on" ? 1 : 0,
-    //                         perm_transactions: req.body.perm_transactions == "on" ? 1 : 0,
-    //                         perm_users: req.body.perm_users == "on" ? 1 : 0,
-    //                         perm_settings: req.body.perm_settings == "on" ? 1 : 0
-    //                     }
-    //                 }, {}, function (
-    //         err,
-    //         numReplaced,
-    //         user
-    //     ) {
-    //         if ( err ) res.status( 500 ).send( err );
-    //         else res.sendStatus( 200 );
-    //     } );
-
-    // }
 
 });
 

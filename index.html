@@ -397,17 +397,23 @@
                   <div class="row">
                       <div class="col-md-4">
                           <div class="list-group">
-                              <a href="javascript:void(0)" id="cash" onclick="paymentType = 1" class="list-group-item active">
-                                  Efectivo
-                              </a>
-                            <a href="javascript:void(0)" id="card" onclick="paymentType = 3" class="list-group-item">Tarjeta</a>
+                              <a href="javascript:void(0)" id="cash" onclick="$('#paymentType').val(JSON.stringify({ 'name': 'Efectivo' }))" class="list-group-item active">Efectivo</a>
+                              <a href="javascript:void(0)" id="card" onclick="$('#paymentType').val(JSON.stringify({ 'name': 'Tarjeta' }))" class="list-group-item">Tarjeta</a>
+                              <input type="hidden" id="paymentType" value='{ "name": "Efectivo" }'/>
                           </div>
                           <br/>
                           <br/>
                           <div class="list-group">
-                            <a href="javascript:void(0)" onclick="documentType = '12'" class="list-group-item">Ticket</a>
-                            <a href="javascript:void(0)" onclick="documentType = '03'" class="list-group-item active">Boleta Electrónica</a>
-                            <a href="javascript:void(0)" onclick="documentType = '01'" class="list-group-item">Factura Electrónica</a>
+                            <a href="javascript:void(0)" onclick="$('#documentType').val(JSON.stringify({'code': '12', 'name': 'Ticket'})); $('#confirmPayment>b').text('TICKET');" class="list-group-item active">Ticket</a>
+                            <a href="javascript:void(0)" onclick="$('#documentType').val(JSON.stringify({'code': '03', 'name': 'Boleta Electrónica'})); $('#confirmPayment>b').text('BOLETA');" class="list-group-item ">
+                                <span class="glyphicon glyphicon-cloud-upload" aria-hidden="true"></span>
+                                <b>Boleta</b> Electrónica
+                            </a>
+                            <a href="javascript:void(0)" onclick="$('#documentType').val(JSON.stringify({'code': '01', 'name': 'Factura Electrónica'})); $('#confirmPayment>b').text('FACTURA');" class="list-group-item">
+                                <span class="glyphicon glyphicon-cloud-upload" aria-hidden="true"></span>
+                                <b>Factura</b> Electrónica
+                            </a>
+                            <input type="hidden" id="documentType" value='{"code": "12", "name": "TICKET"}'/>
                         </div>
                       </div>
                       <div class="col-md-8">
@@ -493,7 +499,7 @@
                         <div class="btn btn-primary btn-block btn-lg waves-effect waves-light">Vuelto <span id="change_curr"></span><span id="change"></span> </div>
                       </div>
                         <div class="col-md-3">
-                            <button type="button" id="confirmPayment" class="btn btn-default btn-block btn-lg waves-effect waves-light">Venta <b>Ticket</b></button>
+                            <button type="button" id="confirmPayment" class="btn btn-default btn-block btn-lg waves-effect waves-light">Venta <b>TICKET</b></button>
                         </div>
                   </div>
                   
@@ -816,12 +822,12 @@
     <div class="modal-dialog modal-sm">
         <div class="modal-content">
             <div class="modal-header">
-                <button class="btn btn-sm btn-default" onclick="$(this).print()">Print</button> <br> <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <button class="btn btn-sm btn-default" onclick="$(this).print()">Imprimir</button> <br> <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
               </div>
             <div class="modal-body" id="viewTransaction">                 
             </div>
 
-            <div class="alert alert-danger" style="font-size:11px;">Right-Click and Reload if you get stuck after cancelling a print.</div>
+            <div class="alert alert-danger" style="font-size:11px;">Haga clic con el botón derecho y Recargue si se queda atascado después de cancelar una impresión.</div>
         </div>
     </div>
 </div>
@@ -896,7 +902,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="userName">Dirección 2</label>
-                                    <input type="text" required="required"  name="address_two" class="form-control" id="address_two">
+                                    <input type="text"  name="address_two" class="form-control" id="address_two">
                                 </div>
                                 <div class="form-group">
                                     <label for="userName">Número de contacto</label>
@@ -904,8 +910,8 @@
                                     <input type="text" name="contact" class="form-control" id="contact">
                                 </div>
                                 <div class="form-group">
-                                    <label for="userName">Vat Number</label>
-                                    <input type="text" name="tax" parsley-trigger="change" class="form-control" id="tax">
+                                    <label for="userName">RUC</label>
+                                    <input type="text" name="vat_no" parsley-trigger="change" class="form-control" id="vat_no">
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -951,15 +957,43 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Serie</label>
-                                    <input type="text" required="required"  name="serie" class="form-control" id="serie">
+                                    <label>Serie Ticket</label>
+                                    <input type="text" required="required"  name="serie_t" class="form-control" id="serie_t">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Número de Correlativo</label>
-                                    <div style="width: 80%; float:left;">
-                                    <input type="text" required="required" name="numero" class="form-control" id="numero">
+                                    <label>Próximo correlativo Ticket</label>
+                                    <div>
+                                    <input type="text" required="required" name="next_correlative_t" class="form-control" id="next_correlative_t">
+                                    </div>
+                                </div>                                                                 
+                            </div> 
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Serie Boleta</label>
+                                    <input type="text" required="required"  name="serie_b" class="form-control" id="serie_b">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Próximo correlativo Boleta</label>
+                                    <div>
+                                    <input type="text" required="required" name="next_correlative_b" class="form-control" id="next_correlative_b">
+                                    </div>
+                                </div>                                                                 
+                            </div> 
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Serie Factura</label>
+                                    <input type="text" required="required"  name="serie_f" class="form-control" id="serie_f">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Próximo correlativo Factura</label>
+                                    <div>
+                                    <input type="text" required="required" name="next_correlative_f" class="form-control" id="next_correlative_f">
                                     </div>
                                 </div>                                                                 
                             </div> 

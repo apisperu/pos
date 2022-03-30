@@ -116,6 +116,19 @@ async function xmlInvoice(data) {
     })
 }
 
+async function pdfInvoice(data) {
+  let settings = await settingsDB.get('1');
+  let token = settings.settings.token;
+
+  return axios.post('https://facturacion.apisperu.com/api/v1/invoice/pdf', data, {
+      headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+      },
+      responseType: 'arraybuffer'
+  })
+}
+
 function fetchBaja(data, token){
   return fetch('https://facturacion.apisperu.com/api/v1/voided/send', {
       method: 'POST',
@@ -251,5 +264,6 @@ function formatDate(date){
 module.exports = {
     jsonInvoice,
     sendInvoice,
-    xmlInvoice
+    xmlInvoice,
+    pdfInvoice
 }

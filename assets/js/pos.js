@@ -2047,7 +2047,7 @@ function loadTransactions() {
                     trClass = 'warning';
                     suntaState = 'Observado';
                 }
-
+                
                 counter++;
                 transaction_list += `<tr class="${trClass}">
                                 <!--<td>${trans.order}</td>-->
@@ -2069,8 +2069,8 @@ function loadTransactions() {
                                         <ul class="dropdown-menu">
                                             ${!trans.paid ? '<li class="disabled"><a href="#">Reimprimir</a></li>' : '<li><a href="#" onClick="$(this).viewTransaction(' + index + ')">Reimprimir</a></li>'}
                                             <li><a href="#" onClick="$(this).downloadXML('${index}')">Descargar XML</a></li>
-                                            <li><a href="#">Descargar PDF</a></li>
-                                            <li><a href="#">Descargar CDR</a></li>
+                                            <li><a href="#" onClick="$(this).downloadPDF('${index}')">Descargar PDF</a></li>
+                                            <li><a href="#" onClick="$(this).downloadCDR('${index}')">Descargar CDR</a></li>
                                             <li role="separator" class="divider"></li>
                                             <li><a href="#">Cambiar Estado</a></li>
                                             <li><a href="#">Reenviar a Sunat</a></li>
@@ -2341,23 +2341,60 @@ $.fn.viewTransaction = function (index) {
 
 }
 
-$.fn.downloadXML = function(index) {
-    let id = allTransactions[index]._id;
-    $.post( api + "transactions/" + id + "/xml", function( data ) {
-        console.log(data)
-        // download('asd.xml', data)
-    });
-}
-
-function download(filename, text) {
+function downloadx(filename, text) {
     var element = document.createElement('a');
     element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
     element.setAttribute('download', filename);
-    element.style.display = 'none';
-    document.body.appendChild(element);
     element.click();
-    document.body.removeChild(element);
-  }
+}
+
+function downloadp(filename, data) {
+    var link = document.createElement('a');
+    link.download = filename;
+    link.href = window.URL.createObjectURL(data);
+    link.click();
+}
+
+
+$.fn.downloadXML = function(index) {
+    let id = allTransactions[index]._id;
+    let serie = allTransactions[index].serie;
+    let correlative = allTransactions[index].correlative;
+
+    $.ajax({
+        type: 'GET',
+        url: api + "transactions/" + id + "/xml"
+    }).done(function(data){
+        downloadx(serie + '-' + correlative + '.xml', data)
+    })
+}
+
+$.fn.downloadPDF = function(index) {
+    let id = allTransactions[index]._id;
+    let serie = allTransactions[index].serie;
+    let correlative = allTransactions[index].correlative;
+
+    $.ajax({
+        xhrFields: {
+           responseType: 'blob' 
+        },
+        type:'GET',
+        url:api + "transactions/" + id + "/pdf"
+    }).done(function(data){
+        downloadp(serie + '-' + correlative + '.pdf', data)
+    });
+}
+
+$.fn.downloadCDR = function(index) {
+    let data = allTransactions[index].sunat_response.cdrZip;
+    let serie = allTransactions[index].serie;
+    let correlative = allTransactions[index].correlative;
+    
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;base64,' + data);
+    element.setAttribute('download', serie + '-' + correlative + '.zip');
+    element.click();
+}
 
 
 $('#status').change(function () {

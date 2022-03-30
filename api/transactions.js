@@ -244,7 +244,7 @@ app.get("/:transactionId", function(req, res) {
   });
 });
 
-app.post("/:transactionId/xml", async function(req, res) {
+app.get("/:transactionId/xml", async function(req, res) {
   let id  = req.params.transactionId;
 
   let transaction = await transactionsDB.get(id);
@@ -252,8 +252,23 @@ app.post("/:transactionId/xml", async function(req, res) {
   let json = await apisperu.jsonInvoice(transaction);
 
   apisperu.xmlInvoice(json).then(r => {
-    res.header("Content-Type", "application/xml");
-    res.status(200).send(r.data);
+    res.end(r.data);
+  }).catch(err => {
+    res.status( 500 ).send( err );
+  });
+});
+
+
+app.get("/:transactionId/pdf", async function(req, res) {
+  let id  = req.params.transactionId;
+
+  let transaction = await transactionsDB.get(id);
+
+  let json = await apisperu.jsonInvoice(transaction);
+
+  apisperu.pdfInvoice(json).then(r => {
+    res.header("Content-Type", "application/pdf");
+    res.end(r.data);
   }).catch(err => {
     res.status( 500 ).send( err );
   });

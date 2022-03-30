@@ -1,8 +1,11 @@
-let app = require("express")();
+const app = require("express")();
 let server = require("http").Server(app);
 let Inventory = require("./inventory");
+let Settings = require("./settings");
+let apisperu = require("../helpers/apisperu");
 const PouchDB = require('pouchdb');
 const PouchdbFind = require('pouchdb-find');
+const apiResults = require('../helpers/apiResults');
 
 PouchDB.plugin(PouchdbFind);
 
@@ -62,7 +65,8 @@ app.get("/by-date", function(req, res) {
   
   if(req.query.user == 0 && req.query.till == 0) {
     transactionsDB.find({
-      selector: { $and: [{ date: { $gte: startDate.toJSON(), $lte: endDate.toJSON() }}, { status: parseInt(req.query.status) }] }
+      selector: { $and: [{ date: { $gte: startDate.toJSON(), $lte: endDate.toJSON() }}, { status: parseInt(req.query.status) }] },
+      sort: [{_id: 'desc'}]
     }).then(function (result) {
       res.send(result)
     })
@@ -76,7 +80,8 @@ app.get("/by-date", function(req, res) {
 
   if(req.query.user != 0 && req.query.till == 0) {
     transactionsDB.find({
-      selector: { $and: [{ date: { $gte: startDate.toJSON(), $lte: endDate.toJSON() }}, { status: parseInt(req.query.status) }, { user_id: req.query.user }] }
+      selector: { $and: [{ date: { $gte: startDate.toJSON(), $lte: endDate.toJSON() }}, { status: parseInt(req.query.status) }, { user_id: req.query.user }] },
+      sort: [{id: 'desc'}]
     }).then(function (result) {
       res.send(result)
     })
@@ -91,7 +96,8 @@ app.get("/by-date", function(req, res) {
 
   if(req.query.user == 0 && req.query.till != 0) {
     transactionsDB.find({
-      selector: { $and: [{ date: { $gte: startDate.toJSON(), $lte: endDate.toJSON() }}, { status: parseInt(req.query.status) }, { till: parseInt(req.query.till) }] }
+      selector: { $and: [{ date: { $gte: startDate.toJSON(), $lte: endDate.toJSON() }}, { status: parseInt(req.query.status) }, { till: parseInt(req.query.till) }] },
+      sort: [{id: 'desc'}]
     }).then(function (result) {
       res.send(result)
     })
@@ -106,7 +112,8 @@ app.get("/by-date", function(req, res) {
 
   if(req.query.user != 0 && req.query.till != 0) {
     transactionsDB.find({
-      selector: { $and: [{ date: { $gte: startDate.toJSON(), $lte: endDate.toJSON() }}, { status: parseInt(req.query.status) }, { till: parseInt(req.query.till) }, { user_id: req.query.user }] }
+      selector: { $and: [{ date: { $gte: startDate.toJSON(), $lte: endDate.toJSON() }}, { status: parseInt(req.query.status) }, { till: parseInt(req.query.till) }, { user_id: req.query.user }] },
+      sort: [{id: 'desc'}]
     }).then(function (result) {
       res.send(result)
     })
@@ -123,75 +130,93 @@ app.get("/by-date", function(req, res) {
 
 
 
-app.post("/new", function(req, res) {
- 
+app.post("/new", async function(req, res) {
   let newTransaction = req.body;
-  // transactionsDB.insert(newTransaction, function(err, transaction) {    
-  //   if (err) res.status(500).send(err);
-  //   else {
-  //    res.sendStatus(200);
 
-  //    if(newTransaction.paid >= newTransaction.total){
-  //       Inventory.decrementInventory(newTransaction.items);
-  //    }
-     
-  //   }
-  // });
+  // obtener serie y correlativo
+  if (newTransaction.document_type && newTransaction.status) {
+    let documentType = await Settings.getDocumentType(newTransaction.document_type.code)
+    newTransaction.serie = documentType.serie;
+    newTransaction.correlative = documentType.next_correlative;
+  }
 
   transactionsDB.put({
     ...newTransaction,
     _id: newTransaction._id.toString(),
-  }).then(function (result) {
+  }).then(async function (result) {
     if(newTransaction.paid >= newTransaction.total){
       Inventory.decrementInventory(newTransaction.items);
     }
+    
+    // Emitir a sunat
+    if (newTransaction.document_type && newTransaction.document_type.send_sunat) {
+      let json = await apisperu.jsonInvoice(newTransaction);
 
-    res.sendStatus( 200 )
+      apisperu.sendInvoice(json).then(r => {
+        apiResults.invoiceResult(r.data, result.id, json)
+      }).catch(err => {
+        console.log(err);
+      });
+    }
+
+    // Aumentar al siguiente correlativo
+    if (newTransaction.document_type && newTransaction.status) {
+      await Settings.addCorrelative(newTransaction.document_type.code)
+    }
+    
+    res.json( newTransaction )
   }).catch(function (err) {
-      res.status( 500 ).send( err );
-      console.log(err);
+    res.status( 500 ).send( err );
+    console.log(err);
   });
 });
 
 
 
-app.put("/new", function(req, res) {
+app.put("/new", async function(req, res) {
 
   let oderId = req.body._id.toString();
   let newTransaction = req.body;
-  // transactionsDB.update( {
-  //     _id: oderId
-  // }, req.body, {}, function (
-  //     err,
-  //     numReplaced,
-  //     order
-  // ) {
-  //     if ( err ) res.status( 500 ).send( err );
-  //     else res.sendStatus( 200 );
-  // } );
+
+  // obtener serie y correlativo
+  if (newTransaction.document_type && newTransaction.status) {
+    let documentType = await Settings.getDocumentType(newTransaction.document_type.code)
+    newTransaction.serie = documentType.serie;
+    newTransaction.correlative = documentType.next_correlative;
+  }
 
   transactionsDB.get(oderId).then(doc => {
     return transactionsDB.put({
-      _id: '_id',
-      _rev: doc._rev,
+      ...doc,
       ...newTransaction
     });
-  }).then(function(response) {
-    // handle response
+  }).then(async function(result) {
+    if(newTransaction.paid >= newTransaction.total){
+      Inventory.decrementInventory(newTransaction.items);
+    }
+
+    // Emitir a sunat
+    if (newTransaction.document_type && newTransaction.document_type.send_sunat) {
+      let json = await apisperu.jsonInvoice(newTransaction);
+
+      apisperu.sendInvoice(json).then(r => {
+        apiResults.invoiceResult(r.data, result.id, json)
+      }).catch(err => {
+        console.log(err);
+      });
+    }
+
+    // Aumentar al siguiente correlativo
+    if (newTransaction.document_type && newTransaction.status) {
+      await Settings.addCorrelative(newTransaction.document_type.code)
+    }
+
+    res.json( newTransaction )
   }).catch(function (err) {
+    res.status( 500 ).send( err );
     console.log(err);
   });
 
-
-  // transactionsDB.put({
-  //   ...newTransaction,
-  //   _id: oderId,
-  // }).then(function (result) {
-  //   res.sendStatus( 200 )
-  // }).catch(function (err) {
-  //     res.status( 500 ).send( err );
-  //     console.log(err);
-  // });
 });
 
 
@@ -218,5 +243,21 @@ app.get("/:transactionId", function(req, res) {
     if (doc) res.send(doc[0]);
   });
 });
+
+app.post("/:transactionId/xml", async function(req, res) {
+  let id  = req.params.transactionId;
+
+  let transaction = await transactionsDB.get(id);
+
+  let json = await apisperu.jsonInvoice(transaction);
+
+  apisperu.xmlInvoice(json).then(r => {
+    res.header("Content-Type", "application/xml");
+    res.status(200).send(r.data);
+  }).catch(err => {
+    res.status( 500 ).send( err );
+  });
+});
+
 
 module.exports = app;

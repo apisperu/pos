@@ -1,85 +1,118 @@
 const dotenv = require('dotenv');
+const moment = require('moment');
+const aLetras = require('./numeroALetras')
+const axios = require('axios');
+const PouchDB = require('pouchdb');
+let settingsDB = new PouchDB(process.env.DB_HOST + 'settings');
 
 
-function configFatura(data){
-    
-    const boletaData = {
+async function jsonInvoice(data){
+    let settings = await settingsDB.get('1');
+    settings = settings.settings;
+
+    let json = {
         "ublVersion": "2.1",
         "tipoOperacion": "0101",
-        "tipoDoc": "03",
-        "serie": "B001",
-        "correlativo": data.correlativo,
-        "fechaEmision": new Date("Y-m-dTH:i:s"),
+        "tipoDoc": data.document_type.code,
+        "serie": data.serie,
+        "correlativo": data.correlative,
+        "fechaEmision": moment(new Date(data.date)).format('YYYY-MM-DDTHH:mm:ss-05:00'),
         "formaPago": {
           "moneda": "PEN",
           "tipo": "Contado"
         },
         "tipoMoneda": "PEN",
         "client": {
-          "tipoDoc": String(data.cliente[0]),
-          "numDoc": Number(data.cliente[1]),
-          "rznSocial": String(data.cliente[2]),
+          "tipoDoc": data.customer.document_type.code,
+          "numDoc": data.customer.document_type.number,
+          "rznSocial": data.customer.name,
           "address": {
-            "direccion": "LIMA",
-            "provincia": "LIMA",
-            "departamento": "LIMA",
-            "distrito": "LIMA",
-            "ubigueo": "150101"
+            "direccion": data.customer.address.street,
+            "provincia": data.customer.address.state,
+            "departamento": data.customer.address.city,
+            "distrito": data.customer.address.district,
+            "ubigueo": data.customer.address.zip
           }
         },
         "company": {
-          "ruc": 10064782261,
-          "razonSocial": "Raúl Fernando Luna Toro",
-          "nombreComercial": "ewforex.net",
+          "ruc": settings.vat_no,
+          "razonSocial": settings.legal_name,
+          "nombreComercial": settings.tradename,
           "address": {
-            "direccion": "Av del éjercito 768, Miraflores",
-            "provincia": "LIMA",
-            "departamento": "LIMA",
-            "distrito": "LIMA",
-            "ubigueo": "150101"
+            "direccion": settings.address.street,
+            "provincia": settings.address.state,
+            "departamento": settings.address.city,
+            "distrito": settings.address.district,
+            "ubigueo": settings.address.zip
           }
         },
-        "mtoOperExoneradas": data.recibe,
-        "mtoIGV": 0,
-        "valorVenta": data.recibe,
-        "totalImpuestos": 0,
-        "subTotal": data.recibe,
-        "mtoImpVenta": data.recibe,
-        "details": [
-          {
-            "codProducto": "P001",
-            "unidad": "NIU",
-            "descripcion": data.tipo,
-            "cantidad": data.monto,
-            "mtoValorUnitario": data.cotizacion,
-            "mtoValorVenta": data.recibe,
-            "mtoBaseIgv": data.recibe,
-            "porcentajeIgv": 0,
-            "igv": 0,
-            "tipAfeIgv": 20,
-            "totalImpuestos": 0,
-            "mtoPrecioUnitario": data.cotizacion
-          }
-        ],
+        "mtoOperGravadas": data.subtotal,
+        "mtoIGV": data.tax,
+        "valorVenta": data.subtotal,
+        "totalImpuestos": data.tax,
+        "subTotal": data.total,
+        "mtoImpVenta": data.total,
         "legends": [
           {
             "code": "1000",
-            "value": data.montoT
+            "value": aLetras.numeroALetras(data.total)
           }
         ]
     }
-    console.log(boletaData)
-    return boletaData;
+
+    json.details = [];
+
+    for (let i = 0; i < data.items.length; i++) {
+        let item = data.items[i];
+        let valorVenta = (parseFloat(item.quantity) * parseFloat(item.price));
+        let igv = (valorVenta * settings.percentage) / 100;
+        let precioUnitario = (valorVenta + igv) / item.quantity;
+
+        json.details.push({
+            "codProducto": item.id,
+            "unidad": "NIU",
+            "descripcion": item.product_name,
+            "cantidad": item.quantity,
+            "mtoValorUnitario": item.price,
+            "mtoValorVenta": valorVenta.toFixed(2),
+            "mtoBaseIgv": valorVenta.toFixed(2),
+            "porcentajeIgv": settings.percentage,
+            "igv": igv.toFixed(2),
+            "tipAfeIgv": 10,
+            "totalImpuestos": igv.toFixed(2),
+            "mtoPrecioUnitario": precioUnitario.toFixed(2)
+        })
+        
+    }
+
+    if (settings.charge_tax) {
+
+    }
+
+    return json;
 }
 
-function fetchFactura(data, token){
-    return fetch('https://facturacion.apisperu.com/api/v1/invoice/send', {
-        method: 'POST',
+async function sendInvoice(data){
+    let settings = await settingsDB.get('1');
+    let token = settings.settings.token;
+
+    return axios.post('https://facturacion.apisperu.com/api/v1/invoice/send', data, {
         headers: {
-        'Content-Type': 'application/json',
-        'Authorization': token
-        },
-        body: JSON.stringify(data)
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        }
+    })
+}
+
+async function xmlInvoice(data) {
+    let settings = await settingsDB.get('1');
+    let token = settings.settings.token;
+
+    return axios.post('https://facturacion.apisperu.com/api/v1/invoice/xml', data, {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        }
     })
 }
 
@@ -213,4 +246,10 @@ function fetchPdf(data, token){
 function formatDate(date){
     
   return formatDate;
+}
+
+module.exports = {
+    jsonInvoice,
+    sendInvoice,
+    xmlInvoice
 }

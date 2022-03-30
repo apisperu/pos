@@ -38,6 +38,7 @@ let jsPDF = require('jspdf');
 let html2canvas = require('html2canvas');
 let JsBarcode = require('jsbarcode');
 let macaddress = require('macaddress');
+const { exit } = require('process');
 let categories = [];
 let holdOrderList = [];
 let customerOrderList = [];
@@ -239,12 +240,11 @@ if (auth == undefined) {
                 });
 
                 categories.forEach(category => {
-
                     let c = allCategories.filter(function (ctg) {
-                        return ctg._id == category;
+                        return ctg.id == category;
                     })
 
-                    $('#categories').append(`<button type="button" id="${category}" class="btn btn-categories btn-white waves-effect waves-light">${c.length > 0 ? c[0].name : ''}</button> `);
+                    $('#categories').append(`<button type="button" id="${category}" class="btn btn-categories btn-white waves-effect waves-light">${c.length > 0 ? c[0].doc.name : ''}</button> `);
                 });
 
             });
@@ -266,11 +266,13 @@ if (auth == undefined) {
 
             $.get(api + 'customers/all', function (customers) {
                 
-                $('#customer').html(`<option value="0" selected="selected">Seleccione un cliente</option>`);
+                $('#customer').html(`<option value="" selected="selected">Seleccione un cliente</option>`);
 
                 customers.forEach(cust => {
                     cust = cust.doc;
-                    let customer = `<option value='{"id": ${cust._id}, "name": "${cust.name}"}'>${cust.name}</option>`;
+                    cust.id = cust._id;
+
+                    let customer = `<option value='${JSON.stringify(cust)}'>${cust.name}</option>`;
                     $('#customer').append(customer);
                 });
 
@@ -615,6 +617,16 @@ if (auth == undefined) {
 
 
         $("#payButton").on('click', function () {
+            if (!$("#customer").val()) {
+                Swal.fire(
+                    '¡Uy!',
+                    '¡Debe seleccionar un cliente!',
+                    'warning'
+                );
+
+                return;
+            }
+
             if (cart.length != 0) {
                 $("#paymentModel").modal('toggle');
             } else {
@@ -662,7 +674,7 @@ if (auth == undefined) {
             let currentTime = new Date(moment());
 
             let discount = $("#inputDiscount").val();
-            let customer = JSON.parse($("#customer").val());
+            let customer = $("#customer").val() ? JSON.parse($("#customer").val()) : {};
             let date = moment(currentTime).format("YYYY-MM-DD HH:mm:ss");
             let paid = $("#payment").val() == "" ? "" : parseFloat($("#payment").val()).toFixed(2);
             let change = $("#change").text() == "" ? "" : parseFloat($("#change").text()).toFixed(2);
@@ -673,21 +685,19 @@ if (auth == undefined) {
             let tax_row = "";
             let documentType = JSON.parse($("#documentType").val())
 
-
-
             if (paid != "") {
                 payment = `<tr>
-                        <td>Paid</td>
+                        <td>Pagado</td>
                         <td>:</td>
                         <td>${settings.symbol + paid}</td>
                     </tr>
                     <tr>
-                        <td>Change</td>
+                        <td>Vuelto</td>
                         <td>:</td>
                         <td>${settings.symbol + Math.abs(change).toFixed(2)}</td>
                     </tr>
                     <tr>
-                        <td>Method</td>
+                        <td>Método</td>
                         <td>:</td>
                         <td>${type}</td>
                     </tr>`
@@ -705,17 +715,18 @@ if (auth == undefined) {
 
 
 
-            if (status == 0) {
-
+            if (status === 0) {
                 if ($("#customer").val() == 0 && $("#refNumber").val() == "") {
-                    Swal.fire(
-                        '¡Referencia requerida!',
-                        '¡Debe seleccionar un cliente <br> o ingrese una referencia!',
-                        'warning'
+                Swal.fire(
+                    '¡Referencia requerida!',
+                    '¡Debe seleccionar un cliente <br> o ingrese una referencia!',
+                    'warning'
                     )
-
+                    
                     return;
                 }
+
+                documentType = {};
             }
 
 
@@ -736,19 +747,20 @@ if (auth == undefined) {
             receipt = `<div style="font-size: 10px;">                            
         <p style="text-align: center;">
         ${settings.img == "" ? settings.img : '<img style="max-width: 50px;max-width: 100px;" src ="' + settings.logo + '" /><br>'}
-            <span style="font-size: 22px;">${settings.store}</span> <br>
-            ${settings.address_one} <br>
-            ${settings.address_two ? settings.address_two + '<br>' : '' }
+            <span style="font-size: 22px;">${settings.legal_name}</span> <br>
+            ${settings.address.street} ${settings.address.district} ${settings.address.city} ${settings.address.state}<br>
             ${settings.contact != '' ? 'Teléfono: ' + settings.contact + '<br>' : ''} 
             ${settings.vat_no != '' ? 'RUC ' + settings.vat_no + '<br>' : ''} 
-            <span style="font-size: 15px; text-transform: uppercase;">${documentType.name}</span> <br />
+            ${documentType.name ? '<span style="font-size: 15px; text-transform: uppercase;">' + documentType.name + '</span> <br />' : ''}
+            <span style="font-size: 15px; text-transform: uppercase;" id="serieCorrelativo"></span> <br />
+
         </p>
         <hr>
         <left>
             <p>
             Pedido No : ${orderNumber} <br>
-            Ref No : ${refNumber == "" ? orderNumber : refNumber} <br>
-            Cliente : ${customer == 0 ? 'Seleccione un cliente' : customer.name} <br>
+            <!--Ref No : ${refNumber == "" ? orderNumber : refNumber} <br>-->
+            Cliente : ${customer.name || ''} <br>
             Cajero : ${user.fullname} <br>
             Fecha : ${date}<br>
             </p>
@@ -771,11 +783,11 @@ if (auth == undefined) {
                 <td>:</td>
                 <td><b>${settings.symbol}${subTotal.toFixed(2)}</b></td>
             </tr>
-            <tr>
+            <!--<tr>
                 <td>Descuento</td>
                 <td>:</td>
                 <td>${discount > 0 ? settings.symbol + parseFloat(discount).toFixed(2) : ''}</td>
-            </tr>
+            </tr>-->
             
             ${tax_row}
         
@@ -857,6 +869,10 @@ if (auth == undefined) {
                     cart = [];
                     $('#viewTransaction').html('');
                     $('#viewTransaction').html(receipt);
+                    // insertar correlativo
+                    if (data.serie && data.correlative) {
+                        $('#serieCorrelativo').html('<b>' + data.serie + '-' + data.correlative + '</b>');
+                    }
                     $('#orderModal').modal('show');
                     loadProducts();
                     loadCustomers();
@@ -1080,7 +1096,17 @@ if (auth == undefined) {
                 name: $('#userName').val(),
                 phone: $('#phoneNumber').val(),
                 email: $('#emailAddress').val(),
-                address: $('#userAddress').val()
+                document_type: {
+                    code: $('#document_code').val(),
+                    number:$('#document_number').val()
+                },
+                address: {
+                    street: $('#customer_street').val(),
+                    state: $('#customer_state').val(),
+                    city: $('#customer_city').val(),
+                    district: $('#customer_district').val(),
+                    zip: $('#customer_zip').val(),
+                }
             }
 
             $.ajax({
@@ -1856,8 +1882,13 @@ if (auth == undefined) {
 
                 $("#settings_id").val("1");
                 $("#store").val(settings.store);
-                $("#address_one").val(settings.address_one);
-                $("#address_two").val(settings.address_two);
+                $("#legal_name").val(settings.legal_name);
+                $("#tradename").val(settings.tradename);
+                $("#street").val(settings.address && settings.address.street);
+                $("#state").val(settings.address && settings.address.state);
+                $("#city").val(settings.address && settings.address.city);
+                $("#district").val(settings.address && settings.address.district);
+                $("#zip").val(settings.address && settings.address.zip);
                 $("#contact").val(settings.contact);
                 $("#vat_no").val(settings.vat_no);
                 $("#symbol").val(settings.symbol);
@@ -2003,19 +2034,32 @@ function loadTransactions() {
                     users.push(trans.user_id);
                 }
 
+                let trClass = '', suntaState = '';
+                if (trans.sunat_state === 'success') {
+                    trClass = 'success';
+                    suntaState = 'Aceptado';
+                }
+                if (trans.sunat_state === 'null') {
+                    trClass = 'danger'
+                    suntaState = 'Anulado';
+                }
+                if (trans.sunat_state === 'observed') {
+                    trClass = 'warning';
+                    suntaState = 'Observado';
+                }
+
                 counter++;
-                transaction_list += `<tr>
-                                <td>${trans.order}</td>
-                                <td class="nobr">${moment(trans.date).format('YYYY MMM DD hh:mm:ss')}</td>
+                transaction_list += `<tr class="${trClass}">
+                                <!--<td>${trans.order}</td>-->
+                                <td class="text-center"><b>${trans.serie}-${trans.correlative}</b></td>
+                                <td class="nobr">${moment(trans.date).format('YYYY MMM DD HH:mm:ss')}</td>
                                 <td>${settings.symbol + trans.total}</td>
                                 <!--<td>${trans.paid == "" ? "" : settings.symbol + trans.paid}</td>-->
                                 <!--<td>${trans.change ? settings.symbol + Math.abs(trans.change).toFixed(2) : ''}</td>-->
                                 <td>${trans.paid == "" ? "" : trans.payment_type.name}</td>
                                 <!--<td>${trans.till}</td>-->
                                 <td>${trans.user}</td>
-                                <td class="text-center">
-                                ${trans.paid == "" ? '<button class="btn btn-dark"><i class="fa fa-search-plus"></i></button>' : '<button onClick="$(this).viewTransaction(' + index + ')" class="btn btn-info"><i class="fa fa-search-plus"></i></button>'}
-                                </td>
+                                <td>${suntaState}</td>
 
                                 <td class="text-center">
                                     <div class="btn-group">
@@ -2023,7 +2067,8 @@ function loadTransactions() {
                                             <span class="glyphicon glyphicon-option-vertical" aria-hidden="true"></span>
                                         </button>
                                         <ul class="dropdown-menu">
-                                            <li><a href="#">Descargar XML</a></li>
+                                            ${!trans.paid ? '<li class="disabled"><a href="#">Reimprimir</a></li>' : '<li><a href="#" onClick="$(this).viewTransaction(' + index + ')">Reimprimir</a></li>'}
+                                            <li><a href="#" onClick="$(this).downloadXML('${index}')">Descargar XML</a></li>
                                             <li><a href="#">Descargar PDF</a></li>
                                             <li><a href="#">Descargar CDR</a></li>
                                             <li role="separator" class="divider"></li>
@@ -2181,7 +2226,7 @@ $.fn.viewTransaction = function (index) {
     transaction_index = index;
 
     let discount = allTransactions[index].discount;
-    let customer = allTransactions[index].customer == 0 ? 'Seleccione un cliente' : allTransactions[index].customer.username;
+    let customer = !allTransactions[index].customer? 'Seleccione un cliente' : allTransactions[index].customer.username;
     let refNumber = allTransactions[index].ref_number != "" ? allTransactions[index].ref_number : allTransactions[index].order;
     let orderNumber = allTransactions[index].order;
     let type = allTransactions[index].payment_type.name;
@@ -2197,17 +2242,17 @@ $.fn.viewTransaction = function (index) {
 
     if (allTransactions[index].paid != "") {
         payment = `<tr>
-                    <td>Paid</td>
+                    <td>Pagado</td>
                     <td>:</td>
                     <td>${settings.symbol + allTransactions[index].paid}</td>
                 </tr>
                 <tr>
-                    <td>Change</td>
+                    <td>Vuelto</td>
                     <td>:</td>
                     <td>${settings.symbol + Math.abs(allTransactions[index].change).toFixed(2)}</td>
                 </tr>
                 <tr>
-                    <td>Method</td>
+                    <td>Método</td>
                     <td>:</td>
                     <td>${type}</td>
                 </tr>`
@@ -2228,21 +2273,21 @@ $.fn.viewTransaction = function (index) {
     receipt = `<div style="font-size: 10px;">                            
         <p style="text-align: center;">
         ${settings.img == "" ? settings.img : '<img style="max-width: 50px;max-width: 100px;" src ="' + settings.logo + '" /><br>'}
-            <span style="font-size: 17px;">${settings.store}</span> <br>
-            ${settings.address_one} <br>
-            ${settings.address_two ? settings.address_two + '<br>' : '' }
+            <span style="font-size: 17px;">${settings.legal_name}</span> <br>
+            ${settings.address.street} ${settings.address.district} ${settings.address.city} ${settings.address.state} <br>
             ${settings.contact != '' ? 'Teléfono: ' + settings.contact + '<br>' : ''} 
             ${settings.vat_no != '' ? 'RUC ' + settings.vat_no + '<br>' : ''}
-            <span style="font-size: 15px; text-transform: uppercase;">${allTransactions[index].document_type.name}</span> <br />
+            ${allTransactions[index].document_type.name ? '<span style="font-size: 15px; text-transform: uppercase;">' + allTransactions[index].document_type.name + '</span> <br />' : ''}
+            <span style="font-size: 15px; text-transform: uppercase;"><b>${allTransactions[index].serie || ''} - ${allTransactions[index].correlative || ''}</b></span> <br />
     </p>
     <hr>
     <left>
         <p>
-        Invoice : ${orderNumber} <br>
-        Ref No : ${refNumber} <br>
-        Customer : ${allTransactions[index].customer == 0 ? 'Seleccione un cliente' : allTransactions[index].customer.name} <br>
-        Cashier : ${allTransactions[index].user} <br>
-        Date : ${moment(allTransactions[index].date).format('DD MMM YYYY HH:mm:ss')}<br>
+        Pedido N° : ${orderNumber} <br>
+        <!--Ref No : ${refNumber} <br>-->
+        Cliente : ${allTransactions[index].customer.name || ''} <br>
+        Cajero : ${allTransactions[index].user} <br>
+        Fecha : ${moment(allTransactions[index].date).format('DD MMM YYYY HH:mm:ss')}<br>
         </p>
 
     </left>
@@ -2250,9 +2295,9 @@ $.fn.viewTransaction = function (index) {
     <table width="100%">
         <thead style="text-align: left;">
         <tr>
-            <th>Item</th>
-            <th>Qty</th>
-            <th>Price</th>
+            <th>Producto</th>
+            <th>Cant.</th>
+            <th>Precio</th>
         </tr>
         </thead>
         <tbody>
@@ -2263,11 +2308,11 @@ $.fn.viewTransaction = function (index) {
             <td>:</td>
             <td><b>${settings.symbol}${allTransactions[index].subtotal}</b></td>
         </tr>
-        <tr>
+        <!--<tr>
             <td>Descuento</td>
             <td>:</td>
             <td>${discount > 0 ? settings.symbol + parseFloat(allTransactions[index].discount).toFixed(2) : ''}</td>
-        </tr>
+        </tr>-->
         
         ${tax_row}
     
@@ -2295,6 +2340,24 @@ $.fn.viewTransaction = function (index) {
     $('#orderModal').modal('show');
 
 }
+
+$.fn.downloadXML = function(index) {
+    let id = allTransactions[index]._id;
+    $.post( api + "transactions/" + id + "/xml", function( data ) {
+        console.log(data)
+        // download('asd.xml', data)
+    });
+}
+
+function download(filename, text) {
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    element.setAttribute('download', filename);
+    element.style.display = 'none';
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  }
 
 
 $('#status').change(function () {

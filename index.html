@@ -183,10 +183,11 @@
                            </div>
 
                            <div class="col-md-7">
-                            <table class="table tablesaw-enhanced" id="transactionList">
+                            <table class="table tablesaw-enhanced table-responsive" id="transactionList">
                                 <thead>
                                     <tr>                                                                      
-                                        <th>Factura</th>                                      
+                                        <!--<th>Order</th>   -->                                   
+                                        <th>Correlativo</th>                                      
                                         <th>Fecha</th>
                                         <th>Total</th>
                                         <!--<th>Pagado</th>-->
@@ -194,7 +195,7 @@
                                         <th>Método</th>
                                         <!--<th>Till</th>-->
                                         <th>Cajero</th>
-                                        <th class="text-center">Ver</th>
+                                        <th class="text-center">Sunat</th>
                                         <th class="text-center">Acc.</th>
                                     </tr>
                                 </thead>
@@ -264,10 +265,10 @@
                          <div class="col-md-3">: <span id="price">0.0</span></div>
                      </div>
                      <div class="row">
-                         <div class="col-md-3">Descuento</div>
-                         <div class="col-md-3"><input class="form-control" type="number" id="inputDiscount" oninput="$(this).calculateCart();"></div>
-                         <div class="col-md-3">Precio bruto (inc <span id="taxInfo"></span>% Impuesto)</div>
-                         <div class="col-md-3"><h3 id="gross_price">0.00</h3></div>
+                         <div class="col-md-2"><!--Descuento--></div>
+                         <div class="col-md-2"><input style="display: none;" class="form-control" type="number" id="inputDiscount" oninput="$(this).calculateCart();"></div>
+                         <div class="col-md-4">Precio bruto (inc <span id="taxInfo"></span>% Impuesto)</div>
+                         <div class="col-md-4"><h3 id="gross_price">0.00</h3></div>
                      </div>
   
                  </div>
@@ -327,7 +328,7 @@
               </div>
               <div class="modal-body">
                   <form action="">
-                      <input type="text" id="refNumber" placeholder="Enter a reference" class="form-control">
+                      <input type="text" id="refNumber" placeholder="Ingrese una referencia" class="form-control">
                   </form>
                   <hr>
                   <div class="row">
@@ -379,7 +380,7 @@
                   </div>
               </div>
               <div class="modal-footer">
-                  <button type="button" onclick="$(this).submitDueOrder(0);" class="btn btn-primary btn-block btn-lg waves-effect waves-light">Hold Order</button>
+                  <button type="button" onclick="$(this).submitDueOrder(0);" class="btn btn-primary btn-block btn-lg waves-effect waves-light">En Espera</button>
               </div>
   
           </div><!-- /.modal-content -->
@@ -404,12 +405,12 @@
                           <br/>
                           <br/>
                           <div class="list-group">
-                            <a href="javascript:void(0)" onclick="$('#documentType').val(JSON.stringify({'code': '12', 'name': 'Ticket'})); $('#confirmPayment>b').text('TICKET');" class="list-group-item active">Ticket</a>
-                            <a href="javascript:void(0)" onclick="$('#documentType').val(JSON.stringify({'code': '03', 'name': 'Boleta Electrónica'})); $('#confirmPayment>b').text('BOLETA');" class="list-group-item ">
+                            <a href="javascript:void(0)" onclick="$('#documentType').val(JSON.stringify({'code': '12', 'name': 'Ticket', 'send_sunat': false})); $('#confirmPayment>b').text('TICKET');" class="list-group-item active">Ticket</a>
+                            <a href="javascript:void(0)" onclick="$('#documentType').val(JSON.stringify({'code': '03', 'name': 'Boleta Electrónica', 'send_sunat': true})); $('#confirmPayment>b').text('BOLETA');" class="list-group-item ">
                                 <span class="glyphicon glyphicon-cloud-upload" aria-hidden="true"></span>
                                 <b>Boleta</b> Electrónica
                             </a>
-                            <a href="javascript:void(0)" onclick="$('#documentType').val(JSON.stringify({'code': '01', 'name': 'Factura Electrónica'})); $('#confirmPayment>b').text('FACTURA');" class="list-group-item">
+                            <a href="javascript:void(0)" onclick="$('#documentType').val(JSON.stringify({'code': '01', 'name': 'Factura Electrónica', 'send_sunat': true})); $('#confirmPayment>b').text('FACTURA');" class="list-group-item">
                                 <span class="glyphicon glyphicon-cloud-upload" aria-hidden="true"></span>
                                 <b>Factura</b> Electrónica
                             </a>
@@ -510,7 +511,7 @@
   </div><!-- /.modal -->
   
   <div id="newCustomer" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true" style="display: none;">
-      <div class="modal-dialog modal-sm">
+      <div class="modal-dialog modal-md">
           <div class="modal-content">
               <div class="modal-header">
                   <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
@@ -520,21 +521,54 @@
               </div>
               <div class="modal-body">
                   <form id="saveCustomer" data-parsley-validate>
-                      <div class="form-group">
-                          <label for="userName">Nombre del Cliente*</label>
-                          <input type="text" required="required"  name="name" parsley-trigger="change" placeholder="Ingrese nombre del cliente" class="form-control" id="userName">
-                      </div>
-                      <div class="form-group">
-                          <label for="userName">Teléfono</label>
-                          <input type="text" name="phone" parsley-trigger="change" placeholder="Ingrese el número de teléfono" class="form-control" id="phoneNumber">
-                      </div>
-                      <div class="form-group">
-                          <label for="userName">Correo Electrónico</label>
-                          <input type="email" name="email" parsley-trigger="change" placeholder="Ingrese el correo electrónico" class="form-control" id="emailAddress">
-                      </div>
-                      <div class="form-group">
-                          <label for="userName">Dirección</label>
-                          <input type="text" name="address" parsley-trigger="change" placeholder="Ingrese la dirección" class="form-control" id="userAddress">
+                      <div class="row">
+                          <div class="col-md-6">
+                                
+                              <div class="form-group">
+                                  <label for="userName">Nombre del Cliente*</label>
+                                  <input type="text" required="required"  name="name" parsley-trigger="change" placeholder="Ingrese nombre del cliente" class="form-control" id="userName">
+                              </div>
+                              <div class="form-group">
+                                <label for="userName">Documento</label>
+                                <select class="form-control" name="document_code" id="document_code">
+                                    <option value="1" selected>DNI</option>
+                                    <option value="6">RUC</option>
+                                </select>
+                                <input type="text" class="form-control" placeholder="Número de documento" aria-describedby="sizing-addon1" name="document_number" id="document_number" required="required">
+                            </div>
+                              <div class="form-group">
+                                  <label for="userName">Teléfono</label>
+                                  <input type="text" name="phone" parsley-trigger="change" placeholder="Ingrese el número de teléfono" class="form-control" id="phoneNumber">
+                              </div>
+                              <div class="form-group">
+                                  <label for="userName">Correo Electrónico</label>
+                                  <input type="email" name="email" parsley-trigger="change" placeholder="Ingrese el correo electrónico" class="form-control" id="emailAddress">
+                              </div>
+                          </div>
+                          <div class="col-md-6">
+                            
+                          
+                          <div class="form-group">
+                            <label for="userName">Dirección</label>
+                            <input type="text" required="required"  name="customer_street" class="form-control" id="customer_street">
+                    </div>
+                    <div class="form-group">
+                        <label for="userName">Provincia</label>
+                        <input type="text" required="required"  name="customer_state" class="form-control" id="customer_state">
+                    </div>
+                    <div class="form-group">
+                        <label for="userName">Departamento</label>
+                        <input type="text" required="required"  name="customer_city" class="form-control" id="customer_city">
+                    </div>
+                    <div class="form-group">
+                        <label for="userName">Distrito</label>
+                        <input type="text" required="required"  name="customer_district" class="form-control" id="customer_district">
+                    </div>
+                    <div class="form-group">
+                        <label for="userName">Zip</label>
+                        <input type="text" required="required"  name="customer_zip" class="form-control" id="customer_zip">
+                    </div>
+                </div>
                       </div>
 
                       <input type="submit" class="btn btn-primary btn-block waves-effect waves-light" value="Guardar">
@@ -897,24 +931,45 @@
                                     <input type="text" required="required"  name="store" class="form-control" id="store">
                                 </div>
                                 <div class="form-group">
-                                        <label for="userName">Dirección 1</label>
-                                        <input type="text" required="required"  name="address_one" class="form-control" id="address_one">
+                                    <label for="userName">Razón Social</label>
+                                    <input type="text" required="required"  name="legal_name" class="form-control" id="legal_name">
                                 </div>
                                 <div class="form-group">
-                                    <label for="userName">Dirección 2</label>
-                                    <input type="text"  name="address_two" class="form-control" id="address_two">
+                                        <label for="userName">Dirección</label>
+                                        <input type="text" required="required"  name="street" class="form-control" id="street">
+                                </div>
+                                <div class="form-group">
+                                    <label for="userName">Provincia</label>
+                                    <input type="text" required="required"  name="state" class="form-control" id="state">
+                                </div>
+                                <div class="form-group">
+                                    <label for="userName">Departamento</label>
+                                    <input type="text" required="required"  name="city" class="form-control" id="city">
+                                </div>
+                                <div class="form-group">
+                                    <label for="userName">Distrito</label>
+                                    <input type="text" required="required"  name="district" class="form-control" id="district">
+                                </div>
+                                <div class="form-group">
+                                    <label for="userName">Zip</label>
+                                    <input type="text" required="required"  name="zip" class="form-control" id="zip">
                                 </div>
                                 <div class="form-group">
                                     <label for="userName">Número de contacto</label>
 
                                     <input type="text" name="contact" class="form-control" id="contact">
                                 </div>
+                                
+                            </div>
+                            <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="userName">RUC</label>
                                     <input type="text" name="vat_no" parsley-trigger="change" class="form-control" id="vat_no">
                                 </div>
-                            </div>
-                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="userName">Nombre Comercial</label>
+                                    <input type="text" required="required"  name="tradename" class="form-control" id="tradename">
+                                </div>
                                 <div class="form-group">
 
                                         <label for="userName">Símbolo de moneda</label>

@@ -25,8 +25,15 @@ app.post( "/", upload.single('imagename'), async function ( req, res ) {
         settings: {
             "app": req.body.app,
             "store": req.body.store,
-            "address_one": req.body.address_one,
-            "address_two":req.body.address_two,
+            "legal_name": req.body.legal_name,
+            "tradename": req.body.tradename,
+            "address": {
+                "street": req.body.street,
+                "state": req.body.state,
+                "city": req.body.city,
+                "district": req.body.district,
+                "zip": req.body.zip,
+            },
             "contact": req.body.contact,
             "vat_no": req.body.vat_no,
             "symbol": req.body.symbol,
@@ -37,9 +44,9 @@ app.post( "/", upload.single('imagename'), async function ( req, res ) {
             "next_correlative": req.body.next_correlative,
             "token": req.body.token,
             "document_types": [
-                { "code": "12", "name": "Ticket", "serie": req.body.serie_t, "next_correlative": req.body.next_correlative_t},
-                { "code": "03", "name": "Boleta Electrónica", "serie": req.body.serie_b, "next_correlative": req.body.next_correlative_b },
-                { "code": "01", "name": "Factura Electrónica", "serie": req.body.serie_f, "next_correlative": req.body.next_correlative_f }
+                { "code": "12", "name": "Ticket", "send_sunat": false, "serie": req.body.serie_t, "next_correlative": req.body.next_correlative_t},
+                { "code": "03", "name": "Boleta Electrónica", "send_sunat": true, "serie": req.body.serie_b, "next_correlative": req.body.next_correlative_b },
+                { "code": "01", "name": "Factura Electrónica", "send_sunat": true, "serie": req.body.serie_f, "next_correlative": req.body.next_correlative_f }
             ]
         }       
     }
@@ -84,5 +91,29 @@ app.post( "/", upload.single('imagename'), async function ( req, res ) {
         }
     }
 });
+
+app.addCorrelative = async function (documentCode) {
+    try {
+        var settings = await settingsDB.get('1');
+        documentTypes = settings.settings.document_types;
+
+        documentTypes.forEach((element, index) => {
+            if (element.code === documentCode) {
+                documentTypes[index].next_correlative = parseInt(documentTypes[index].next_correlative) + 1;
+            }
+        });
+
+        await settingsDB.put({ ...settings, document_types: documentTypes });
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+app.getDocumentType = async function (documentCode) {
+    var settings = await settingsDB.get('1');
+    settings = settings.settings;
+    return settings.document_types.find((type) => type.code === documentCode);
+}
+
 
 module.exports = app;

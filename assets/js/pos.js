@@ -54,7 +54,8 @@ let settings;
 let platform;
 let user = {};
 let start = moment().startOf('month');
-let end = moment();
+// let end = moment(moment().format('YYYY-MM-DD 23:59:59'));
+let end = moment().endOf('month');
 let start_date = moment(start).toDate();
 let end_date = moment(end).toDate();
 let by_till = 0;
@@ -883,11 +884,15 @@ if (auth == undefined) {
                     $(this).getCustomerOrders();
                     $(this).renderTable(cart);
 
+                    loadTransactions();
+
                 }, error: function (data) {
                     $(".loading").hide();
-                    $("#dueModal").modal('toggle');
-                    Swal("¡Algo salió mal!", 'Actualiza esta página e inténtalo de nuevo.');
-
+                    Swal.fire(
+                        '¡Error!',
+                        'Error al intentar crear la venta: ' + data.responseText,
+                        'error'
+                    );
                 }
             });
 
@@ -2039,6 +2044,10 @@ function loadTransactions() {
                     trClass = 'success';
                     suntaState = 'Aceptado';
                 }
+                if (trans.sunat_state === 'nullable') {
+                    trClass = 'warning'
+                    suntaState = 'Por Anular';
+                }
                 if (trans.sunat_state === 'null') {
                     trClass = 'danger'
                     suntaState = 'Anulado';
@@ -2046,6 +2055,10 @@ function loadTransactions() {
                 if (trans.sunat_state === 'observed') {
                     trClass = 'warning';
                     suntaState = 'Observado';
+                }
+                if (trans.sunat_state === 'send') {
+                    trClass = 'warning';
+                    suntaState = 'Enviado';
                 }
                 
                 counter++;
@@ -2074,7 +2087,14 @@ function loadTransactions() {
                                             <li role="separator" class="divider"></li>
                                             <li><a href="#">Cambiar Estado</a></li>
                                             <li><a href="#">Reenviar a Sunat</a></li>
-                                            <li><a href="#">Dar de Baja</a></li>
+                                            <li role="separator" class="divider"></li>
+
+                                            ${trans.document_type.code === '01' && trans.sunat_state !== 'null' ? '<li><a href="#" onClick="$(this).sendVoided(' + index + ')">Comunicar Baja</a></li>' : '' }
+                                            ${trans.document_type.code === '01' ? '<li><a href="#" onClick="$(this).statusVoided(' + index + ')">Consultar Estado de Baja</a></li>' : ''}
+                                        
+                                            ${trans.document_type.code === '03' && trans.sunat_state !== 'null' ? '<li><a href="#" onClick="$(this).sendSummaryNullable(' + index + ')">Anular Mediante Resumen</a></li>' : '' }
+                                            ${trans.document_type.code === '03' ? '<li><a href="#" onClick="$(this).statusSummary(' + index + ')">Consultar Estado de Resumen</a></li>' : ''}
+
                                         </ul>
                                     </div>
                                 </td>
@@ -2394,6 +2414,216 @@ $.fn.downloadCDR = function(index) {
     element.setAttribute('href', 'data:text/plain;base64,' + data);
     element.setAttribute('download', serie + '-' + correlative + '.zip');
     element.click();
+}
+
+$.fn.sendVoided = async function(index) {
+    let confirmation = await Swal.fire({
+        title: "¿Comunicar Baja?",
+        text: "Esto comunicará el documento a SUNAT para su baja.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: '¡Sí, Comunícalo!'
+    })
+
+    if (!confirmation.isConfirmed) {
+        return;
+    }
+
+    let id = allTransactions[index]._id;
+    
+    if (allTransactions[index].sunat_state === 'null') {
+        return Swal.fire(
+            '¡Ups!',
+            'El comprobante ya está eliminado',
+            'error'
+        )
+    }
+
+    $.ajax({
+        type: 'POST',
+        url: api + "transactions/voided/" + id
+    }).done(function(data){
+        if (data.sunatResponse.success) {
+            Swal.fire(
+                '¡Solicitud de comunicación de Baja!',
+                'Ticket generado: ' + data.sunatResponse.ticket,
+                'success'
+            )
+            
+            loadTransactions();
+        } else {
+            Swal.fire(
+                'Error comunicación de Baja!',
+                data.sunatResponse.error.code + ' ' + data.sunatResponse.error.message,
+                'error'
+            )
+        }
+    }).fail(function (e) {
+        Swal.fire(
+            '¡Error!',
+            'Error al emitir la comunicación de baja: ' + e.responseText,
+            'error'
+        );
+    })
+}
+
+$.fn.statusVoided = async function(index) {
+    let confirmation = await Swal.fire({
+        title: "¿Consultar Estado de Baja?",
+        text: "Esto consultará el estado de la comunicación de baja.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: '¡Sí, Consúltalo!'
+    })
+
+    if (!confirmation.isConfirmed) {
+        return;
+    }
+    
+    let id = allTransactions[index]._id;
+    
+    $.ajax({
+        type: 'POST',
+        url: api + "transactions/voided/" + id + "/status"
+    }).done(function(data){
+        
+        if (data.success) {
+            Swal.fire(
+                '¡Comunicación de Baja!',
+                data.cdrResponse.description,
+                'success'
+            )
+
+            loadTransactions();
+        } else {
+            Swal.fire(
+                '¡Error consulta comunicación de Baja!',
+                data.error.code + ' ' + data.error.message,
+                'error'
+            )
+        }
+    }).fail(function (e) {
+        Swal.fire(
+            '¡Error!',
+            'Error al consultar la comunicación de baja: ' + e.responseText,
+            'error'
+        );
+    })
+}
+
+$.fn.sendSummaryNullable = async function(index) {
+    let confirmation = await Swal.fire({
+        title: "¿Desea Anular el comprobante?",
+        text: "Esto enviará un resumen diario para anular el comprobante.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: '¡Sí, Anúlalo!'
+    })
+
+    if (!confirmation.isConfirmed) {
+        return;
+    }
+
+    let id = allTransactions[index]._id;
+    
+    if (allTransactions[index].sunat_state === 'null') {
+        return Swal.fire(
+            '¡Ups!',
+            'El comprobante ya está eliminado',
+            'error'
+        )
+    }
+
+    $.ajax({
+        type: 'POST',
+        url: api + "transactions/set-nullable/" + id
+    }).done(function(data){
+
+        $.ajax({
+            type: 'POST',
+            url: api + "transactions/summary/" + id
+        }).done(function(data) {
+            if (data.sunatResponse.success) {
+                Swal.fire(
+                    '¡Resumen Diario!',
+                    'Ticket generado: ' + data.sunatResponse.ticket,
+                    'success'
+                )
+                
+                loadTransactions();
+            } else {
+                Swal.fire(
+                    '¡Error resumen!',
+                    data.sunatResponse.error.code + ' ' + data.sunatResponse.error.message,
+                    'error'
+                )
+            }
+        }).fail(function (e) {
+            Swal.fire(
+                '¡Error!',
+                'Error al emitir el resumen: ' + e.responseText,
+                'error'
+            );
+        })
+    }).fail(function (e) {
+        Swal.fire(
+            '¡Error!',
+            'Error al emitir la comunicación de baja: ' + e.responseText,
+            'error'
+        );
+    })
+}
+
+$.fn.statusSummary = async function(index) {
+    let confirmation = await Swal.fire({
+        title: "¿Consultar Estado de Resumen?",
+        text: "Esto consultará el estado del resumen diario.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: '¡Sí, Consúltalo!'
+    })
+
+    if (!confirmation.isConfirmed) {
+        return;
+    }
+    
+    let id = allTransactions[index]._id;
+    
+    $.ajax({
+        type: 'POST',
+        url: api + "transactions/summary/" + id + "/status"
+    }).done(function(data){
+        
+        if (data.success) {
+            Swal.fire(
+                '¡Resumen Diario!',
+                data.cdrResponse.description,
+                'success'
+            )
+
+            loadTransactions();
+        } else {
+            Swal.fire(
+                '¡Error consulta resumen diario!',
+                data.error.code + ' ' + data.error.message,
+                'error'
+            )
+        }
+    }).fail(function (e) {
+        Swal.fire(
+            '¡Error!',
+            'Error al consultar el resumen diario: ' + e.responseText,
+            'error'
+        );
+    })
 }
 
 

@@ -3,7 +3,9 @@ const moment = require('moment');
 const aLetras = require('./numeroALetras')
 const axios = require('axios');
 const PouchDB = require('pouchdb');
+
 let settingsDB = new PouchDB(process.env.DB_HOST + 'settings');
+let transactionsDB = new PouchDB(process.env.DB_HOST + 'transactions');
 
 
 async function jsonInvoice(data){
@@ -129,141 +131,218 @@ async function pdfInvoice(data) {
   })
 }
 
-function fetchBaja(data, token){
-  return fetch('https://facturacion.apisperu.com/api/v1/voided/send', {
-      method: 'POST',
-      headers: {
-      'Content-Type': 'application/json',
-      'Authorization': token
-      },
-      body: JSON.stringify(data)
-  })
-}
 
-async function configBaja(id, fecha){
+async function jsonVoided(invoices) {
+  let voidedDate = moment(new Date(moment())).format('YYYYMMDD');
 
-  let date = new Date(fecha);
-  let fechaBoleta = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}T00:00:00-22:00`;
-  
-  const JSONBaja = {
-    "correlativo": id,
-    "fecGeneracion": fechaBoleta,
-    "fecComunicacion": fechaBoleta,
+  let fechaGen = moment(new Date(invoices[0].date)).format('YYYY-MM-DDT00:00:00-05:00');
+  let fechaCom = moment(new Date(moment())).format('YYYY-MM-DDTHH:mm:ss-05:00');
+  let settings = await settingsDB.get('1');
+  settings = settings.settings;
+
+  let nextCorrelative = await getNextCorrelativeVoided(voidedDate);
+
+  let json = {
+    "correlativo": nextCorrelative,
+    "fecGeneracion": fechaGen,
+    "fecComunicacion": fechaCom,
     "company": {
-      "ruc": 10064782261,
-      "razonSocial": "Raúl Fernando Luna Toro",
-      "nombreComercial": "ewforex.net",
+      "ruc": settings.vat_no,
+      "razonSocial": settings.legal_name,
+      "nombreComercial": settings.tradename,
       "address": {
-        "direccion": "Av del éjercito 768, Miraflores",
-        "provincia": "LIMA",
-        "departamento": "LIMA",
-        "distrito": "LIMA",
-        "ubigueo": "150101"
+        "direccion": settings.address.street,
+        "provincia": settings.address.state,
+        "departamento": settings.address.city,
+        "distrito": settings.address.district,
+        "ubigueo": settings.address.zip
       }
-    },
-    "details": [
-      {
-        "tipoDoc": "01",
-        "serie": "F001",
-        "correlativo": id,
-        "desMotivoBaja": "ANULADO"
-      },
-    ]
+    }
   }
 
-  return fetcBaja(JSONBaja, token);
+  json.details = [];
+
+  for (let i = 0; i < invoices.length; i++) {
+    let item = invoices[i];
+    let fechaGenItem = moment(new Date(item.date)).format('YYYY-MM-DDT00:00:00-05:00');
+    if (fechaGen === fechaGenItem && item.document_type.code === '01' && item.sunat_state !== 'null') {
+      json.details.push({
+        "tipoDoc": item.document_type.code,
+        "serie": item.serie,
+        "correlativo": item.correlative,
+        "desMotivoBaja": "ERROR"
+      })
+    }
+  }
+
+  return json;
 }
 
-async function configPdf(data){
+async function sendVoided(data) {
+  let settings = await settingsDB.get('1');
+  let token = settings.settings.token;
 
-  const boletaData = {
-    "ublVersion": "2.1",
-    "tipoOperacion": "0101",
-    "tipoDoc": "03",
-    "serie": "B001",
-    "correlativo": data.correlative_sunat,
-    "fechaEmision": `${year}-${mes}-${dia}T${hora}:${minutos}:${segundos}-05:00`,
-    "formaPago": {
-      "moneda": "PEN",
-      "tipo": "Contado"
-    },
-    "tipoMoneda": "PEN",
-    "client": {
-      "tipoDoc": data.cliente[0],
-      "numDoc": data.cliente[1],
-      "rznSocial": data.cliente[2],
-      "address": {
-        "direccion": "LIMA",
-        "provincia": "LIMA",
-        "departamento": "LIMA",
-        "distrito": "LIMA",
-        "ubigueo": "150101"
-      }
-    },
-    "company": {
-      "ruc": 10064782261,
-      "razonSocial": "Raúl Fernando Luna Toro",
-      "nombreComercial": "ewforex.net",
-      "address": {
-        "direccion": "Av del éjercito 768, Miraflores",
-        "provincia": "LIMA",
-        "departamento": "LIMA",
-        "distrito": "LIMA",
-        "ubigueo": "150101"
-      }
-    },
-    "mtoOperExoneradas": data.rec_operacion,
-    "mtoIGV": 0,
-    "valorVenta": data.rec_operacion,
-    "totalImpuestos": 0,
-    "subTotal": data.rec_operacion,
-    "mtoImpVenta": data.rec_operacion,
-    "details": [
-      {
-        "codProducto": "P001",
-        "unidad": "NIU",
-        "descripcion": tipo,
-        "cantidad": data.mon_operacion,
-        "mtoValorUnitario": data.cot_operacion,
-        "mtoValorVenta": data.rec_operacion,
-        "mtoBaseIgv": data.rec_operacion,
-        "porcentajeIgv": 0,
-        "igv": 0,
-        "tipAfeIgv": 20,
-        "totalImpuestos": 0,
-        "mtoPrecioUnitario": data.cot_operacion
-      }
-    ],
-    "legends": [
-      {
-        "code": "1000",
-        "value": montoT
-      }
-    ]
-}
-
-  return apiPdf(boletaData, token);
-}
-
-function fetchPdf(data, token){
-  return fetch('https://facturacion.apisperu.com/api/v1/invoice/pdf', {
-      method: 'POST',
+  return axios.post('https://facturacion.apisperu.com/api/v1/voided/send', data, {
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': token
-      },
-      body: JSON.stringify(data)
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+      }
   })
 }
 
-function formatDate(date){
-    
-  return formatDate;
+async function statusVoided(ticket) {
+  let settings = await settingsDB.get('1');
+  let token = settings.settings.token;
+  let ruc = settings.settings.vat_no;
+
+  return axios.get('https://facturacion.apisperu.com/api/v1/voided/status?ticket=' + ticket + '&ruc=' + ruc, {
+      headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+      }
+  })
 }
+
+
+async function getNextCorrelativeVoided(date) {
+  try {
+
+    let transaction = await transactionsDB.find({
+      selector: { voided_date: date, voided_correlative: {$exists: true} },
+      sort: [{'_id': 'desc'}],
+      limit: 1
+    });
+
+    let correlative = 1;
+
+    if (transaction.docs.length) {
+      correlative = transaction.docs[0].voided_correlative + 1
+    }
+
+    return correlative;
+
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+
+async function jsonSummary(invoices) {
+  let summaryDate = moment(new Date(moment())).format('YYYYMMDD');
+
+  let fechaGen = moment(new Date(invoices[0].date)).format('YYYY-MM-DDT00:00:00-05:00');
+  let fechaRes = moment(new Date(moment())).format('YYYY-MM-DDTHH:mm:ss-05:00');
+  let settings = await settingsDB.get('1');
+  settings = settings.settings;
+
+  let nextCorrelative = await getNextCorrelativeSummary(summaryDate);
+
+  let json = {
+    "correlativo": nextCorrelative,
+    "fecGeneracion": fechaGen,
+    "fecResumen": fechaRes,
+    "moneda": "PEN",
+    "company": {
+      "ruc": settings.vat_no,
+      "razonSocial": settings.legal_name,
+      "nombreComercial": settings.tradename,
+      "address": {
+        "direccion": settings.address.street,
+        "provincia": settings.address.state,
+        "departamento": settings.address.city,
+        "distrito": settings.address.district,
+        "ubigueo": settings.address.zip
+      }
+    }
+  }
+
+  json.details = [];
+
+  for (let i = 0; i < invoices.length; i++) {
+    let item = invoices[i];
+    let fechaGenItem = moment(new Date(item.date)).format('YYYY-MM-DDT00:00:00-05:00');
+    if (fechaGen === fechaGenItem && item.document_type.code === '03' && item.sunat_state !== 'null') {
+      let estado = item.sunat_state_summary ? item.sunat_state_summary : 1;
+      
+      json.details.push({
+        "tipoDoc": item.document_type.code,
+        "serieNro": item.serie + '-' + item.correlative,
+        "estado": estado,
+        "clienteTipo": item.customer.document_type.code,
+        "clienteNro": item.customer.document_type.number,
+        "total": item.total,
+        "mtoOperGravadas": item.total,
+        "mtoOperInafectas": 0,
+        "mtoOperExoneradas": 0,
+        "mtoOperExportacion": 0,
+        "mtoOtrosCargos": 0,
+        "mtoIGV": item.tax
+      })
+    }
+  }
+
+  return json;
+}
+
+async function sendSummary(data) {
+  let settings = await settingsDB.get('1');
+  let token = settings.settings.token;
+
+  return axios.post('https://facturacion.apisperu.com/api/v1/summary/send', data, {
+      headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+      }
+  })
+}
+
+async function statusSummary(ticket) {
+  let settings = await settingsDB.get('1');
+  let token = settings.settings.token;
+  let ruc = settings.settings.vat_no;
+
+  return axios.get('https://facturacion.apisperu.com/api/v1/summary/status?ticket=' + ticket + '&ruc=' + ruc, {
+      headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+      }
+  })
+}
+
+async function getNextCorrelativeSummary(date) {
+  try {
+
+    let transaction = await transactionsDB.find({
+      selector: { summary_date: date, summary_correlative: {$exists: true} },
+      sort: [{'_id': 'desc'}],
+      limit: 1
+    });
+
+    let correlative = 1;
+
+    if (transaction.docs.length) {
+      correlative = transaction.docs[0].summary_correlative + 1
+    }
+
+    return correlative;
+
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+
+
 
 module.exports = {
     jsonInvoice,
     sendInvoice,
     xmlInvoice,
-    pdfInvoice
+    pdfInvoice,
+    jsonVoided,
+    sendVoided,
+    statusVoided,
+    jsonSummary,
+    sendSummary,
+    statusSummary
 }

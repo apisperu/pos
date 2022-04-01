@@ -138,8 +138,25 @@ app.post("/new", async function(req, res) {
     let documentType = await Settings.getDocumentType(newTransaction.document_type.code)
     newTransaction.serie = documentType.serie;
     newTransaction.correlative = documentType.next_correlative;
+    
+    // verificar si el siguiente correlativo ya se está usando.
+    // si ya se está usando mostrar alerta 
+    let trans = await transactionsDB.find({
+      selector: {
+        $and: [
+          { serie: newTransaction.serie}, 
+          { correlative: newTransaction.correlative },
+        ]
+      },
+      limit: 1
+    });
+    
+    if (trans.docs.length) {
+      return res.status( 500 ).send( 'Ya existe un documento con la misma serie y el correlativo' );
+    }
   }
-
+  
+  
   transactionsDB.put({
     ...newTransaction,
     _id: newTransaction._id.toString(),
@@ -150,13 +167,18 @@ app.post("/new", async function(req, res) {
     
     // Emitir a sunat
     if (newTransaction.document_type && newTransaction.document_type.send_sunat) {
-      let json = await apisperu.jsonInvoice(newTransaction);
-
-      apisperu.sendInvoice(json).then(r => {
-        apiResults.invoiceResult(r.data, result.id, json)
-      }).catch(err => {
-        console.log(err);
-      });
+      try {
+        let json = await apisperu.jsonInvoice(newTransaction);
+  
+        apisperu.sendInvoice(json).then(r => {
+          apiResults.invoiceResult(r.data, result.id, json)
+        }).catch(err => {
+          console.log(err);
+        });
+      
+      } catch (error) {
+        console.log(error) 
+      }
     }
 
     // Aumentar al siguiente correlativo
@@ -274,5 +296,105 @@ app.get("/:transactionId/pdf", async function(req, res) {
   });
 });
 
+app.post( "/voided/:transactionId", async function ( req, res ) {
+  let id  = req.params.transactionId;
+
+  let transaction = await transactionsDB.get(id);
+
+  let json = await apisperu.jsonVoided([transaction]);
+
+  if (!json.details.length) {
+    return res.status( 500 ).send( 'Documento no permitido para comunicacíón de baja' );
+  }
+
+  apisperu.sendVoided(json).then(async r => {
+    await apiResults.voidedResult(r.data, id, json)
+    res.status( 200 ).json( r.data );
+  }).catch(err => {
+    console.log(err);
+    res.status( 500 ).send( 'No se pudo solicitar la comunicación de baja' );
+  });
+ 
+});
+ 
+app.post( "/voided/:transactionId/status", async function ( req, res ) {
+  let id  = req.params.transactionId;
+
+  let transaction = await transactionsDB.get(id);
+
+  if (!transaction.sunat_response_voided || !transaction.sunat_response_voided.ticket) {
+    return res.status( 500 ).send( 'No existe ticket' );
+  }
+
+  let ticket = transaction.sunat_response_voided.ticket
+
+  apisperu.statusVoided(ticket).then(async r => {
+    await apiResults.voidedStatusResult(r.data, id)
+    res.status( 200 ).json( r.data );
+  }).catch(err => {
+    console.log(err);
+    res.status( 500 ).send( 'No status' );
+  });
+
+ 
+});
+
+app.post( "/summary/:transactionId", async function ( req, res ) {
+  let id  = req.params.transactionId;
+
+  let transaction = await transactionsDB.get(id);
+
+  let json = await apisperu.jsonSummary([transaction]);
+
+  if (!json.details.length) {
+    return res.status( 500 ).send( 'Documento no permitido para el resumen diario' );
+  }
+
+  apisperu.sendSummary(json).then(async r => {
+    await apiResults.summaryResult(r.data, id, json)
+    res.status( 200 ).json( r.data );
+  }).catch(err => {
+    console.log(err);
+    res.status( 500 ).send( 'No se pudo enviar el resumen diario' );
+  });
+ 
+});
+ 
+app.post( "/summary/:transactionId/status", async function ( req, res ) {
+  let id  = req.params.transactionId;
+  let transaction = await transactionsDB.get(id);
+
+  if (!transaction.sunat_response_summary || !transaction.sunat_response_summary.ticket) {
+    return res.status( 500 ).send( 'No existe ticket' );
+  }
+
+  let ticket = transaction.sunat_response_summary.ticket
+
+  apisperu.statusSummary(ticket).then(async r => {
+    await apiResults.summaryStatusResult(r.data, id, transaction)
+    res.status( 200 ).json( r.data );
+  }).catch(err => {
+    console.log(err);
+    res.status( 500 ).send( 'No status' );
+  });
+ 
+});
+
+app.post( "/set-nullable/:transactionId", async function ( req, res ) {
+  let id  = req.params.transactionId;
+  let transaction = await transactionsDB.get(id);
+
+  try {    
+    transactionsDB.put({
+      ...transaction,
+      sunat_state_summary: 3,
+      sunat_state: 'nullable'
+    })
+
+    res.status( 200 ).json( transaction );
+  } catch (error) {
+    res.status( 500 ).send( error );
+  }
+});
 
 module.exports = app;

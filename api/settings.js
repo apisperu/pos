@@ -41,12 +41,12 @@ app.post( "/", upload.single('imagename'), async function ( req, res ) {
             "charge_tax": req.body.charge_tax,
             "footer": req.body.footer,
             "serie": req.body.serie,
-            "next_correlative": req.body.next_correlative,
+            "next_correlative": parseInt(req.body.next_correlative),
             "token": req.body.token,
             "document_types": [
-                { "code": "12", "name": "Ticket", "send_sunat": false, "serie": req.body.serie_t, "next_correlative": req.body.next_correlative_t},
-                { "code": "03", "name": "Boleta Electrónica", "send_sunat": true, "serie": req.body.serie_b, "next_correlative": req.body.next_correlative_b },
-                { "code": "01", "name": "Factura Electrónica", "send_sunat": true, "serie": req.body.serie_f, "next_correlative": req.body.next_correlative_f }
+                { "code": "12", "name": "Ticket", "send_sunat": false, "serie": req.body.serie_t, "next_correlative": parseInt(req.body.next_correlative_t) },
+                { "code": "03", "name": "Boleta Electrónica", "send_sunat": true, "serie": req.body.serie_b, "next_correlative": parseInt(req.body.next_correlative_b) },
+                { "code": "01", "name": "Factura Electrónica", "send_sunat": true, "serie": req.body.serie_f, "next_correlative": parseInt(req.body.next_correlative_f) }
             ]
         }       
     }

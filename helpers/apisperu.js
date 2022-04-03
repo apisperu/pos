@@ -1,8 +1,10 @@
-const dotenv = require('dotenv');
 const moment = require('moment');
 const aLetras = require('./numeroALetras')
 const axios = require('axios');
 const PouchDB = require('pouchdb');
+const apiResults = require('./apiResults');
+
+require('dotenv').config();
 
 let settingsDB = new PouchDB(process.env.DB_HOST + 'settings');
 let transactionsDB = new PouchDB(process.env.DB_HOST + 'transactions');
@@ -332,6 +334,35 @@ async function getNextCorrelativeSummary(date) {
 }
 
 
+async function sendPending() {
+  // buscar todos los comprobantes enviados (send)
+  // send = resumen diario
+  let daysAgo = moment().subtract(3, 'days');
+
+  let transactions = await transactionsDB.find({
+    selector: {
+      $and: [{ sunat_state: 'send' }, { date: { $gte: daysAgo.toJSON() }}] 
+    },
+    sort: [{'_id': 'desc'}],
+  });
+
+  if (transactions.docs.length) {
+    for (let i = 0; i < transactions.docs.length; i++) {
+      const element = transactions.docs[i];
+      
+      console.log('Consultar transacción: ' + element._id)
+      if (element.sunat_response_summary && element.sunat_response_summary.ticket) {
+        let ticket = element.sunat_response_summary.ticket;
+        statusSummary(ticket).then(async r => {
+          await apiResults.summaryStatusResult(r.data, element._id)
+        }).catch(err => {
+          console.log(err)
+        })
+      }
+    }
+  }
+
+}
 
 
 module.exports = {
@@ -344,5 +375,6 @@ module.exports = {
     statusVoided,
     jsonSummary,
     sendSummary,
-    statusSummary
+    statusSummary,
+    sendPending
 }

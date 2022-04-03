@@ -342,21 +342,31 @@ app.post( "/voided/:transactionId/status", async function ( req, res ) {
 app.post( "/summary/:transactionId", async function ( req, res ) {
   let id  = req.params.transactionId;
 
-  let transaction = await transactionsDB.get(id);
+  try {
+    
+    let transaction = await transactionsDB.get(id);
+    
+    let json = await apisperu.jsonSummary([transaction]);
+  
+    if (!json.details.length) {
+      return res.status( 500 ).send( 'Documento no permitido para el resumen diario' );
+    }
 
-  let json = await apisperu.jsonSummary([transaction]);
+    apisperu.sendSummary(json).then(async r => {
+      await apiResults.summaryResult(r.data, id, json)
+      res.status( 200 ).json( r.data );
+    }).catch(err => {
+      console.log(err);
+      res.status( 500 ).send( 'No se pudo enviar el resumen diario' );
+    });
 
-  if (!json.details.length) {
-    return res.status( 500 ).send( 'Documento no permitido para el resumen diario' );
+  } catch (error) {
+    console.log(error)
+    res.status( 500 ).send( error );
+    
   }
-
-  apisperu.sendSummary(json).then(async r => {
-    await apiResults.summaryResult(r.data, id, json)
-    res.status( 200 ).json( r.data );
-  }).catch(err => {
-    console.log(err);
-    res.status( 500 ).send( 'No se pudo enviar el resumen diario' );
-  });
+  return;
+  
  
 });
  

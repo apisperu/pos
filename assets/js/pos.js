@@ -1235,8 +1235,8 @@ if (auth == undefined) {
                             $("#newProduct").modal('hide');
                         }
                     });
-                }, error: function (data) {
-                    console.log(data);
+                }, error: function (err) {
+                    console.log(err);
                 }
             });
 
@@ -1278,8 +1278,8 @@ if (auth == undefined) {
                             $('#saveCategory input:hidden').val('');
                         }
                     });
-                }, error: function (data) {
-                    console.log(data);
+                }, error: function (err) {
+                    console.log(err);
                 }
 
             });
@@ -1707,8 +1707,8 @@ if (auth == undefined) {
 
                         ipcRenderer.send('app-reload', '');
 
-                    }, error: function (data) {
-                        console.log(data);
+                    }, error: function (err) {
+                        console.log(err);
                     }
 
                 });
@@ -1807,8 +1807,8 @@ if (auth == undefined) {
                         }
 
 
-                    }, error: function (data) {
-                        console.log(data);
+                    }, error: function (err) {
+                        console.log(err);
                     }
 
                 });
@@ -2095,6 +2095,9 @@ function loadTransactions() {
                                             ${trans.document_type.code === '03' && trans.sunat_state !== 'null' ? '<li><a href="#" onClick="$(this).sendSummaryNullable(' + index + ')">Anular Mediante Resumen</a></li>' : '' }
                                             ${trans.document_type.code === '03' ? '<li><a href="#" onClick="$(this).statusSummary(' + index + ')">Consultar Estado de Resumen</a></li>' : ''}
 
+                                            <li role="separator" class="divider"></li>
+                                            <li><a href="#"  onClick="$(this).viewLogs(${index})">Logs</a></li>
+
                                         </ul>
                                     </div>
                                 </td>
@@ -2358,6 +2361,23 @@ $.fn.viewTransaction = function (index) {
     $('#viewTransaction').html(receipt);
 
     $('#orderModal').modal('show');
+
+}
+
+
+$.fn.viewLogs = function (index) {
+    let id = allTransactions[index]._id;
+    let rows = '';
+
+    $.ajax({
+        type: 'GET',
+        url: api + "logs/by-transaction?id=" + id
+    }).done(function(data){
+       console.log(data)
+    //    $('#viewTransaction .table').html('');
+    //    $('#viewTransaction .table').html(rows);
+    //    $('#logsModal').modal('show');
+    })
 
 }
 
@@ -2703,8 +2723,8 @@ $('body').on("submit", "#account", function (e) {
                     );
                 }
 
-            }, error: function (data) {
-                console.log(data);
+            }, error: function (err) {
+                console.log(err);
             }
         });
     }

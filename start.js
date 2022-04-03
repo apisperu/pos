@@ -1,3 +1,5 @@
+let apisperu = require("./helpers/apisperu");
+
 const setupEvents = require('./installers/setupEvents')
  if (setupEvents.handleSquirrelEvent()) {
     return;
@@ -8,6 +10,7 @@ const {app, BrowserWindow, ipcMain} = require('electron');
 const path = require('path')
 
 const contextMenu = require('electron-context-menu');
+var cron = require('node-cron');
 
 let mainWindow
 
@@ -38,7 +41,13 @@ function createWindow() {
 }
 
 
-app.on('ready', createWindow)
+app.on('ready', () => {
+  cron.schedule('*/5 * * * * *', () => {
+    apisperu.sendPending();
+  });
+
+  createWindow()
+})
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

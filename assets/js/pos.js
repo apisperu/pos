@@ -1126,10 +1126,10 @@ if (auth == undefined) {
                     Swal.fire("¡Cliente agregado!", "¡El cliente se agregó con éxito!", "success");
                     $("#customer option:selected").removeAttr('selected');
                     $('#customer').append(
-                        $('<option>', { text: custData.name, value: `{"id": ${custData._id}, "name": ${custData.name}}`, selected: 'selected' })
+                        $('<option>', { text: custData.name, value: `{"id": "${custData._id}", "name": "${custData.name}"}`, selected: 'selected' })
                     );
 
-                    $('#customer').val(`{"id": ${custData._id}, "name": ${custData.name}}`).trigger('chosen:updated');
+                    $('#customer').val(`{"id": "${custData._id}", "name": "${custData.name}"}`).trigger('chosen:updated');
 
                 }, error: function (data) {
                     $("#newCustomer").modal('hide');

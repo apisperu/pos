@@ -89,7 +89,8 @@ async function jsonInvoice(data){
         
     }
 
-    if (settings.charge_tax) {
+    // Codígo para exonerados
+    if (!settings.charge_tax) {
 
     }
 
@@ -273,7 +274,7 @@ async function jsonSummary(invoices) {
         "clienteTipo": item.customer.document_type.code,
         "clienteNro": item.customer.document_type.number,
         "total": item.total,
-        "mtoOperGravadas": item.total,
+        "mtoOperGravadas": item.subtotal,
         "mtoOperInafectas": 0,
         "mtoOperExoneradas": 0,
         "mtoOperExportacion": 0,
@@ -333,15 +334,55 @@ async function getNextCorrelativeSummary(date) {
   }
 }
 
+async function jsonQrSale(invoice) {
+  let date = moment(new Date(invoice.date)).format('YYYY-MM-DDTHH:mm:ss-05:00');
+  
+  let settings = await settingsDB.get('1');
+  let ruc = settings.settings.vat_no;
 
-async function sendPending() {
-  // buscar todos los comprobantes enviados (send)
-  // send = resumen diario
+  json = {
+    "ruc": ruc,
+    "tipo": invoice.document_type.code,
+    "serie": invoice.serie,
+    "numero": invoice.correlative,
+    "emision": date,
+    "igv": invoice.tax,
+    "total": invoice.total,
+    "clienteTipo": invoice.customer ? invoice.customer.document_type.code : '',
+    "clienteNumero": invoice.customer.document_type.number
+  }
+
+  return json;
+}
+
+async function qrSale(data) {
+  let settings = await settingsDB.get('1');
+  let token = settings.settings.token;
+
+  return axios.post('https://facturacion.apisperu.com/api/v1/sale/qr', data, {
+      headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+      }
+  })
+}
+
+async function sendPending(job) {
+  if (job.taskRunning) {
+    return
+  }
+  
+  // send = summary
+  // nullable = voided
+  // register = invoice || summary
+
+  job.taskRunning = true
   let daysAgo = moment().subtract(3, 'days');
 
+  // send = summary
   let transactions = await transactionsDB.find({
     selector: {
-      $and: [{ sunat_state: 'send' }, { date: { $gte: daysAgo.toJSON() }}] 
+      $and: [{ sunat_state: { $in: ['send'] } }, { date: { $gte: daysAgo.toJSON() }}] 
     },
     sort: [{'_id': 'desc'}],
   });
@@ -349,11 +390,11 @@ async function sendPending() {
   if (transactions.docs.length) {
     for (let i = 0; i < transactions.docs.length; i++) {
       const element = transactions.docs[i];
-      
-      console.log('Consultar transacción: ' + element._id)
+
+      console.log('Consultar transacción summary: ' + element._id)
       if (element.sunat_response_summary && element.sunat_response_summary.ticket) {
         let ticket = element.sunat_response_summary.ticket;
-        statusSummary(ticket).then(async r => {
+        await statusSummary(ticket).then(async r => {
           await apiResults.summaryStatusResult(r.data, element._id)
         }).catch(err => {
           console.log(err)
@@ -361,7 +402,33 @@ async function sendPending() {
       }
     }
   }
+  
 
+  // nullable = voided
+  let transactionsV = await transactionsDB.find({
+    selector: {
+      $and: [{ sunat_state: { $in: ['nullable'] } }, { date: { $gte: daysAgo.toJSON() }}] 
+    },
+    sort: [{'_id': 'desc'}],
+  });
+
+  if (transactionsV.docs.length) {
+    for (let i = 0; i < transactionsV.docs.length; i++) {
+      const element = transactionsV.docs[i];
+      
+      console.log('Consultar transacción voided: ' + element._id)
+      if (element.sunat_response_voided && element.sunat_response_voided.ticket) {
+        let ticket = element.sunat_response_voided.ticket;
+        await statusVoided(ticket).then(async r => {
+          await apiResults.voidedStatusResult(r.data, element._id)
+        }).catch(err => {
+          console.log(err)
+        })
+      }
+    }
+  }
+
+  job.taskRunning = false
 }
 
 
@@ -376,5 +443,7 @@ module.exports = {
     jsonSummary,
     sendSummary,
     statusSummary,
-    sendPending
+    sendPending,
+    jsonQrSale,
+    qrSale
 }

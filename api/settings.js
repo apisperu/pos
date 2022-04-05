@@ -38,7 +38,7 @@ app.post( "/", upload.single('imagename'), async function ( req, res ) {
             "vat_no": req.body.vat_no,
             "symbol": req.body.symbol,
             "percentage": req.body.percentage,
-            "charge_tax": req.body.charge_tax,
+            "charge_tax": true,//req.body.charge_tax,
             "footer": req.body.footer,
             "serie": req.body.serie,
             "next_correlative": parseInt(req.body.next_correlative),

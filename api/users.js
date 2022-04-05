@@ -82,8 +82,9 @@ app.post( "/login", function ( req, res ) {
             });
             
             res.send(user)
+        } else {
+            res.send(result)
         }
-        res.send(result)
     })
     
 } );

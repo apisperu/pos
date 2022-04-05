@@ -42,8 +42,8 @@ function createWindow() {
 
 
 app.on('ready', () => {
-  cron.schedule('*/5 * * * * *', () => {
-    apisperu.sendPending();
+  const job = cron.schedule('*/3 * * * *', () => {
+    apisperu.sendPending(job);
   });
 
   createWindow()

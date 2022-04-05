@@ -870,13 +870,23 @@
 
 
 <div id="logsModal" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" style="display: none;">
-    <div class="modal-dialog modal-md">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
                 <h4 class="modal-title">Registros de procesos</h4>
             </div>
-            <div class="modal-body" id="viewLogs">                 
+            <div class="modal-body" id="viewLogs">   
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr><th>Fecha</th><th>Referencia</th><th>Descripción</th></tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -903,8 +913,8 @@
                         <label for="app">Aplicación</label>
                         <select name="app" id="app" class="form-control">
                             <option value="Standalone Point of Sale">Punto de venta independiente</option>
-                            <option value="Network Point of Sale Terminal">Red Punto de Venta Terminal</option>
-                            <option value="Network Point of Sale Server">Red Punto de Venta Servidor</option>                                            
+                            <!-- <option value="Network Point of Sale Terminal">Red Punto de Venta Terminal</option>
+                            <option value="Network Point of Sale Server">Red Punto de Venta Servidor</option>                                             -->
                         </select>
                  </div>
 
@@ -971,7 +981,7 @@
                                     <input type="text" required="required"  name="district" class="form-control" id="district">
                                 </div>
                                 <div class="form-group">
-                                    <label for="userName">Zip</label>
+                                    <label for="userName">Código Ubigeo</label>
                                     <input type="text" required="required"  name="zip" class="form-control" id="zip">
                                 </div>
                                 <div class="form-group">
@@ -1007,7 +1017,7 @@
                                         <div class="pull-right p-t-10"> % </div>
                                     </div>
                                     <br><br>
-                                    <div class="form-group">
+                                    <div class="form-group hidden">
 
                                     <label><input type="checkbox" name="charge_tax" id="charge_tax"> Cobrar Impuestos</label>
                                     </div>
@@ -1027,7 +1037,7 @@
                         </div>  
                         <div class="row">
                             <div class="col-md-12">
-                                <h4>API Settings</h4>
+                                <h4>Configuración de facturación </h4>
                                 <hr />
                             </div>
                             <div class="col-md-6">
@@ -1074,7 +1084,7 @@
                             </div> 
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    <label>Token</label>
+                                    <label>Token de emisión electrónica</label>
                                     <textarea name="token" class="form-control" id="token"></textarea>
                                 </div>   
                             </div>   

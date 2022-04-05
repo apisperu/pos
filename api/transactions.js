@@ -168,13 +168,29 @@ app.post("/new", async function(req, res) {
     // Emitir a sunat
     if (newTransaction.document_type && newTransaction.document_type.send_sunat) {
       try {
-        let json = await apisperu.jsonInvoice(newTransaction);
+        
+        // boletas
+        if (newTransaction.document_type.code === '03') {
+          let json = await apisperu.jsonSummary([newTransaction]);
+
+          if (json.details.length) {
+            apisperu.sendSummary(json).then(async r => {
+              apiResults.summaryResult(r.data, result.id, json)
+            }).catch(err => {
+              console.log(err);
+            });
+          }
+
+        } else {
+          let json = await apisperu.jsonInvoice(newTransaction);
+
+          apisperu.sendInvoice(json).then(r => {
+            apiResults.invoiceResult(r.data, result.id, json)
+          }).catch(err => {
+            console.log(err);
+          });
+        }
   
-        apisperu.sendInvoice(json).then(r => {
-          apiResults.invoiceResult(r.data, result.id, json)
-        }).catch(err => {
-          console.log(err);
-        });
       
       } catch (error) {
         console.log(error) 
@@ -296,6 +312,45 @@ app.get("/:transactionId/pdf", async function(req, res) {
   });
 });
 
+app.get("/:transactionId/qr", async function(req, res) {
+  let id  = req.params.transactionId;
+
+  let transaction = await transactionsDB.get(id);
+  let json = await apisperu.jsonQrSale(transaction);
+
+  apisperu.qrSale(json).then(r => {
+    // res.header("Content-Type", "application/pdf");
+    res.end(r.data);
+  }).catch(err => {
+    res.status( 500 ).send( err );
+  });
+});
+
+
+app.post( "/invoice/:transactionId", async function ( req, res ) {
+  let id  = req.params.transactionId;
+
+  try {
+    
+    let transaction = await transactionsDB.get(id);
+    let json = await apisperu.jsonInvoice(transaction);
+  
+    apisperu.sendInvoice(json).then(async r => {
+      await apiResults.invoiceResult(r.data, id, json)
+      res.status( 200 ).json( r.data );
+    }).catch(err => {
+      console.log(err);
+      res.status( 500 ).send( 'No se pudo enviar el comprobante' );
+    });
+
+  } catch (error) {
+    console.log(error)
+    res.status( 500 ).send( error );
+  }
+  return;
+ 
+});
+
 app.post( "/voided/:transactionId", async function ( req, res ) {
   let id  = req.params.transactionId;
 
@@ -324,6 +379,10 @@ app.post( "/voided/:transactionId/status", async function ( req, res ) {
 
   if (!transaction.sunat_response_voided || !transaction.sunat_response_voided.ticket) {
     return res.status( 500 ).send( 'No existe ticket' );
+  }
+
+  if (transaction.sunat_state === 'success' || transaction.sunat_state === 'null') {
+    return res.status( 500 ).send( 'El comprobante ya se encuentra informado.' );
   }
 
   let ticket = transaction.sunat_response_voided.ticket
@@ -378,6 +437,10 @@ app.post( "/summary/:transactionId/status", async function ( req, res ) {
     return res.status( 500 ).send( 'No existe ticket' );
   }
 
+  if (transaction.sunat_state === 'success' || transaction.sunat_state === 'null') {
+    return res.status( 500 ).send( 'El comprobante ya se encuentra informado.' );
+  }
+
   let ticket = transaction.sunat_response_summary.ticket
 
   apisperu.statusSummary(ticket).then(async r => {
@@ -398,7 +461,7 @@ app.post( "/set-nullable/:transactionId", async function ( req, res ) {
     transactionsDB.put({
       ...transaction,
       sunat_state_summary: 3,
-      sunat_state: 'nullable'
+      // sunat_state: 'nullable'
     })
 
     res.status( 200 ).json( transaction );

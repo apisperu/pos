@@ -34,6 +34,7 @@ async function invoiceResult(result, id, json) {
             if (result.sunatResponse.error) {
                 logsDB.put({
                     _id: (Math.floor(Date.now() / 1000)).toString(),
+                    date: moment().toJSON(),
                     transaction: id,
                     name: 'invoice/send|Enviar una Factura o Boleta',
                     description: result.sunatResponse.error.code + '|' + result.sunatResponse.error.message,
@@ -56,6 +57,7 @@ async function invoiceResult(result, id, json) {
             if (result.sunatResponse.error) {
                 logsDB.put({
                     _id: (Math.floor(Date.now() / 1000)).toString(),
+                    date: moment().toJSON(),
                     transaction: id,
                     name: 'invoice/send|Enviar una Factura o Boleta',
                     description: result.sunatResponse.error.code + '|' + result.sunatResponse.error.message,
@@ -78,6 +80,7 @@ async function invoiceResult(result, id, json) {
     if (result.sunatResponse.cdrResponse) {
         logsDB.put({
             _id: (Math.floor(Date.now() / 1000)).toString(),
+            date: moment().toJSON(),
             transaction: id,
             name: 'invoice/send|Enviar una Factura o Boleta',
             description: result.sunatResponse.cdrResponse.code + '|' + result.sunatResponse.cdrResponse.description,
@@ -105,6 +108,7 @@ async function voidedResult(result, id, json) {
         if (result.sunatResponse.error) {
             logsDB.put({
                 _id: (Math.floor(Date.now() / 1000)).toString(),
+                date: moment().toJSON(),
                 transaction: id,
                 name: 'voided/send|Enviar una Comunicación de Bajas',
                 description: result.sunatResponse.error.code + '|' + result.sunatResponse.error.message,
@@ -129,6 +133,7 @@ async function voidedResult(result, id, json) {
     if (result.sunatResponse) {
         logsDB.put({
             _id: (Math.floor(Date.now() / 1000)).toString(),
+            date: moment().toJSON(),
             transaction: id,
             name: 'voided/send|Enviar una Comunicación de Bajas',
             description: 'Ticket Generado ' + result.sunatResponse.ticket,
@@ -151,6 +156,7 @@ async function voidedStatusResult(result, id, json) {
         if (result) {
             logsDB.put({
                 _id: (Math.floor(Date.now() / 1000)).toString(),
+                date: moment().toJSON(),
                 transaction: id,
                 name: 'voided/status|Estado del Ticket Comunicación de Bajas',
                 description: result.error.code + '|' + result.error.message,
@@ -195,6 +201,7 @@ async function summaryResult(result, id, json) {
         if (result.sunatResponse.error) {
             logsDB.put({
                 _id: (Math.floor(Date.now() / 1000)).toString(),
+                date: moment().toJSON(),
                 transaction: id,
                 name: 'summary/send|Enviar un resumen diario de boletas de venta electrónicas y notas electrónicas',
                 description: result.sunatResponse.error.code + '|' + result.sunatResponse.error.message,
@@ -218,6 +225,7 @@ async function summaryResult(result, id, json) {
     if (result.sunatResponse) {
         logsDB.put({
             _id: (Math.floor(Date.now() / 1000)).toString(),
+            date: moment().toJSON(),
             transaction: id,
             name: 'summary/send|Enviar un resumen diario de boletas de venta electrónicas y notas electrónicas',
             description: 'Ticket Generado ' + result.sunatResponse.ticket,
@@ -241,6 +249,7 @@ async function summaryStatusResult(result, id) {
         if (result) {
             logsDB.put({
                 _id: (Math.floor(Date.now() / 1000)).toString(),
+                date: moment().toJSON(),
                 transaction: id,
                 name: 'summary/status|Estado del Ticket Resumen diario de boletas de venta electrónicas y notas electrónicas',
                 description: result.error.code + '|' + result.error.message,
@@ -262,6 +271,7 @@ async function summaryStatusResult(result, id) {
 
         logsDB.put({
             _id: (Math.floor(Date.now() / 1000)).toString(),
+            date: moment().toJSON(),
             transaction: id,
             name: 'summary/status|Estado del Ticket Resumen diario de boletas de venta electrónicas y notas electrónicas',
             description: result.cdrResponse.code + '|' + result.cdrResponse.description,
@@ -282,6 +292,7 @@ async function summaryStatusResult(result, id) {
 
     logsDB.put({
         _id: (Math.floor(Date.now() / 1000)).toString(),
+        date: moment().toJSON(),
         transaction: id,
         name: 'summary/status|Estado del Ticket Resumen diario de boletas de venta electrónicas y notas electrónicas',
         description: result.cdrResponse.code + '|' + result.cdrResponse.description,

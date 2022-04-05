@@ -128,7 +128,7 @@ if (auth == undefined) {
         $('#loading').hide();
     }, 2000);
 
-    platform = storage.get('settings');
+    platform = storage.get('settings') || {};
 
     if (platform != undefined) {
 
@@ -480,7 +480,7 @@ if (auth == undefined) {
             orderTotal = grossTotal.toFixed(2);
 
             $("#gross_price").text(settings.symbol + grossTotal.toFixed(2));
-            $("#payablePrice").val(grossTotal);
+            $("#payablePrice").val(grossTotal.toFixed(2));
         };
 
 
@@ -708,7 +708,7 @@ if (auth == undefined) {
 
             if (settings.charge_tax) {
                 tax_row = `<tr>
-                    <td>Vat(${settings.percentage})% </td>
+                    <td>IGV(${settings.percentage})% </td>
                     <td>:</td>
                     <td>${settings.symbol}${parseFloat(totalVat).toFixed(2)}</td>
                 </tr>`;
@@ -1900,7 +1900,7 @@ if (auth == undefined) {
                 $("#percentage").val(settings.percentage);
                 $("#footer").val(settings.footer);
                 $("#logo_img").val(settings.img);
-                if (settings.charge_tax == 'on') {
+                if (settings.charge_tax) {
                     $('#charge_tax').prop("checked", true);
                 }
                 if (settings.logo) {
@@ -2059,6 +2059,10 @@ function loadTransactions() {
                 if (trans.sunat_state === 'send') {
                     trClass = 'warning';
                     suntaState = 'Enviado';
+
+                    if (trans.sunat_state_summary === 3) {
+                        suntaState += '<br />Por Anular'
+                    }
                 }
                 
                 counter++;
@@ -2072,27 +2076,27 @@ function loadTransactions() {
                                 <td>${trans.paid == "" ? "" : trans.payment_type.name}</td>
                                 <!--<td>${trans.till}</td>-->
                                 <td>${trans.user}</td>
-                                <td>${suntaState}</td>
+                                <td><b>${suntaState}</b></td>
 
                                 <td class="text-center">
                                     <div class="btn-group">
                                         <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">        
                                             <span class="glyphicon glyphicon-option-vertical" aria-hidden="true"></span>
                                         </button>
-                                        <ul class="dropdown-menu">
+                                        <ul class="dropdown-menu dropdown-menu-right">
                                             ${!trans.paid ? '<li class="disabled"><a href="#">Reimprimir</a></li>' : '<li><a href="#" onClick="$(this).viewTransaction(' + index + ')">Reimprimir</a></li>'}
+                                            <li role="separator" class="divider"></li>
                                             <li><a href="#" onClick="$(this).downloadXML('${index}')">Descargar XML</a></li>
                                             <li><a href="#" onClick="$(this).downloadPDF('${index}')">Descargar PDF</a></li>
                                             <li><a href="#" onClick="$(this).downloadCDR('${index}')">Descargar CDR</a></li>
                                             <li role="separator" class="divider"></li>
-                                            <li><a href="#">Cambiar Estado</a></li>
-                                            <li><a href="#">Reenviar a Sunat</a></li>
-                                            <li role="separator" class="divider"></li>
-
-                                            ${trans.document_type.code === '01' && trans.sunat_state !== 'null' ? '<li><a href="#" onClick="$(this).sendVoided(' + index + ')">Comunicar Baja</a></li>' : '' }
+                                            <!--<li><a href="#">Cambiar Estado</a></li>-->
+                                            ${trans.sunat_state !== 'success' && trans.sunat_state !== 'null' ? '<li><a href="#" onClick="$(this).resend(' + index + ')">Reenviar a Sunat</a></li> <li role="separator" class="divider"></li>' : ''}
+                                            
+                                            ${trans.document_type.code === '01' && trans.sunat_state !== 'null' ? '<li><a href="#" onClick="$(this).sendVoided(' + index + ')">Comunicar Baja</a></li>' : '' }   
                                             ${trans.document_type.code === '01' ? '<li><a href="#" onClick="$(this).statusVoided(' + index + ')">Consultar Estado de Baja</a></li>' : ''}
                                         
-                                            ${trans.document_type.code === '03' && trans.sunat_state !== 'null' ? '<li><a href="#" onClick="$(this).sendSummaryNullable(' + index + ')">Anular Mediante Resumen</a></li>' : '' }
+                                            ${trans.document_type.code === '03' && trans.sunat_state !== 'null' ? '<li><a href="#" onClick="$(this).sendSummaryNullable(' + index + ')">Anular Mediante Resumen</a></li><li role="separator" class="divider"></li>' : '' }
                                             ${trans.document_type.code === '03' ? '<li><a href="#" onClick="$(this).statusSummary(' + index + ')">Consultar Estado de Resumen</a></li>' : ''}
 
                                             <li role="separator" class="divider"></li>
@@ -2285,7 +2289,7 @@ $.fn.viewTransaction = function (index) {
 
     if (settings.charge_tax) {
         tax_row = `<tr>
-                <td>Vat(${settings.percentage})% </td>
+                <td>IGV(${settings.percentage})% </td>
                 <td>:</td>
                 <td>${settings.symbol}${parseFloat(allTransactions[index].tax).toFixed(2)}</td>
             </tr>`;
@@ -2357,6 +2361,17 @@ $.fn.viewTransaction = function (index) {
          </p>
         </div>`;
 
+    // obtener qr
+    try {
+        $.get(api + 'transactions/' + allTransactions[index]._id + '/qr', function(data){
+            $('#viewTransaction table').after('<br /><div style="text-align: center;">' + data + '</div>')
+            receipt += '<br /><div style="text-align: center;">' + data + '</div>';
+        });
+    } catch (error) {
+        console.log(error)
+    }
+
+
     $('#viewTransaction').html('');
     $('#viewTransaction').html(receipt);
 
@@ -2367,16 +2382,25 @@ $.fn.viewTransaction = function (index) {
 
 $.fn.viewLogs = function (index) {
     let id = allTransactions[index]._id;
-    let rows = '';
+    
 
     $.ajax({
         type: 'GET',
         url: api + "logs/by-transaction?id=" + id
     }).done(function(data){
-       console.log(data)
-    //    $('#viewTransaction .table').html('');
-    //    $('#viewTransaction .table').html(rows);
-    //    $('#logsModal').modal('show');
+
+        $('#viewLogs table tbody').html('');
+        $("#logsModal h4").html('Historial <b>' + allTransactions[index].serie + '-' + allTransactions[index].correlative + '</b>')
+        for (let i = 0; i < data.docs.length; i++) {
+            const element = data.docs[i];
+            let tr = $('<tr>');
+            // tr.addClass(element.type === 'error' ? 'danger' : element.type)
+            tr.append('<td>' + moment(element.date).format('YYYY MM DD HH:mm:ss') + '</td>')
+            tr.append('<td>' + element.name + '</td>')
+            tr.append('<td>' + element.description + '</td>')
+            $('#viewLogs table tbody').append(tr)
+            $('#logsModal').modal('show');
+        }
     })
 
 }
@@ -2426,9 +2450,15 @@ $.fn.downloadPDF = function(index) {
 }
 
 $.fn.downloadCDR = function(index) {
-    let data = allTransactions[index].sunat_response.cdrZip;
+    let data = '';
     let serie = allTransactions[index].serie;
     let correlative = allTransactions[index].correlative;
+
+    if (allTransactions[index].document_type.code === '03') {
+        data = allTransactions[index].sunat_response_summary_status.cdrZip
+    } else if (allTransactions[index].document_type.code === '01') {
+        data = allTransactions[index].sunat_response.cdrZip;
+    }
     
     var element = document.createElement('a');
     element.setAttribute('href', 'data:text/plain;base64,' + data);
@@ -2517,8 +2547,6 @@ $.fn.statusVoided = async function(index) {
                 data.cdrResponse.description,
                 'success'
             )
-
-            loadTransactions();
         } else {
             Swal.fire(
                 '¡Error consulta comunicación de Baja!',
@@ -2526,13 +2554,100 @@ $.fn.statusVoided = async function(index) {
                 'error'
             )
         }
+
+        loadTransactions();
     }).fail(function (e) {
         Swal.fire(
             '¡Error!',
             'Error al consultar la comunicación de baja: ' + e.responseText,
             'error'
         );
+
+        loadTransactions();
     })
+}
+
+$.fn.resend = async function(index) {
+    let confirmation = await Swal.fire({
+        title: "¿Desea volver a enviar el comprobante?",
+        text: "Esto enviará un resumen diario en caso de boletas y para facturas el envío será directo.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: '¡Sí, Volver a Emitir!'
+    })
+
+    if (!confirmation.isConfirmed) {
+        return;
+    }
+
+    if (allTransactions[index].sunat_state === 'null' || allTransactions[index].sunat_state === 'success') {
+        return Swal.fire(
+            '¡Ups!',
+            'El comprobante ya está aceptado o anulado',
+            'error'
+        )
+    }
+
+    let id = allTransactions[index]._id;
+
+    if(allTransactions[index].document_type.code === '03') {
+        $.ajax({
+            type: 'POST',
+            url: api + "transactions/summary/" + id
+        }).done(function(data) {
+            if (data.sunatResponse.success) {
+                Swal.fire(
+                    '¡Resumen Diario!',
+                    'Ticket generado: ' + data.sunatResponse.ticket,
+                    'success'
+                )
+                
+                loadTransactions();
+            } else {
+                Swal.fire(
+                    '¡Error resumen!',
+                    data.sunatResponse.error.code + ' ' + data.sunatResponse.error.message,
+                    'error'
+                )
+            }
+        }).fail(function (e) {
+            Swal.fire(
+                '¡Error!',
+                'Error al emitir el resumen: ' + e.responseText,
+                'error'
+            );
+        })
+    } else if(allTransactions[index].document_type.code === '01') {
+        $.ajax({
+            type: 'POST',
+            url: api + "transactions/invoice/" + id
+        }).done(function(data) {
+            if (data.sunatResponse.success) {
+                Swal.fire(
+                    '¡Comprobante Electrónico!',
+                    data.sunatResponse.cdrResponse.code + '|' + data.sunatResponse.cdrResponse.description + '<br /><br />' + data.sunatResponse.cdrResponse.notes.toString(),
+                    'success'
+                )
+                
+                loadTransactions();
+            } else {
+                Swal.fire(
+                    '¡Error resumen!',
+                    data.sunatResponse.error.code + ' ' + data.sunatResponse.error.message,
+                    'error'
+                )
+            }
+        }).fail(function (e) {
+            Swal.fire(
+                '¡Error!',
+                'Error al emitir el resumen: ' + e.responseText,
+                'error'
+            );
+        })
+    }
+
 }
 
 $.fn.sendSummaryNullable = async function(index) {
@@ -2625,11 +2740,9 @@ $.fn.statusSummary = async function(index) {
         if (data.success) {
             Swal.fire(
                 '¡Resumen Diario!',
-                data.cdrResponse.description,
+                data.cdrResponse.code + '|' + data.cdrResponse.description + '<br /><br />' + data.cdrResponse.notes.toString(),
                 'success'
             )
-
-            loadTransactions();
         } else {
             Swal.fire(
                 '¡Error consulta resumen diario!',
@@ -2637,12 +2750,16 @@ $.fn.statusSummary = async function(index) {
                 'error'
             )
         }
+
+        loadTransactions();
     }).fail(function (e) {
         Swal.fire(
             '¡Error!',
             'Error al consultar el resumen diario: ' + e.responseText,
             'error'
         );
+
+        loadTransactions();
     })
 }
 

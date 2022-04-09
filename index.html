@@ -216,12 +216,13 @@
               <div class="card-box" id="card-box">
                   <div class="col-md-12">
                       <div class="row">
-                          <div class="col-md-10">
+                          <div class="col-md-9">
                               <select name="" id="customer" class="form-control">
                           </select>
                           </div>
-                          <div class="col-md-2">
-                              <button data-toggle="modal" data-target="#newCustomer" class="btn btn-success"><i class="fa fa-plus"></i></button>
+                          <div class="col-md-3">
+                              <button id="btnEditCustomer" onclick="$(this).editCustomer()" class="btn btn-warning"><i class="fa fa-edit"></i></button>
+                              <button id="newCustomerModal" data-toggle="modal" data-target="#newCustomer" class="btn btn-success"><i class="fa fa-plus"></i></button>
                           </div>
                       </div>
                       <div class="input-group m-t-5">
@@ -299,7 +300,7 @@
               <div class="card-box">
                   <div class="row">
                       <div class="col-md-4">
-                          <input type="text" id="search" class="form-control" placeholder="Buscar producto por nombre o sku">
+                          <input type="text" id="search" class="form-control" placeholder="Buscar producto por nombre">
                       </div>
                       <div class="col-md-8">
                           <div class="" id="categories">
@@ -521,6 +522,7 @@
               </div>
               <div class="modal-body">
                   <form id="saveCustomer" data-parsley-validate>
+                    <input type="hidden" name="id" id="customer_id">
                       <div class="row">
                           <div class="col-md-6">
                                 

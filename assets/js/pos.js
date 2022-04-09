@@ -1104,9 +1104,9 @@ if (auth == undefined) {
         $('#saveCustomer').on('submit', function (e) {
 
             e.preventDefault();
+            let method = 'POST';
 
             let custData = {
-                _id: Math.floor(Date.now() / 1000),
                 name: $('#userName').val(),
                 phone: $('#phoneNumber').val(),
                 email: $('#emailAddress').val(),
@@ -1123,22 +1123,37 @@ if (auth == undefined) {
                 }
             }
 
+            if ($('#customer_id').val()) {
+                method = 'PUT';
+                custData.id = $('#customer_id').val();
+            }
+
             $.ajax({
                 url: api + 'customers/customer',
-                type: 'POST',
+                type: method,
                 data: JSON.stringify(custData),
                 contentType: 'application/json; charset=utf-8',
                 cache: false,
                 processData: false,
-                success: function (data) {
+                success: function (data) { // cuando se actualiza
                     $("#newCustomer").modal('hide');
-                    Swal.fire("¡Cliente agregado!", "¡El cliente se agregó con éxito!", "success");
-                    $("#customer option:selected").removeAttr('selected');
-                    $('#customer').append(
-                        $('<option>', { text: custData.name, value: `{"id": "${custData._id}", "name": "${custData.name}", "document_type": {"code": "${custData.document_type.code}", "number": "${custData.document_type.number}"}}`, selected: 'selected' })
-                    );
 
-                    $('#customer').val(`{"id": "${custData._id}", "name": "${custData.name}", "document_type": {"code": "${custData.document_type.code}", "number": "${custData.document_type.number}"}}`).trigger('chosen:updated');
+                    if ($('#customer_id').val()) {
+                        Swal.fire("¡Cliente actualizado!", "¡El cliente se actualizó con éxito!", "success");
+                        $('#customer option:selected').replaceWith(
+                            $('<option>', { text: data.name, value: `{"id": "${data._id}", "name": "${data.name}", "document_type": {"code": "${data.document_type.code}", "number": "${data.document_type.number}"}}`, selected: 'selected' })
+                        );
+                    } else {
+
+                        Swal.fire("¡Cliente agregado!", "¡El cliente se agregó con éxito!", "success");
+                        $("#customer option:selected").removeAttr('selected');
+                        $('#customer').append(
+                            $('<option>', { text: data.name, value: `{"id": "${data._id}", "name": "${data.name}", "document_type": {"code": "${data.document_type.code}", "number": "${data.document_type.number}"}}`, selected: 'selected' })
+                        );
+    
+                        $('#customer').val(`{"id": "${data._id}", "name": "${data.name}", "document_type": {"code": "${data.document_type.code}", "number": "${data.document_type.number}"}}`).trigger('chosen:updated');
+                    }
+
 
                 }, error: function (data) {
                     $("#newCustomer").modal('hide');
@@ -1216,6 +1231,11 @@ if (auth == undefined) {
             $('#saveCategory input[type=hidden').val('');
         });
 
+        $('#newCustomerModal').click(function () {
+            $('#saveCustomer').get(0).reset();
+            $('#saveCustomer input[type=hidden').val('');
+        });
+
 
         $('#saveProduct').submit(function (e) {
             e.preventDefault();
@@ -1259,7 +1279,7 @@ if (auth == undefined) {
         $('#saveCategory').submit(function (e) {
             e.preventDefault();
 
-            if ($('#category_id').val() == "") {
+            if (!$('#category_id').val()) {
                 method = 'POST';
             }
             else {
@@ -1330,6 +1350,19 @@ if (auth == undefined) {
             $('#newProduct').modal('show');
         }
 
+        $.fn.editCustomer = function () {
+            let customer = $('#customer').val();
+
+            if (!customer) {
+                return
+            }
+            
+            customer = JSON.parse(customer)
+
+            let id = customer.id;
+            loadCustomer(id);
+            $('#newCustomer').modal('show');
+        }
 
         $("#userModal").on("hide.bs.modal", function () {
             $('.perms').hide();
@@ -2016,6 +2049,24 @@ function loadSettings() {
         $("#next_correlative_f").val(factura.next_correlative);
 
         $("#token").val(settings.token);
+    });
+}
+
+function loadCustomer(id) {
+    return $.get(api + 'customers/customer/' + id, function (data) {
+        let customer = data;
+        
+        $('#customer_id').val(customer._id);
+        $('#userName').val(customer.name);
+        $('#document_code').val(customer.document_type.code);
+        $('#document_number').val(customer.document_type.number);
+        $('#phoneNumber').val(customer.phone);
+        $('#emailAddress').val(customer.email);
+        $('#customer_street').val(customer.address.street);
+        $('#customer_state').val(customer.address.state);
+        $('#customer_city').val(customer.address.city);
+        $('#customer_district').val(customer.address.district);
+        $('#customer_zip').val(customer.address.zip);
     });
 }
 

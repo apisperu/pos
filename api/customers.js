@@ -57,7 +57,10 @@ app.put( "/customer", function ( req, res ) {
             _rev: cus._rev
         });
     }).then(function( response ) {
-        res.sendStatus( 200 );
+        return customerDB.get(response.id)
+    }).
+    then(function(customer) {
+        res.status( 200 ).json(customer);
     }).catch(function( err ) {
         res.status( 500 ).send( err );
         console.log( err );
@@ -68,11 +71,13 @@ app.get( "/customer/:customerId", function ( req, res ) {
     if ( !req.params.customerId ) {
         res.status( 500 ).send( "ID field is required." );
     } else {
-        customerDB.findOne( {
-            _id: req.params.customerId
-        }, function ( err, customer ) {
-            res.send( customer );
-        } );
+        customerDB.get(req.params.customerId)
+        .then(function(response) {
+            res.send( response );
+        }).catch(function(err) {
+            console.log(err);
+            res.status( 500 ).send( err );
+        })
     }
 } );
 

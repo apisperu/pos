@@ -24,8 +24,9 @@ app.post( "/customer", function ( req, res ) {
     customerDB.put({
         ...newCustomer,
         _id: id.toString(),
-    }).then(function (result) {
-        res.sendStatus( 200 )
+    }).then(async function (result) {
+        let customer = await customerDB.get(result.id);
+        res.json(customer)
     }).catch(function (err) {
         res.status( 500 ).send( err );
         console.log(err);

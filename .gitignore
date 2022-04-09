@@ -4,3 +4,5 @@ yarn.lock
 .env
 /db/*
 !/db/index.html
+release-builds
+windows_installer

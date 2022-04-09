@@ -161,17 +161,21 @@ app.post("/new", async function(req, res) {
     ...newTransaction,
     _id: newTransaction._id.toString(),
   }).then(async function (result) {
-    if(newTransaction.paid >= newTransaction.total){
-      Inventory.decrementInventory(newTransaction.items);
+    
+    let transaction = await transactionsDB.get(result.id);
+
+    if(transaction.paid >= transaction.total){
+      Inventory.decrementInventory(transaction.items);
     }
     
     // Emitir a sunat
-    if (newTransaction.document_type && newTransaction.document_type.send_sunat) {
+    if (transaction.document_type && transaction.document_type.send_sunat) {
       try {
         
         // boletas
-        if (newTransaction.document_type.code === '03') {
-          let json = await apisperu.jsonSummary([newTransaction]);
+        if (transaction.document_type.code === '03') {
+          
+          let json = await apisperu.jsonSummary([transaction]);
 
           if (json.details.length) {
             apisperu.sendSummary(json).then(async r => {
@@ -182,7 +186,7 @@ app.post("/new", async function(req, res) {
           }
 
         } else {
-          let json = await apisperu.jsonInvoice(newTransaction);
+          let json = await apisperu.jsonInvoice(transaction);
 
           apisperu.sendInvoice(json).then(r => {
             apiResults.invoiceResult(r.data, result.id, json)
@@ -198,11 +202,11 @@ app.post("/new", async function(req, res) {
     }
 
     // Aumentar al siguiente correlativo
-    if (newTransaction.document_type && newTransaction.status) {
-      await Settings.addCorrelative(newTransaction.document_type.code)
+    if (transaction.document_type && transaction.status) {
+      await Settings.addCorrelative(transaction.document_type.code)
     }
     
-    res.json( newTransaction )
+    res.json( transaction )
   }).catch(function (err) {
     res.status( 500 ).send( err );
     console.log(err);

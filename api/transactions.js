@@ -167,6 +167,11 @@ app.post("/new", async function(req, res) {
     if(transaction.paid >= transaction.total){
       Inventory.decrementInventory(transaction.items);
     }
+
+    // Aumentar al siguiente correlativo
+    if (transaction.document_type && transaction.status) {
+      await Settings.addCorrelative(transaction.document_type.code)
+    }
     
     // Emitir a sunat
     if (transaction.document_type && transaction.document_type.send_sunat) {
@@ -200,11 +205,6 @@ app.post("/new", async function(req, res) {
         console.log(error) 
       }
     }
-
-    // Aumentar al siguiente correlativo
-    if (transaction.document_type && transaction.status) {
-      await Settings.addCorrelative(transaction.document_type.code)
-    }
     
     res.json( transaction )
   }).catch(function (err) {
@@ -237,6 +237,11 @@ app.put("/new", async function(req, res) {
       Inventory.decrementInventory(newTransaction.items);
     }
 
+    // Aumentar al siguiente correlativo
+    if (newTransaction.document_type && newTransaction.status) {
+      await Settings.addCorrelative(newTransaction.document_type.code)
+    }
+
     // Emitir a sunat
     if (newTransaction.document_type && newTransaction.document_type.send_sunat) {
       let json = await apisperu.jsonInvoice(newTransaction);
@@ -246,11 +251,6 @@ app.put("/new", async function(req, res) {
       }).catch(err => {
         console.log(err);
       });
-    }
-
-    // Aumentar al siguiente correlativo
-    if (newTransaction.document_type && newTransaction.status) {
-      await Settings.addCorrelative(newTransaction.document_type.code)
     }
 
     res.json( newTransaction )

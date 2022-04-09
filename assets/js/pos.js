@@ -867,6 +867,15 @@ if (auth == undefined) {
                 cache: false,
                 processData: false,
                 success: function (data) {
+                    // obtener qr
+                    try {
+                        $.get(api + 'transactions/' + data._id + '/qr', function(data){
+                            $('#viewTransaction table').after('<br /><div style="text-align: center;">' + data + '</div>')
+                        });
+                    } catch (error) {
+                        console.log(error)
+                    }
+            
                     cart = [];
                     $('#viewTransaction').html('');
                     $('#viewTransaction').html(receipt);
@@ -1199,10 +1208,12 @@ if (auth == undefined) {
         $('#newProductModal').click(function () {
             $('#saveProduct').get(0).reset();
             $('#current_img').text('');
+            $('#saveProduct input[type=hidden').val('');
         });
 
         $('#newCategoryModal').click(function () {
             $('#saveCategory').get(0).reset();
+            $('#saveCategory input[type=hidden').val('');
         });
 
 
@@ -1218,6 +1229,7 @@ if (auth == undefined) {
 
                     $('#saveProduct').get(0).reset();
                     $('#current_img').text('');
+                    $('#saveProduct input[type=hidden').val('');
 
                     loadProducts();
                     Swal.fire({
@@ -1260,6 +1272,7 @@ if (auth == undefined) {
                 data: $(this).serialize(),
                 success: function (data, textStatus, jqXHR) {
                     $('#saveCategory').get(0).reset();
+                    $('#saveCategory input[type=hidden').val('');
                     loadCategories();
                     loadProducts();
                     Swal.fire({
@@ -1331,40 +1344,40 @@ if (auth == undefined) {
 
             $('.perms').show();
 
-            $("#user_id").val(allUsers[index]._id);
-            $('#fullname').val(allUsers[index].fullname);
-            $('#username').val(allUsers[index].username);
-            $('#password').val(atob(allUsers[index].password));
+            $("#user_id").val(allUsers[index].doc._id);
+            $('#fullname').val(allUsers[index].doc.fullname);
+            $('#username').val(allUsers[index].doc.username);
+            $('#password').val(atob(allUsers[index].doc.password));
 
-            if (allUsers[index].perm_products == 1) {
+            if (allUsers[index].doc.perm_products == 1) {
                 $('#perm_products').prop("checked", true);
             }
             else {
                 $('#perm_products').prop("checked", false);
             }
 
-            if (allUsers[index].perm_categories == 1) {
+            if (allUsers[index].doc.perm_categories == 1) {
                 $('#perm_categories').prop("checked", true);
             }
             else {
                 $('#perm_categories').prop("checked", false);
             }
 
-            if (allUsers[index].perm_transactions == 1) {
+            if (allUsers[index].doc.perm_transactions == 1) {
                 $('#perm_transactions').prop("checked", true);
             }
             else {
                 $('#perm_transactions').prop("checked", false);
             }
 
-            if (allUsers[index].perm_users == 1) {
+            if (allUsers[index].doc.perm_users == 1) {
                 $('#perm_users').prop("checked", true);
             }
             else {
                 $('#perm_users').prop("checked", false);
             }
 
-            if (allUsers[index].perm_settings == 1) {
+            if (allUsers[index].doc.perm_settings == 1) {
                 $('#perm_settings').prop("checked", true);
             }
             else {
@@ -1858,13 +1871,14 @@ if (auth == undefined) {
             }
 
             $("#saveUser").get(0).reset();
+            $('#saveUser input[type=hidden').val('');
             $('#userModal').modal('show');
 
         });
 
 
 
-        $('#settings').click(function () {
+        $('#settings').click(async function () {
 
             if (platform.app == 'Network Point of Sale Terminal') {
                 $('#net_settings_form').show(500);
@@ -1883,51 +1897,8 @@ if (auth == undefined) {
             }
             else {
                 $('#net_settings_form').hide(500);
+                await loadSettings();
                 $('#settings_form').show(500);
-
-                $("#settings_id").val("1");
-                $("#store").val(settings.store);
-                $("#legal_name").val(settings.legal_name);
-                $("#tradename").val(settings.tradename);
-                $("#street").val(settings.address && settings.address.street);
-                $("#state").val(settings.address && settings.address.state);
-                $("#city").val(settings.address && settings.address.city);
-                $("#district").val(settings.address && settings.address.district);
-                $("#zip").val(settings.address && settings.address.zip);
-                $("#contact").val(settings.contact);
-                $("#vat_no").val(settings.vat_no);
-                $("#symbol").val(settings.symbol);
-                $("#percentage").val(settings.percentage);
-                $("#footer").val(settings.footer);
-                $("#logo_img").val(settings.img);
-                if (settings.charge_tax) {
-                    $('#charge_tax').prop("checked", true);
-                }
-                if (settings.logo) {
-                    $('#logoname').hide();
-                    $('#current_logo').html(`<img src="${settings.logo}" alt="">`);
-                    $('#rmv_logo').show();
-                }
-
-                $("#app option").filter(function () {
-                    return $(this).text() == settings.app;
-                }).prop("selected", true);
-
-                let ticket = settings.document_types.find(s => s.code === "12");
-                let boleta = settings.document_types.find(s => s.code === "03");
-                let factura = settings.document_types.find(s => s.code === "01");
-                
-
-                $("#serie_t").val(ticket.serie);
-                $("#next_correlative_t").val(ticket.next_correlative);
-
-                $("#serie_b").val(boleta.serie);
-                $("#next_correlative_b").val(boleta.next_correlative);
-
-                $("#serie_f").val(factura.serie);
-                $("#next_correlative_f").val(factura.next_correlative);
-
-                $("#token").val(settings.token);
             }
 
         });
@@ -1992,6 +1963,60 @@ $.fn.print = function () {
 
     printJS({ printable: receipt, type: 'raw-html' });
 
+}
+
+function loadSettings() {
+    return $.get(api + 'settings/all', function (data) {
+        settings = data.settings;
+        
+        if (data._attachments && data._attachments.logo) {
+           settings.logo = 'data:' + data._attachments.logo.content_type + ';base64,' + data._attachments.logo.data;
+        }
+
+        $("#settings_id").val("1");
+        $("#store").val(settings.store);
+        $("#legal_name").val(settings.legal_name);
+        $("#tradename").val(settings.tradename);
+        $("#street").val(settings.address && settings.address.street);
+        $("#state").val(settings.address && settings.address.state);
+        $("#city").val(settings.address && settings.address.city);
+        $("#district").val(settings.address && settings.address.district);
+        $("#zip").val(settings.address && settings.address.zip);
+        $("#contact").val(settings.contact);
+        $("#vat_no").val(settings.vat_no);
+        $("#symbol").val(settings.symbol);
+        $("#percentage").val(settings.percentage);
+        $("#footer").val(settings.footer);
+        $("#logo_img").val(settings.img);
+        if (settings.charge_tax) {
+            $('#charge_tax').prop("checked", true);
+        }
+        if (settings.logo) {
+            $('#logoname').hide();
+            $('#current_logo').html(`<img src="${settings.logo}" alt="">`);
+            $('#rmv_logo').show();
+        }
+
+        $("#app option").filter(function () {
+            return $(this).text() == settings.app;
+        }).prop("selected", true);
+
+        let ticket = settings.document_types.find(s => s.code === "12");
+        let boleta = settings.document_types.find(s => s.code === "03");
+        let factura = settings.document_types.find(s => s.code === "01");
+        
+
+        $("#serie_t").val(ticket.serie);
+        $("#next_correlative_t").val(ticket.next_correlative);
+
+        $("#serie_b").val(boleta.serie);
+        $("#next_correlative_b").val(boleta.next_correlative);
+
+        $("#serie_f").val(factura.serie);
+        $("#next_correlative_f").val(factura.next_correlative);
+
+        $("#token").val(settings.token);
+    });
 }
 
 

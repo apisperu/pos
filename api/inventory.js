@@ -44,29 +44,6 @@ app.get( "/products", function ( req, res ) {
 
 app.post( "/product", upload.single('imagename'), async function ( req, res ) {
 
-    // let image = '';
-
-    // if(req.body.img != "") {
-    //     image = req.body.img;        
-    // }
-
-    // if(req.file) {
-    //     image = req.file.filename;  
-    // }
- 
-    // if(req.body.remove == 1) {
-    //     const path = './resources/app/public/uploads/product_image/'+ req.body.img;
-    //     try {
-    //       fs.unlinkSync(path)
-    //     } catch(err) {
-    //       console.error(err)
-    //     }
-
-    //     if(!req.file) {
-    //         image = '';
-    //     }
-    // }
-    
     let Product = {
         _id: (req.body.id).toString(),
         price: req.body.price,

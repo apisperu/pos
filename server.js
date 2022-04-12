@@ -2,12 +2,12 @@ let express = require("express"),
   http = require("http"),
   app = require("express")(),
   server = http.createServer(app),
-  bodyParser = require("body-parser");
+  bodyParser = require("body-parser"),
+  CONFIG = require('./config');
 
-require('dotenv').config();
 app.use(express.json());
 
-const PORT = process.env.PORT || 8001;
+const PORT = CONFIG.PORT || 8001;
 
 console.log("Server started");
 app.use(bodyParser.json());

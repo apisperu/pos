@@ -2,7 +2,9 @@ const app = require( "express")();
 const multer = require("multer");
 const fs = require('fs');
 const PouchDB = require('pouchdb');
-let settingsDB = new PouchDB(process.env.DB_HOST + 'settings');
+const CONFIG = require('../config');
+
+let settingsDB = new PouchDB(CONFIG.DB_HOST + 'settings');
 
 let upload = multer();
 
@@ -43,6 +45,7 @@ app.post( "/", upload.single('imagename'), async function ( req, res ) {
             "serie": req.body.serie,
             "next_correlative": parseInt(req.body.next_correlative),
             "token": req.body.token,
+            "token_consulta": req.body.token_consulta,
             "document_types": [
                 { "code": "12", "name": "Ticket", "send_sunat": false, "serie": req.body.serie_t, "next_correlative": parseInt(req.body.next_correlative_t) },
                 { "code": "03", "name": "Boleta Electrónica", "send_sunat": true, "serie": req.body.serie_b, "next_correlative": parseInt(req.body.next_correlative_b) },

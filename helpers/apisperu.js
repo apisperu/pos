@@ -3,11 +3,10 @@ const aLetras = require('./numeroALetras')
 const axios = require('axios');
 const PouchDB = require('pouchdb');
 const apiResults = require('./apiResults');
+const CONFIG = require('../config');
 
-require('dotenv').config();
-
-let settingsDB = new PouchDB(process.env.DB_HOST + 'settings');
-let transactionsDB = new PouchDB(process.env.DB_HOST + 'transactions');
+let settingsDB = new PouchDB(CONFIG.DB_HOST + 'settings');
+let transactionsDB = new PouchDB(CONFIG.DB_HOST + 'transactions');
 
 
 async function jsonInvoice(data){
@@ -431,6 +430,24 @@ async function sendPending(job) {
   job.taskRunning = false
 }
 
+async function getDniRuc(type, number){
+  let settings = await settingsDB.get('1');
+  let token = settings.settings.token_consulta;
+
+  let typeDoc = 'dni';
+  
+  if (type === '6') {
+    typeDoc = 'ruc';
+  }
+
+  return axios.get('https://dniruc.apisperu.com/api/v1/' + typeDoc + '/' + number + '?token=' + token, {
+      headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+      }
+  })
+}
+
 
 module.exports = {
     jsonInvoice,
@@ -445,5 +462,6 @@ module.exports = {
     statusSummary,
     sendPending,
     jsonQrSale,
-    qrSale
+    qrSale,
+    getDniRuc
 }

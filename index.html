@@ -12,6 +12,7 @@
     <link href="assets/plugins/daterangepicker/daterangepicker.css" rel="stylesheet" type="text/css" />    
     <link href="assets/plugins/dataTables/jquery.dataTables.min.css" rel="stylesheet" type="text/css" />
     <link href="assets/plugins/dataTables/dataTables.bootstrap.min.css" rel="stylesheet" type="text/css" />    
+    <link href="assets/plugins/bootstrap-select/bootstrap-select.min.css" rel="stylesheet" type="text/css" />    
     <link href="assets/css/pages.css" rel="stylesheet" type="text/css" />
     </head>
   <body>
@@ -217,7 +218,7 @@
                   <div class="col-md-12">
                       <div class="row">
                           <div class="col-md-9">
-                              <select name="" id="customer" class="form-control">
+                              <select name="" id="customer" class="form-control selectpicker" data-live-search="true">
                           </select>
                           </div>
                           <div class="col-md-3">
@@ -537,6 +538,7 @@
                                     <option value="6">RUC</option>
                                 </select>
                                 <input type="text" class="form-control" placeholder="Número de documento" aria-describedby="sizing-addon1" name="document_number" id="document_number" required="required">
+                                <span class="help-block">Pulsar enter para la busqueda avanzada</span>
                             </div>
                               <div class="form-group">
                                   <label for="userName">Teléfono</label>
@@ -1089,7 +1091,13 @@
                                     <label>Token de emisión electrónica</label>
                                     <textarea name="token" class="form-control" id="token"></textarea>
                                 </div>   
-                            </div>   
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>Token de consulta DNI/RUC</label>
+                                    <textarea name="token_consulta" class="form-control" id="token_consulta"></textarea>
+                                </div>   
+                            </div>
                         </div>           
                         <div class="form-group">
                                 <input id="save_settings" type="submit" class="btn btn-default btn-block waves-effect waves-light" value="Guardar Ajustes">
@@ -1123,6 +1131,7 @@ require('./renderer.js');
     <script src="assets/plugins/dataTables/buttons.html5.min.js"></script>
     <script src="assets/plugins/dataTables/pdfmake.min.js"></script>
     <script src="assets/plugins/dataTables/vfs_fonts.js"></script>
+    <script src="assets/plugins/bootstrap-select/bootstrap-select.min.js"></script>
     <!-- <script src="assets/plugins/jquery-ui/jquery-ui.min.js"></script>
     <script src="assets/plugins/jq-keyboard/jqkeyboard-min.js"></script>
     <script src="assets/plugins/jq-keyboard/jqk.layout.en.js"></script>

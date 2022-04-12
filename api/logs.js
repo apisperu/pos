@@ -1,6 +1,8 @@
 const app = require( "express" )();
 const PouchDB = require('pouchdb');
-let logsDB = new PouchDB(process.env.DB_HOST + 'logs');
+const CONFIG = require('../config');
+
+let logsDB = new PouchDB(CONFIG.DB_HOST + 'logs');
 
 app.get( "/", function ( req, res ) {
     res.send( "Logs API" );

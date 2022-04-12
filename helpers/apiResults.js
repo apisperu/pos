@@ -1,10 +1,9 @@
 const moment = require('moment');
 const PouchDB = require('pouchdb');
+const CONFIG = require('../config');
 
-require('dotenv').config();
-
-let transactionsDB = new PouchDB(process.env.DB_HOST + 'transactions');
-let logsDB = new PouchDB(process.env.DB_HOST + 'logs');
+let transactionsDB = new PouchDB(CONFIG.DB_HOST + 'transactions');
+let logsDB = new PouchDB(CONFIG.DB_HOST + 'logs');
 
 async function invoiceResult(result, id, json) {
 

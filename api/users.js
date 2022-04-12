@@ -1,13 +1,12 @@
 const app = require( "express")();
 const PouchDB = require('pouchdb');
 const btoa = require('btoa');
-
+const CONFIG = require('../config');
 const PouchdbFind = require('pouchdb-find');
 
 PouchDB.plugin(PouchdbFind);
 
-
-let usersDB = new PouchDB(process.env.DB_HOST + 'users');
+let usersDB = new PouchDB(CONFIG.DB_HOST + 'users');
 
 app.get( "/", function ( req, res ) {
     res.send( "Users API" );

@@ -273,9 +273,10 @@ if (auth == undefined) {
                     cust = cust.doc;
                     cust.id = cust._id;
 
-                    let customer = `<option value='${JSON.stringify(cust)}'>${cust.name}</option>`;
+                    let customer = `<option value='${JSON.stringify(cust)}'>${cust.document_type.number + ' - ' + cust.name}</option>`;
                     $('#customer').append(customer);
                 });
+                $('#customer').selectpicker('refresh');
 
                 //  $('#customer').chosen();
 
@@ -871,6 +872,7 @@ if (auth == undefined) {
                     try {
                         $.get(api + 'transactions/' + data._id + '/qr', function(data){
                             $('#viewTransaction table').after('<br /><div style="text-align: center;">' + data + '</div>')
+                            receipt += '<br /><div style="text-align: center;">' + data + '</div>';
                         });
                     } catch (error) {
                         console.log(error)
@@ -1141,23 +1143,28 @@ if (auth == undefined) {
                     if ($('#customer_id').val()) {
                         Swal.fire("¡Cliente actualizado!", "¡El cliente se actualizó con éxito!", "success");
                         $('#customer option:selected').replaceWith(
-                            $('<option>', { text: data.name, value: `{"id": "${data._id}", "name": "${data.name}", "document_type": {"code": "${data.document_type.code}", "number": "${data.document_type.number}"}}`, selected: 'selected' })
+                            $('<option>', { text: data.document_type.number + ' - ' + data.name, value: `{"id": "${data._id}", "name": "${data.name}", "document_type": {"code": "${data.document_type.code}", "number": "${data.document_type.number}"}}`, selected: 'selected' })
                         );
+
+                        $('#customer').selectpicker('refresh');
                     } else {
 
                         Swal.fire("¡Cliente agregado!", "¡El cliente se agregó con éxito!", "success");
                         $("#customer option:selected").removeAttr('selected');
                         $('#customer').append(
-                            $('<option>', { text: data.name, value: `{"id": "${data._id}", "name": "${data.name}", "document_type": {"code": "${data.document_type.code}", "number": "${data.document_type.number}"}}`, selected: 'selected' })
+                            $('<option>', { text: data.document_type.number + ' - ' + data.name, value: `{"id": "${data._id}", "name": "${data.name}", "document_type": {"code": "${data.document_type.code}", "number": "${data.document_type.number}"}}`, selected: 'selected' })
                         );
     
                         $('#customer').val(`{"id": "${data._id}", "name": "${data.name}", "document_type": {"code": "${data.document_type.code}", "number": "${data.document_type.number}"}}`).trigger('chosen:updated');
+                        
+                        $('#customer').selectpicker('refresh');
                     }
 
 
                 }, error: function (data) {
-                    $("#newCustomer").modal('hide');
-                    Swal.fire('Error', 'Algo salió mal. Por favor, vuelva a intentarlo', 'error')
+                    console.log(data)
+                    // $("#newCustomer").modal('hide');
+                    Swal.fire('Error', 'Algo salió mal. Por favor, vuelva a intentarlo.' + '<br>' + data.responseText, 'error')
                 }
             })
         })
@@ -1989,6 +1996,48 @@ if (auth == undefined) {
 
     });
 
+    $('#document_number').on('keypress', async function (e) {
+        if(e.which === 13) {
+            e.preventDefault();
+            
+            $(this).attr("disabled", "disabled");
+            
+            if ($('#document_code').val() && $('#document_number').val()) {
+
+                if ($('#document_code').val() === '1' && $('#document_number').val().length !== 8) {
+                    Swal.fire(
+                        '¡Error!',
+                        'DNI Incorrecto',
+                        'error'
+                    );
+                    $(this).removeAttr("disabled");
+                    return;
+                }
+
+                if ($('#document_code').val() === '6' && $('#document_number').val().length !== 11) {
+                    Swal.fire(
+                        '¡Error!',
+                        'RUC Incorrecto',
+                        'error'
+                    );
+                    $(this).removeAttr("disabled");
+                    return;
+                }
+
+                await loadDniRuc($('#document_code').val(), $('#document_number').val()).catch(function (err) {
+                    Swal.fire(
+                        '¡Error!',
+                        'Error interno, verifique el token',
+                        'error'
+                    );
+                    
+                    console.log(err)
+                })
+            }
+
+            $(this).removeAttr("disabled");
+        }
+  });
 }
 
 
@@ -1996,6 +2045,25 @@ $.fn.print = function () {
 
     printJS({ printable: receipt, type: 'raw-html' });
 
+}
+
+function loadDniRuc(type, number) {
+    return $.get(api + 'customers/search/' + type + '/' + number, function (data) {
+        
+        if (type === '1') {
+            $('#userName').val(data.nombres + ' ' + data.apellidoPaterno + ' ' + data.apellidoMaterno);
+        }
+
+        if (type === '6') {
+            $('#userName').val(data.razonSocial);
+            $('#customer_street').val(data.direccion);
+            $('#customer_district').val(data.distrito);
+            $('#customer_state').val(data.capital);
+            $('#customer_city').val(data.departamento);
+            $('#customer_zip').val(data.ubigeo);
+        }
+        
+    });
 }
 
 function loadSettings() {
@@ -2049,6 +2117,7 @@ function loadSettings() {
         $("#next_correlative_f").val(factura.next_correlative);
 
         $("#token").val(settings.token);
+        $("#token_consulta").val(settings.token_consulta);
     });
 }
 

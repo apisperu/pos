@@ -1,6 +1,8 @@
 const app = require( "express" )();
 const PouchDB = require('pouchdb');
-let categoryDB = new PouchDB(process.env.DB_HOST + 'categories');
+const CONFIG = require('../config');
+
+let categoryDB = new PouchDB(CONFIG.DB_HOST + 'categories');
 
 app.get( "/", function ( req, res ) {
     res.send( "Category API" );

@@ -6,10 +6,11 @@ let apisperu = require("../helpers/apisperu");
 const PouchDB = require('pouchdb');
 const PouchdbFind = require('pouchdb-find');
 const apiResults = require('../helpers/apiResults');
+const CONFIG = require('../config');
 
 PouchDB.plugin(PouchdbFind);
 
-let transactionsDB = new PouchDB(process.env.DB_HOST + 'transactions');
+let transactionsDB = new PouchDB(CONFIG.DB_HOST + 'transactions');
 
 app.get("/", function(req, res) {
   res.send("Transactions API");

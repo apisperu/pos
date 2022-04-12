@@ -1,6 +1,9 @@
 const app = require( "express" )();
 const PouchDB = require('pouchdb');
-let customerDB = new PouchDB(process.env.DB_HOST + 'customers');
+const CONFIG = require('../config');
+let apisperu = require("../helpers/apisperu");
+
+let customerDB = new PouchDB(CONFIG.DB_HOST + 'customers');
 
 app.get( "/", function ( req, res ) {
     res.send( "Customer API" );
@@ -17,10 +20,22 @@ app.get( "/all", function ( req, res ) {
     });
 } );
  
-app.post( "/customer", function ( req, res ) {
+app.post( "/customer", async function ( req, res ) {
     let id = Math.floor(Date.now() / 1000);
-    let newCustomer = req.body;
+    var newCustomer = req.body;
 
+    try {
+        let cust = await customerDB.query(function(doc, emit) {
+            emit(doc.document_type.number);
+        }, {key: newCustomer.document_type.number})
+
+        if (cust.rows.length) {
+            return res.status( 500 ).send( 'Ya existe un cliente con el mismo DNI o RUC' );
+        }
+    } catch (err) {
+        console.log(err)
+    }
+   
     customerDB.put({
         ...newCustomer,
         _id: id.toString(),
@@ -74,6 +89,21 @@ app.get( "/customer/:customerId", function ( req, res ) {
         customerDB.get(req.params.customerId)
         .then(function(response) {
             res.send( response );
+        }).catch(function(err) {
+            console.log(err);
+            res.status( 500 ).send( err );
+        })
+    }
+} );
+
+
+app.get( "/search/:type/:number", function ( req, res ) {
+    if ( !req.params.type || !req.params.number ) {
+        res.status( 500 ).send( "Type or number field is required." );
+    } else {
+        apisperu.getDniRuc(req.params.type, req.params.number)
+        .then(function(r) {
+            res.status( 200 ).json( r.data );
         }).catch(function(err) {
             console.log(err);
             res.status( 500 ).send( err );

@@ -5,9 +5,10 @@ const Datastore = require( "nedb" );
 const async = require( "async" );
 const multer = require("multer");
 const fs = require('fs');
+const CONFIG = require('../config');
 
 const PouchDB = require('pouchdb');
-let inventoryDB = new PouchDB(process.env.DB_HOST + 'inventory');
+let inventoryDB = new PouchDB(CONFIG.DB_HOST + 'inventory');
 
 let upload = multer();
 

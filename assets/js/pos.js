@@ -1612,7 +1612,7 @@ if (auth == undefined) {
                 counter++;
 
                 let category = allCategories.filter( category => category.id == product.category);
-                
+
                 product_list += `<tr>
             <td><img id="`+ product._id + `"></td>
             <td style="text-align: center;"><img style="max-height: 50px; max-width: 50px; border: 1px solid #ddd;" src="${product.image}" id="product_img"></td>

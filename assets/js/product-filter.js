@@ -76,14 +76,15 @@ $(document).ready(function(){
 
 
     var $list = $('.list-group-item').click(function () {
-       $list.removeClass('active');
+    //    $list.removeClass('active');
+       $(this).siblings('.list-group-item').removeClass('active');
        $(this).addClass('active');
        if(this.id == 'check'){
             $("#cardInfo").show();
             $("#cardInfo .input-group-addon").text("Check Info");
        }else if(this.id == 'card'){
            $("#cardInfo").show();
-           $("#cardInfo .input-group-addon").text("Card Info");
+           $("#cardInfo .input-group-addon").text("Info. de la tarjeta");
        }else if(this.id == 'cash'){
            $("#cardInfo").hide();
        }

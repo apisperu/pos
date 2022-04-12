@@ -242,3 +242,7 @@ margin-right: 30px;
   font-size: 32px;
   width: 100%;
 }
+
+#paymentModel .list-group .list-group-item {
+  line-height: 3rem;
+}

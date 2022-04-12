@@ -1,111 +1,122 @@
 const app = require( "express")();
-const server = require( "http" ).Server( app );
-const bodyParser = require( "body-parser" );
-const Datastore = require( "nedb" );
 const multer = require("multer");
-const fileUpload = require('express-fileupload');
 const fs = require('fs');
+const PouchDB = require('pouchdb');
+const CONFIG = require('../config');
 
+let settingsDB = new PouchDB(CONFIG.DB_HOST + 'settings');
 
-const storage = multer.diskStorage({
-    destination:  process.env.APPDATA+'/POS/uploads',
-    filename: function(req, file, callback){
-        callback(null, Date.now() + '.jpg'); // 
-    }
-});
-
-let upload = multer({storage: storage});
-
-app.use( bodyParser.json() );
-
-module.exports = app;
-
- 
-let settingsDB = new Datastore( {
-    filename: process.env.APPDATA+"/POS/server/databases/settings.db",
-    autoload: true
-} );
-
-
+let upload = multer();
 
 app.get( "/", function ( req, res ) {
     res.send( "Settings API" );
 } );
 
-
-  
-app.get( "/get", function ( req, res ) {
-    settingsDB.findOne( {
-        _id: 1
-}, function ( err, docs ) {
-        res.send( docs );
-    } );
+app.get( "/all", function ( req, res ) {
+    settingsDB.get('1', {attachments: true}).then(function (result) {
+        res.send( result );
+    }).catch(function (err) {
+        res.status( 500 ).send( err );
+        console.log(err);
+    });
 } );
-
  
-app.post( "/post", upload.single('imagename'), function ( req, res ) {
-
-    let image = '';
-
-    if(req.body.img != "") {
-        image = req.body.img;       
-    }
-
-    if(req.file) {
-        image = req.file.filename;  
-    }
-
-    if(req.body.remove == 1) {
-        const path = process.env.APPDATA+"/POS/uploads/"+ req.body.img;
-        try {
-          fs.unlinkSync(path)
-        } catch(err) {
-          console.error(err)
-        }
-
-        if(!req.file) {
-            image = '';
-        }
-    } 
-    
-  
+app.post( "/", upload.single('imagename'), async function ( req, res ) {
     let Settings = {  
-        _id: 1,
+        _id: '1',
         settings: {
             "app": req.body.app,
             "store": req.body.store,
-            "address_one": req.body.address_one,
-            "address_two":req.body.address_two,
+            "legal_name": req.body.legal_name,
+            "tradename": req.body.tradename,
+            "address": {
+                "street": req.body.street,
+                "state": req.body.state,
+                "city": req.body.city,
+                "district": req.body.district,
+                "zip": req.body.zip,
+            },
             "contact": req.body.contact,
-            "tax": req.body.tax,
+            "vat_no": req.body.vat_no,
             "symbol": req.body.symbol,
             "percentage": req.body.percentage,
-            "charge_tax": req.body.charge_tax,
+            "charge_tax": true,//req.body.charge_tax,
             "footer": req.body.footer,
-            "img": image
+            "serie": req.body.serie,
+            "next_correlative": parseInt(req.body.next_correlative),
+            "token": req.body.token,
+            "token_consulta": req.body.token_consulta,
+            "document_types": [
+                { "code": "12", "name": "Ticket", "send_sunat": false, "serie": req.body.serie_t, "next_correlative": parseInt(req.body.next_correlative_t) },
+                { "code": "03", "name": "Boleta Electrónica", "send_sunat": true, "serie": req.body.serie_b, "next_correlative": parseInt(req.body.next_correlative_b) },
+                { "code": "01", "name": "Factura Electrónica", "send_sunat": true, "serie": req.body.serie_f, "next_correlative": parseInt(req.body.next_correlative_f) }
+            ]
         }       
     }
 
-    if(req.body.id == "") { 
-        settingsDB.insert( Settings, function ( err, settings ) {
-            if ( err ) res.status( 500 ).send( err );
-            else res.send( settings );
-        });
-    }
-    else { 
-        settingsDB.update( {
-            _id: 1
-        }, Settings, {}, function (
-            err,
-            numReplaced,
-            settings
-        ) {
-            if ( err ) res.status( 500 ).send( err );
-            else res.sendStatus( 200 );
-        } );
-
+    if(req.file) {
+        Settings._attachments = {
+            'logo': {
+                content_type: req.file.mimetype,
+                data: req.file.buffer
+            }
+        }
     }
 
+    if (req.body.id) {
+        if(req.body.remove === "1") {
+            try {
+                var setting = await settingsDB.get((req.body.id).toString());
+                await settingsDB.removeAttachment('1', 'logo', setting._rev);
+            } catch (err) {
+                res.status( 500 ).send( err );
+                console.log(err);
+            }
+        }
+
+        try {
+            var setting = await settingsDB.get((req.body.id).toString());
+            await settingsDB.put({ ...setting, ...Settings });
+            res.sendStatus( 200 );
+        } catch (err) {
+            res.status( 500 ).send( err );
+            console.log(err);
+        }
+
+    } else {
+
+        try {
+            await settingsDB.put({ _id: '1', ...Settings })
+            res.sendStatus( 200 )
+        } catch (err) {
+            res.status( 500 ).send( err );
+            console.log(err);
+        }
+    }
 });
 
- 
+app.addCorrelative = async function (documentCode) {
+    try {
+        var settings = await settingsDB.get('1');
+        documentTypes = settings.settings.document_types;
+
+        documentTypes.forEach((element, index) => {
+            if (element.code === documentCode) {
+                documentTypes[index].next_correlative = parseInt(documentTypes[index].next_correlative) + 1;
+            }
+        });
+
+        await settingsDB.put({ ...settings, document_types: documentTypes });
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+app.getDocumentType = async function (documentCode) {
+    var settings = await settingsDB.get('1');
+    settings = settings.settings;
+    return settings.document_types.find((type) => type.code === documentCode);
+}
+
+
+module.exports = app;

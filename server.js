@@ -2,11 +2,12 @@ let express = require("express"),
   http = require("http"),
   app = require("express")(),
   server = http.createServer(app),
-  bodyParser = require("body-parser");
+  bodyParser = require("body-parser"),
+  CONFIG = require('./config');
 
 app.use(express.json());
 
-const PORT = process.env.PORT || 8001;
+const PORT = CONFIG.PORT || 8001;
 
 console.log("Server started");
 app.use(bodyParser.json());
@@ -36,6 +37,8 @@ app.use("/api/customers", require("./api/customers"));
 app.use("/api/categories", require("./api/categories"));
 app.use("/api/settings", require("./api/settings"));
 app.use("/api/users", require("./api/users"));
-app.use("/api", require("./api/transactions"));
+app.use("/api/transactions", require("./api/transactions"));
+app.use("/api/documents", require("./api/documents"));
+app.use("/api/logs", require("./api/logs"));
 
 server.listen(PORT, () => console.log(`Listening on PORT ${PORT}`));

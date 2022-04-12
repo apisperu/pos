@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>Point Of Sale</title>
+    <title>Punto de Venta</title>
     <link href="assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
     <link href="assets/css/core.css" rel="stylesheet" type="text/css" />
     <link href="assets/css/components.css" rel="stylesheet" type="text/css" />
@@ -12,6 +12,7 @@
     <link href="assets/plugins/daterangepicker/daterangepicker.css" rel="stylesheet" type="text/css" />    
     <link href="assets/plugins/dataTables/jquery.dataTables.min.css" rel="stylesheet" type="text/css" />
     <link href="assets/plugins/dataTables/dataTables.bootstrap.min.css" rel="stylesheet" type="text/css" />    
+    <link href="assets/plugins/bootstrap-select/bootstrap-select.min.css" rel="stylesheet" type="text/css" />    
     <link href="assets/css/pages.css" rel="stylesheet" type="text/css" />
     </head>
   <body>
@@ -44,7 +45,7 @@
                             </div>
                    
                             <button id="viewRefOrders" data-toggle="modal" data-target="#holdOrdersModal" type="button" class="btn btn-info waves-effect waves-light">
-                                    <span class="btn-label"><i class="fa fa-shopping-basket"></i> </span> Pedidos Abiertos
+                                    <span class="btn-label"><i class="fa fa-shopping-basket"></i> </span> Pedidos en Espera
                             </button>
             
                             <button id="viewCustomerOrders" data-toggle="modal" data-target="#customerModal" type="button" onclick="$(this).getCustomerOrders()" class="btn btn-info waves-effect waves-light">
@@ -69,7 +70,7 @@
                             </button>
 
                             <button id="pointofsale" type="button" class="btn btn-default waves-effect waves-light">
-                                <span class="btn-label"><i class=" 	glyphicon glyphicon-shopping-cart"></i> </span>  Point of Sale
+                                <span class="btn-label"><i class=" 	glyphicon glyphicon-shopping-cart"></i> </span> Punto de Venta
                             </button>
 
                             <div class="btn-group p_four">
@@ -108,24 +109,24 @@
                     <div class="row">               
                         <h3 class="col-md-2">Transacciones</h3> 
                         <div class="col-md-1">
-                            <span>Till</span>
+                            <span>Caja </span>
                             <select id="tills" class="form-control">                              
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <span>Cashier</span>
+                            <span>Cajero</span>
                             <select id="users" class="form-control">
                             </select>
                         </div>
                         <div class="col-md-1">
-                            <span>Status</span>
+                            <span>Estado</span>
                             <select id="status" class="form-control status">
-                                <option value="1">Paid</option>
-                                <option value="0">Unpaid</option>
+                                <option value="1">Pagado</option>
+                                <option value="0">No pagado</option>
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <span style="width: 100%;">Date</span>
+                            <span style="width: 100%;">Fecha</span>
                             <div id="reportrange">
                                 <i class="fa fa-calendar"></i>&nbsp;
                                 <span></span> <i class="fa fa-caret-down"></i>
@@ -144,10 +145,10 @@
                                             <table class="table tablesaw-enhanced" id="productsSold">
                                                 <thead>
                                                     <tr>
-                                                        <th>Name</th>
-                                                        <th>Sold</th>
-                                                        <th>Available</th> 
-                                                        <th>Sales</th>                                                                                                           
+                                                        <th>Nombre</th>
+                                                        <th>Vendido</th>
+                                                        <th>Disponible</th> 
+                                                        <th>Ventas</th>                                                                                                           
                                                     </tr>
                                                 </thead>
                                                 <tbody id="product_sales"></tbody>
@@ -158,7 +159,7 @@
                                             <hr>
                                     
                                             <div id="total_sales" class="btn-success">
-                                                <h5>SALES</h5>
+                                                <h5>VENTAS</h5>
                                                 <div id="counter">0</div>
                                             </div>
                                        
@@ -168,7 +169,7 @@
                                             </div>
                                 
                                             <div id="total_items" class="btn-info">
-                                                <h5>ITEMS</h5>
+                                                <h5>ELEMENTOS</h5>
                                                 <div id="counter">0</div>
                                             </div>
 
@@ -183,18 +184,20 @@
                            </div>
 
                            <div class="col-md-7">
-                            <table class="table tablesaw-enhanced" id="transactionList">
+                            <table class="table tablesaw-enhanced table-responsive" id="transactionList">
                                 <thead>
                                     <tr>                                                                      
-                                        <th>Invoice</th>                                      
-                                        <th>Date</th>
+                                        <!--<th>Order</th>   -->                                   
+                                        <th>Correlativo</th>                                      
+                                        <th>Fecha</th>
                                         <th>Total</th>
-                                        <th>Paid</th>
-                                        <th>Change</th>
-                                        <th>Method</th>
-                                        <th>Till</th>
-                                        <th>Cashier</th>
-                                        <th>View</th>
+                                        <!--<th>Pagado</th>-->
+                                        <!--<th>Vuelto</th>-->
+                                        <th>Método</th>
+                                        <!--<th>Till</th>-->
+                                        <th>Cajero</th>
+                                        <th class="text-center">Sunat</th>
+                                        <th class="text-center">Acc.</th>
                                     </tr>
                                 </thead>
                                 <tbody id="transaction_list"></tbody>
@@ -214,17 +217,18 @@
               <div class="card-box" id="card-box">
                   <div class="col-md-12">
                       <div class="row">
-                          <div class="col-md-10">
-                              <select name="" id="customer" class="form-control">
+                          <div class="col-md-9">
+                              <select name="" id="customer" class="form-control selectpicker" data-live-search="true">
                           </select>
                           </div>
-                          <div class="col-md-2">
-                              <button data-toggle="modal" data-target="#newCustomer" class="btn btn-success"><i class="fa fa-plus"></i></button>
+                          <div class="col-md-3">
+                              <button id="btnEditCustomer" onclick="$(this).editCustomer()" class="btn btn-warning"><i class="fa fa-edit"></i></button>
+                              <button id="newCustomerModal" data-toggle="modal" data-target="#newCustomer" class="btn btn-success"><i class="fa fa-plus"></i></button>
                           </div>
                       </div>
                       <div class="input-group m-t-5">
                           <form action="" id="searchBarCode">
-                              <input type="text" required id="skuCode" name="skuCode" class="form-control" placeholder="Scan barcode or type the number then hit enter" aria-label="Recipient's username" aria-describedby="basic-addon2">
+                              <input type="text" required id="skuCode" name="skuCode" class="form-control" placeholder="Escanee el código de barras o escriba el número y luego presione enter" aria-label="Recipient's username" aria-describedby="basic-addon2">
                               <input type="submit" style="display:none;">
                           </form>
                           <span class="input-group-addon" id="basic-addon2">
@@ -263,10 +267,10 @@
                          <div class="col-md-3">: <span id="price">0.0</span></div>
                      </div>
                      <div class="row">
-                         <div class="col-md-3">Descuento</div>
-                         <div class="col-md-3"><input class="form-control" type="number" id="inputDiscount" oninput="$(this).calculateCart();"></div>
-                         <div class="col-md-3">Precio bruto (inc <span id="taxInfo"></span>% Impuesto)</div>
-                         <div class="col-md-3"><h3 id="gross_price">0.00</h3></div>
+                         <div class="col-md-2"><!--Descuento--></div>
+                         <div class="col-md-2"><input style="display: none;" class="form-control" type="number" id="inputDiscount" oninput="$(this).calculateCart();"></div>
+                         <div class="col-md-4">Precio bruto (inc <span id="taxInfo"></span>% Impuesto)</div>
+                         <div class="col-md-4"><h3 id="gross_price">0.00</h3></div>
                      </div>
   
                  </div>
@@ -297,7 +301,7 @@
               <div class="card-box">
                   <div class="row">
                       <div class="col-md-4">
-                          <input type="text" id="search" class="form-control" placeholder="Buscar producto por nombre o sku">
+                          <input type="text" id="search" class="form-control" placeholder="Buscar producto por nombre">
                       </div>
                       <div class="col-md-8">
                           <div class="" id="categories">
@@ -320,13 +324,13 @@
           <div class="modal-content">
               <div class="modal-header">
                   <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                  <h4 class="modal-title" id="mySmallModalLabel">Hold Order
+                  <h4 class="modal-title" id="mySmallModalLabel">Pedidos en Espera
                       <img  class="loading m-t-5" style="margin-left: 35%" height="50px" src="assets/images/loading.gif" alt="">
                   </h4>
               </div>
               <div class="modal-body">
                   <form action="">
-                      <input type="text" id="refNumber" placeholder="Enter a reference" class="form-control">
+                      <input type="text" id="refNumber" placeholder="Ingrese una referencia" class="form-control">
                   </form>
                   <hr>
                   <div class="row">
@@ -378,7 +382,7 @@
                   </div>
               </div>
               <div class="modal-footer">
-                  <button type="button" onclick="$(this).submitDueOrder(0);" class="btn btn-primary btn-block btn-lg waves-effect waves-light">Hold Order</button>
+                  <button type="button" onclick="$(this).submitDueOrder(0);" class="btn btn-primary btn-block btn-lg waves-effect waves-light">En Espera</button>
               </div>
   
           </div><!-- /.modal-content -->
@@ -390,17 +394,30 @@
           <div class="modal-content">
               <div class="modal-header">
                   <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                  <h4 class="modal-title" id="myLargeModalLabel">Payment</h4>
+                  <h4 class="modal-title" id="myLargeModalLabel">Pago</h4>
               </div>
               <div class="modal-body">
                   <div class="row">
                       <div class="col-md-4">
                           <div class="list-group">
-                              <a href="javascript:void(0)" id="cash" onclick="paymentType = 1" class="list-group-item active">
-                                  Cash
-                              </a>
-                            <a href="javascript:void(0)" id="card" onclick="paymentType = 3" class="list-group-item">Card</a>
+                              <a href="javascript:void(0)" id="cash" onclick="$('#paymentType').val(JSON.stringify({ 'name': 'Efectivo' }))" class="list-group-item active">Efectivo</a>
+                              <a href="javascript:void(0)" id="card" onclick="$('#paymentType').val(JSON.stringify({ 'name': 'Tarjeta' }))" class="list-group-item">Tarjeta</a>
+                              <input type="hidden" id="paymentType" value='{ "name": "Efectivo" }'/>
                           </div>
+                          <br/>
+                          <br/>
+                          <div class="list-group">
+                            <a href="javascript:void(0)" onclick="$('#documentType').val(JSON.stringify({'code': '12', 'name': 'Ticket', 'send_sunat': false})); $('#confirmPayment>b').text('TICKET');" class="list-group-item active">Ticket</a>
+                            <a href="javascript:void(0)" onclick="$('#documentType').val(JSON.stringify({'code': '03', 'name': 'Boleta Electrónica', 'send_sunat': true})); $('#confirmPayment>b').text('BOLETA');" class="list-group-item ">
+                                <span class="glyphicon glyphicon-cloud-upload" aria-hidden="true"></span>
+                                <b>Boleta</b> Electrónica
+                            </a>
+                            <a href="javascript:void(0)" onclick="$('#documentType').val(JSON.stringify({'code': '01', 'name': 'Factura Electrónica', 'send_sunat': true})); $('#confirmPayment>b').text('FACTURA');" class="list-group-item">
+                                <span class="glyphicon glyphicon-cloud-upload" aria-hidden="true"></span>
+                                <b>Factura</b> Electrónica
+                            </a>
+                            <input type="hidden" id="documentType" value='{"code": "12", "name": "TICKET"}'/>
+                        </div>
                       </div>
                       <div class="col-md-8">
                           <div class="input-group">
@@ -473,7 +490,7 @@
                           </div>
                           <br>
                           <div class="input-group" id="cardInfo">
-                              <span class="input-group-addon" id="basic-addon3">Card Info </span>
+                              <span class="input-group-addon" id="basic-addon3">Info. de la tarjeta</span>
                               <input type="text" class="form-control" id="paymentInfo" aria-describedby="basic-addon3">
                           </div>
                       </div>
@@ -481,12 +498,12 @@
               </div>
               <div class="modal-footer">
                   <div class="row">
-                      <div class="col-md-6">
-                        <div class="btn btn-primary btn-block btn-lg waves-effect waves-light">Change <span id="change_curr"></span><span id="change"></span> </div>
+                      <div class="col-md-3">
+                        <div class="btn btn-primary btn-block btn-lg waves-effect waves-light">Vuelto <span id="change_curr"></span><span id="change"></span> </div>
                       </div>
-                      <div class="col-md-6">
-                        <button type="button" id="confirmPayment" class="btn btn-default btn-block btn-lg waves-effect waves-light">Confirm Payment</button>
-                    </div>
+                        <div class="col-md-3">
+                            <button type="button" id="confirmPayment" class="btn btn-default btn-block btn-lg waves-effect waves-light">Venta <b>TICKET</b></button>
+                        </div>
                   </div>
                   
                   
@@ -496,34 +513,69 @@
   </div><!-- /.modal -->
   
   <div id="newCustomer" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true" style="display: none;">
-      <div class="modal-dialog modal-sm">
+      <div class="modal-dialog modal-md">
           <div class="modal-content">
               <div class="modal-header">
                   <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                  <h4 class="modal-title" id="mySmallModalLabel">New Customer
+                  <h4 class="modal-title" id="mySmallModalLabel">Nuevo Cliente
                       <img  class="loading m-t-5" style="margin-left: 35%" height="50px" src="assets/images/loading.gif" alt="">
                   </h4>
               </div>
               <div class="modal-body">
                   <form id="saveCustomer" data-parsley-validate>
-                      <div class="form-group">
-                          <label for="userName">Customer Name*</label>
-                          <input type="text" required="required"  name="name" parsley-trigger="change" placeholder="Enter name" class="form-control" id="userName">
-                      </div>
-                      <div class="form-group">
-                          <label for="userName">Customer Phone</label>
-                          <input type="text" name="phone" parsley-trigger="change" placeholder="Enter Phone number" class="form-control" id="phoneNumber">
-                      </div>
-                      <div class="form-group">
-                          <label for="userName">Customer Email</label>
-                          <input type="email" name="email" parsley-trigger="change" placeholder="Enter email address" class="form-control" id="emailAddress">
-                      </div>
-                      <div class="form-group">
-                          <label for="userName">Customer Address</label>
-                          <input type="text" name="address" parsley-trigger="change" placeholder="Enter address" class="form-control" id="userAddress">
+                    <input type="hidden" name="id" id="customer_id">
+                      <div class="row">
+                          <div class="col-md-6">
+                                
+                              <div class="form-group">
+                                  <label for="userName">Nombre del Cliente*</label>
+                                  <input type="text" required="required"  name="name" parsley-trigger="change" placeholder="Ingrese nombre del cliente" class="form-control" id="userName">
+                              </div>
+                              <div class="form-group">
+                                <label for="userName">Documento</label>
+                                <select class="form-control" name="document_code" id="document_code">
+                                    <option value="1" selected>DNI</option>
+                                    <option value="6">RUC</option>
+                                </select>
+                                <input type="text" class="form-control" placeholder="Número de documento" aria-describedby="sizing-addon1" name="document_number" id="document_number" required="required">
+                                <span class="help-block">Pulsar enter para la busqueda avanzada</span>
+                            </div>
+                              <div class="form-group">
+                                  <label for="userName">Teléfono</label>
+                                  <input type="text" name="phone" parsley-trigger="change" placeholder="Ingrese el número de teléfono" class="form-control" id="phoneNumber">
+                              </div>
+                              <div class="form-group">
+                                  <label for="userName">Correo Electrónico</label>
+                                  <input type="email" name="email" parsley-trigger="change" placeholder="Ingrese el correo electrónico" class="form-control" id="emailAddress">
+                              </div>
+                          </div>
+                          <div class="col-md-6">
+                            
+                          
+                          <div class="form-group">
+                            <label for="userName">Dirección</label>
+                            <input type="text" required="required"  name="customer_street" class="form-control" id="customer_street">
+                    </div>
+                    <div class="form-group">
+                        <label for="userName">Provincia</label>
+                        <input type="text" required="required"  name="customer_state" class="form-control" id="customer_state">
+                    </div>
+                    <div class="form-group">
+                        <label for="userName">Departamento</label>
+                        <input type="text" required="required"  name="customer_city" class="form-control" id="customer_city">
+                    </div>
+                    <div class="form-group">
+                        <label for="userName">Distrito</label>
+                        <input type="text" required="required"  name="customer_district" class="form-control" id="customer_district">
+                    </div>
+                    <div class="form-group">
+                        <label for="userName">Ubigeo</label>
+                        <input type="text" required="required"  name="customer_zip" class="form-control" id="customer_zip">
+                    </div>
+                </div>
                       </div>
 
-                      <input type="submit" class="btn btn-primary btn-block waves-effect waves-light">
+                      <input type="submit" class="btn btn-primary btn-block waves-effect waves-light" value="Guardar">
                   </form>
               </div>
           </div>
@@ -537,7 +589,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                    <h4 class="modal-title" id="mySmallModalLabel">Product
+                    <h4 class="modal-title" id="mySmallModalLabel">Producto
                         <img  class="loading m-t-5" style="margin-left: 35%" height="50px" src="assets/images/loading.gif" alt="">
                     </h4>
                 </div>
@@ -551,27 +603,27 @@
                             <select name="category" class="form-control" id="category"></select>
                         </div>
                         <div class="form-group">
-                            <label for="userName">Product Name</label>
-                            <input type="text" required="required"  name="name" parsley-trigger="change" placeholder="Enter a product name" class="form-control" id="productName">
+                            <label for="userName">Nombre del Producto</label>
+                            <input type="text" required="required"  name="name" parsley-trigger="change" placeholder="Ingrese el nombre del producto" class="form-control" id="productName">
                         </div>
                         <div class="form-group">
-                            <label for="userName">Price</label>
-                            <input type="text" required="required" name="price" placeholder="Price" class="form-control" id="product_price">
+                            <label for="userName">Precio</label>
+                            <input type="text" required="required" name="price" placeholder="Ingrese el Precio" class="form-control" id="product_price">
                         </div>
                         <div class="form-group">
                             <label for="userName">Stock</label>
-                            <input type="text" name="quantity" placeholder="Available stock" class="form-control" id="quantity">
+                            <input type="text" name="quantity" placeholder="Ingrese el stock disponible" class="form-control" id="quantity">
                         </div>
                         <div class="form-group">
-                            <label><input type="checkbox" name="stock" id="stock" style="max-width: 30px; float: left;">  Disable stock check </label>
+                            <label><input type="checkbox" name="stock" id="stock" style="max-width: 30px; float: left;">  Desactivar Control de Stock </label>
                         </div>
                         <div class="form-group">
-                            <label for="userName"><span id="rmv_img" class="btn btn-xs btn-warning">Remove</span> Picture </label>                      
+                            <label for="userName"><span id="rmv_img" class="btn btn-xs btn-warning">Quitar</span> Imagen </label>                      
                             <div id="current_img"></div>
                             <input type="file" name="imagename" id="imagename">                            
                         </div>
   
-                        <input type="submit" id="submitProduct" class="btn btn-primary btn-block waves-effect waves-light">
+                        <input type="submit" id="submitProduct" class="btn btn-primary btn-block waves-effect waves-light" value="Guardar">
                     </form>
                 </div>
             </div>
@@ -596,7 +648,7 @@
                                 <input id="categoryName" type="text" required="required"  name="name" placeholder="Ingrese un nombre de categoría" class="form-control" >
                             </div>
                           
-                            <input type="submit" id="submitCategory" class="btn btn-primary btn-block waves-effect waves-light">
+                            <input type="submit" id="submitCategory" class="btn btn-primary btn-block waves-effect waves-light" value="Guardar">
                         </form>
                     </div>
                </div>
@@ -652,10 +704,10 @@
                     <table class="table table-bordered" id="userList">
                         <thead>
                             <tr>                                                                      
-                                <th>Name</th>                                      
-                                <th>Username</th>
-                                <th>Status</th>
-                                <th>Action</th>
+                                <th>Nombre</th>                                      
+                                <th>Usuario</th>
+                                <th>Estado</th>
+                                <th>Acción</th>
                             </tr>
                         </thead>
                         <tbody id="user_list"></tbody>
@@ -701,7 +753,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                    <h4 class="modal-title" id="mySmallModalLabel">Account Infomarion
+                    <h4 class="modal-title" id="mySmallModalLabel">Información de la cuenta
                         <img  class="loading m-t-5" style="margin-left: 35%" height="50px" src="assets/images/loading.gif" alt="">
                     </h4>
                 </div>
@@ -709,25 +761,25 @@
                     <form id="saveUser" data-parsley-validate>
                         <input type="hidden" name="id" id="user_id">
                         <div class="form-group">
-                            <label for="userName">Name*</label>
-                            <input type="text" required="required"  name="fullname" parsley-trigger="change" placeholder="Enter name" class="form-control" id="fullname">
+                            <label for="userName">Nombre*</label>
+                            <input type="text" required="required"  name="fullname" parsley-trigger="change" placeholder="Ingrese el nombre" class="form-control" id="fullname">
                         </div>
                         <div class="form-group">
-                            <label for="userName">Username*</label>
-                            <input type="text" name="username" parsley-trigger="change" placeholder="Login Username" class="form-control" id="username">
+                            <label for="userName">Nombre de Usuario*</label>
+                            <input type="text" name="username" parsley-trigger="change" placeholder="Ingrese el nombre de usuario" class="form-control" id="username">
                         </div>
                         <div class="form-group">
-                            <label for="userName">Password</label>
-                            <input type="password" name="password" parsley-trigger="change" placeholder="Password" class="form-control" id="password">
+                            <label for="userName">Contraseña</label>
+                            <input type="password" name="password" parsley-trigger="change" placeholder="Ingrese la contraseña" class="form-control" id="password" required="required">
                         </div>
                         <div class="form-group">
-                            <label for="userName">Repeat Password</label>
-                            <input type="password" name="pass" parsley-trigger="change" placeholder="Repeat" class="form-control" id="pass">
+                            <label for="userName">Repetir Contraseña</label>
+                            <input type="password" name="pass" parsley-trigger="change" placeholder="Repita la contraseña" class="form-control" id="pass">
                         </div>
 
                         <div class="perms">
 
-                            <h4 style="font-size: 22px; margin-top: 20px;">Permissions</h4>
+                            <h4 style="font-size: 22px; margin-top: 20px;">Permisos</h4>
                             <hr>
     
                             <div class="form-group">
@@ -748,7 +800,7 @@
     
                         </div>
            
-                        <input type="submit" class="btn btn-primary btn-block waves-effect waves-light">
+                        <input type="submit" class="btn btn-primary btn-block waves-effect waves-light" value="Guardar">
                     </form>
                 </div>
            </div>
@@ -764,7 +816,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                <h4 class="modal-title" id="myLargeModalLabel">Pedidos Abiertos</h4>
+                <h4 class="modal-title" id="myLargeModalLabel">Pedidos en Espera</h4>
             </div>
             <div class="modal-body">
                 <input type="text" id="holdOrderInput" placeholder="Buscar pedido por referencia" class="holdOrderInput form-control">
@@ -808,15 +860,45 @@
     <div class="modal-dialog modal-sm">
         <div class="modal-content">
             <div class="modal-header">
-                <button class="btn btn-sm btn-default" onclick="$(this).print()">Print</button> <br> <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <button class="btn btn-sm btn-default" onclick="$(this).print()">Imprimir</button> <br> <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
               </div>
             <div class="modal-body" id="viewTransaction">                 
             </div>
 
-            <div class="alert alert-danger" style="font-size:11px;">Right-Click and Reload if you get stuck after cancelling a print.</div>
+            <div class="alert alert-danger" style="font-size:11px;">Haga clic con el botón derecho y Recargue si se queda atascado después de cancelar una impresión.</div>
         </div>
     </div>
 </div>
+
+
+
+
+<div id="logsModal" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" style="display: none;">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h4 class="modal-title">Registros de procesos</h4>
+            </div>
+            <div class="modal-body" id="viewLogs">   
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr><th>Fecha</th><th>Referencia</th><th>Descripción</th></tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
 
 
      <div id="settingsModal" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true" style="display: none;">
@@ -824,7 +906,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                        <h4 class="modal-title" id="mySmallModalLabel">Settings
+                        <h4 class="modal-title" id="mySmallModalLabel">Ajustes
                             <img  class="loading m-t-5" style="margin-left: 35%" height="50px" src="assets/images/loading.gif" alt="">
                         </h4>
                     </div>
@@ -832,111 +914,195 @@
                         
                         
                         <div class="form-group">
-                        <label for="app">Application</label>
+                        <label for="app">Aplicación</label>
                         <select name="app" id="app" class="form-control">
-                            <option>Standalone Point of Sale</option>
-                            <option>Network Point of Sale Terminal</option>
-                            <option>Network Point of Sale Server</option>                                            
+                            <option value="Standalone Point of Sale">Punto de venta independiente</option>
+                            <!-- <option value="Network Point of Sale Terminal">Red Punto de Venta Terminal</option>
+                            <option value="Network Point of Sale Server">Red Punto de Venta Servidor</option>                                             -->
                         </select>
                  </div>
 
                 <form id="net_settings_form">
-                 <div class="row">
+                <div class="row">
                     <div class="form-group">
-                        <label for="userName">Server IP Address*</label>
-                        <input type="text" required="required" placeholder="Enter the IP address of the admin computer." name="ip" class="form-control" id="ip">
+                        <label for="userName">Dirección IP del servidor*</label>
+                        <input type="text" required="required" placeholder="Ingrese la dirección IP de la computadora de administración." name="ip" class="form-control" id="ip">
                     </div>
                     <div class="row">
-                            <div class="col-md-5">
-                                <div class="form-group">
-                                    <label for="userName">Till Number*</label>
-                                    <input type="text" required="required" placeholder="Enter a number" name="till" class="form-control" id="till">
-                                </div>
+                        <div class="col-md-5">
+                            <div class="form-group">
+                              
+                                <label for="userName">Número de caja registradora*</label>
+
+                                <input type="text" required="required" placeholder="Ingrese un número" name="till" class="form-control" id="till">
                             </div>
-                            <div class="col-md-7">
-                                <div class="form-group">
-                                    <label for="userName">Hardware Identification Number </label>
-                                    <input type="text" required="required" name="mac" class="form-control" id="mac" readonly="readonly">
-                                </div>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="form-group">
+
+                                <label for="userName">Número de Identificación de Hardware </label>
+
+                                <input type="text" required="required" name="mac" class="form-control" id="mac" readonly="readonly">
                             </div>
+                        </div>
                     </div>
                      <div class="form-group">
-                        <input id="save_settings" type="submit" class="btn btn-default btn-block waves-effect waves-light" value="Save Settings">
+                        <input id="save_settings" type="submit" class="btn btn-default btn-block waves-effect waves-light" value="Guardar Ajustes">
                     </div>
                  </div>
                 </form>
               
-
-
-                 <form id="settings_form" encType="multipart/form-data">
-
+                <form id="settings_form" encType="multipart/form-data">
                     <input type="hidden" name="id" id="settings_id">
                     <input type="hidden" name="img" id="logo_img">
                     <input type="hidden" name="remove" id="remove_logo">
 
                         <div class="row">
                             <div class="col-md-6">
-                               
-                                 <div class="form-group">
-                                    <label for="userName">Store Name</label>
-                                    <input type="text" required="required"  name="store" class="form-control" id="store">
-                                 </div>
-                                 <div class="form-group">
-                                        <label for="userName">Address Line 1</label>
-                                        <input type="text" required="required"  name="address_one" class="form-control" id="address_one">
-                                 </div>
-                                 <div class="form-group">
-                                        <label for="userName">Address Line 2</label>
-                                        <input type="text" required="required"  name="address_two" class="form-control" id="address_two">
-                                 </div>
-                                 <div class="form-group">
-                                        <label for="userName">Contact Number</label>
-                                        <input type="text" name="contact" class="form-control" id="contact">
-                                 </div>
-                                 <div class="form-group">
-                                        <label for="userName">Vat Number</label>
-                                        <input type="text" name="tax" parsley-trigger="change" class="form-control" id="tax">
-                                 </div>
-                              
+                                <div class="form-group">
 
+                                    <label for="userName">Nombre de la tienda</label>
+                                    <input type="text" required="required"  name="store" class="form-control" id="store">
+                                </div>
+                                <div class="form-group">
+                                    <label for="userName">Razón Social</label>
+                                    <input type="text" required="required"  name="legal_name" class="form-control" id="legal_name">
+                                </div>
+                                <div class="form-group">
+                                        <label for="userName">Dirección</label>
+                                        <input type="text" required="required"  name="street" class="form-control" id="street">
+                                </div>
+                                <div class="form-group">
+                                    <label for="userName">Provincia</label>
+                                    <input type="text" required="required"  name="state" class="form-control" id="state">
+                                </div>
+                                <div class="form-group">
+                                    <label for="userName">Departamento</label>
+                                    <input type="text" required="required"  name="city" class="form-control" id="city">
+                                </div>
+                                <div class="form-group">
+                                    <label for="userName">Distrito</label>
+                                    <input type="text" required="required"  name="district" class="form-control" id="district">
+                                </div>
+                                <div class="form-group">
+                                    <label for="userName">Código Ubigeo</label>
+                                    <input type="text" required="required"  name="zip" class="form-control" id="zip">
+                                </div>
+                                <div class="form-group">
+                                    <label for="userName">Número de contacto</label>
+
+                                    <input type="text" name="contact" class="form-control" id="contact">
+                                </div>
+                                
                             </div>
                             <div class="col-md-6">
-                                    <div class="form-group">
-                                            <label for="userName">Currency Symbol</label>
-                                            <input type="text" required="required"  name="symbol" class="form-control" id="symbol">
-                                     </div>
-    
-                                     <div class="form-group">
-                                            <label for="userName">Vat Percentage</label>
-                                            <div style="width: 80%; float:left;">
-                                            <input type="text" required="required"  name="percentage" class="form-control" id="percentage">
-                                            </div>
-                                            <div class="pull-right p-t-10"> % </div>
-                                     </div>
-                                     <br><br>
-                                     <div class="form-group">
-                                        <label><input type="checkbox" name="charge_tax" id="charge_tax"> Charge Vat</label>
-                                     </div>
-                                     <div class="form-group">       
-                                        <label for="userName"><span id="rmv_logo" class="btn btn-xs btn-warning">Remove</span> Logo </label>              
-                                        <div id="current_logo"></div>                                        
-                                       
-                                        <input type="file" name="imagename" id="logoname">                            
+                                <div class="form-group">
+                                    <label for="userName">RUC</label>
+                                    <input type="text" name="vat_no" parsley-trigger="change" class="form-control" id="vat_no">
+                                </div>
+                                <div class="form-group">
+                                    <label for="userName">Nombre Comercial</label>
+                                    <input type="text" required="required"  name="tradename" class="form-control" id="tradename">
+                                </div>
+                                <div class="form-group">
+
+                                        <label for="userName">Símbolo de moneda</label>
+
+                                        <input type="text" required="required"  name="symbol" class="form-control" id="symbol">
                                     </div>
+
                                     <div class="form-group">
-                                        <label for="userName">Receipt Footer</label>
-                                        <textarea name="footer" class="form-control" id="footer"></textarea>
-                                    </div>                                    
+
+                                        <label for="userName">Porcentaje de IGV</label>
+
+                                        <div style="width: 80%; float:left;">
+                                        <input type="text" required="required"  name="percentage" class="form-control" id="percentage">
+                                        </div>
+                                        <div class="pull-right p-t-10"> % </div>
+                                    </div>
+                                    <br><br>
+                                    <div class="form-group hidden">
+
+                                    <label><input type="checkbox" name="charge_tax" id="charge_tax"> Cobrar Impuestos</label>
+                                    </div>
+                                    <div class="form-group">       
+                                    <label for="userName"><span id="rmv_logo" class="btn btn-xs btn-warning">Quitar</span> Logo </label>              
+
+                                    <div id="current_logo"></div>
+                                    <input type="file" name="imagename" id="logoname">                            
+                                </div>
+                                <div class="form-group">
+
+                                    <label for="userName">Pie de página del recibo</label>
+
+                                    <textarea name="footer" class="form-control" id="footer"></textarea>
+                                </div>                                    
+                            </div>    
+                        </div>  
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h4>Configuración de facturación </h4>
+                                <hr />
                             </div>
-                           
-                        </div>
-
-                       
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Serie Ticket</label>
+                                    <input type="text" required="required"  name="serie_t" class="form-control" id="serie_t">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Próximo correlativo Ticket</label>
+                                    <div>
+                                    <input type="text" required="required" name="next_correlative_t" class="form-control" id="next_correlative_t">
+                                    </div>
+                                </div>                                                                 
+                            </div> 
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Serie Boleta</label>
+                                    <input type="text" required="required"  name="serie_b" class="form-control" id="serie_b">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Próximo correlativo Boleta</label>
+                                    <div>
+                                    <input type="text" required="required" name="next_correlative_b" class="form-control" id="next_correlative_b">
+                                    </div>
+                                </div>                                                                 
+                            </div> 
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Serie Factura</label>
+                                    <input type="text" required="required"  name="serie_f" class="form-control" id="serie_f">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Próximo correlativo Factura</label>
+                                    <div>
+                                    <input type="text" required="required" name="next_correlative_f" class="form-control" id="next_correlative_f">
+                                    </div>
+                                </div>                                                                 
+                            </div> 
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>Token de emisión electrónica</label>
+                                    <textarea name="token" class="form-control" id="token"></textarea>
+                                </div>   
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>Token de consulta DNI/RUC</label>
+                                    <textarea name="token_consulta" class="form-control" id="token_consulta"></textarea>
+                                </div>   
+                            </div>
+                        </div>           
                         <div class="form-group">
-                                <input id="save_settings" type="submit" class="btn btn-default btn-block waves-effect waves-light" value="Save Settings">
+                                <input id="save_settings" type="submit" class="btn btn-default btn-block waves-effect waves-light" value="Guardar Ajustes">
                         </div>
-
-                    </form>
+                </form>
                     </div>
                </div>
           </div>
@@ -965,6 +1131,7 @@ require('./renderer.js');
     <script src="assets/plugins/dataTables/buttons.html5.min.js"></script>
     <script src="assets/plugins/dataTables/pdfmake.min.js"></script>
     <script src="assets/plugins/dataTables/vfs_fonts.js"></script>
+    <script src="assets/plugins/bootstrap-select/bootstrap-select.min.js"></script>
     <!-- <script src="assets/plugins/jquery-ui/jquery-ui.min.js"></script>
     <script src="assets/plugins/jq-keyboard/jqkeyboard-min.js"></script>
     <script src="assets/plugins/jq-keyboard/jqk.layout.en.js"></script>

@@ -1,21 +1,12 @@
 const app = require( "express")();
-const server = require( "http" ).Server( app );
-const bodyParser = require( "body-parser" );
-const Datastore = require( "nedb" );
+const PouchDB = require('pouchdb');
 const btoa = require('btoa');
-app.use( bodyParser.json() );
+const CONFIG = require('../config');
+const PouchdbFind = require('pouchdb-find');
 
-module.exports = app;
+PouchDB.plugin(PouchdbFind);
 
- 
-let usersDB = new Datastore( {
-    filename: process.env.APPDATA+"/POS/server/databases/users.db",
-    autoload: true
-} );
-
-
-usersDB.ensureIndex({ fieldName: '_id', unique: true });
-
+let usersDB = new PouchDB(CONFIG.DB_HOST + 'users');
 
 app.get( "/", function ( req, res ) {
     res.send( "Users API" );
@@ -24,16 +15,29 @@ app.get( "/", function ( req, res ) {
 
   
 app.get( "/user/:userId", function ( req, res ) {
+    // if ( !req.params.userId ) {
+    //     res.status( 500 ).send( "ID field is required." );
+    // } else {
+
+    //     usersDB.findOne( {
+    //         _id: req.params.userId
+    //     }, function ( err, user ) {
+    //         res.send( user );
+    //     } );
+    // }
+
+
     if ( !req.params.userId ) {
         res.status( 500 ).send( "ID field is required." );
+    } else {
+        usersDB.get(req.params.userId).then(function (result) {
+            res.send( result );
+        }).catch(function (err) {
+            res.status( 500 ).send( err );
+            console.log(err);
+        });
     }
-    else{
-    usersDB.findOne( {
-        _id: parseInt(req.params.userId)
-}, function ( err, docs ) {
-        res.send( docs );
-    } );
-    }
+
 } );
 
 
@@ -41,134 +45,141 @@ app.get( "/user/:userId", function ( req, res ) {
 app.get( "/logout/:userId", function ( req, res ) {
     if ( !req.params.userId ) {
         res.status( 500 ).send( "ID field is required." );
-    }
-    else{ usersDB.update( {
-            _id: parseInt(req.params.userId)
-        }, {
-            $set: {
-                status: 'Logged Out_'+ new Date()
-            }
-        }, {},
-    );
+    } else { 
 
-    res.sendStatus( 200 );
- 
+        usersDB.get(req.params.userId).then(function( user ) {
+            return usersDB.put({
+                ...user,
+                status: 'Logged Out_'+ new Date(),
+            });
+        }).then(function( response ) {
+            res.sendStatus( 200 );
+        }).catch(function( err ) {
+            res.status( 500 ).send( err );
+            console.log( err );
+        });
     }
 });
 
 
 
-app.post( "/login", function ( req, res ) {  
-    usersDB.findOne( {
-        username: req.body.username,
-        password: btoa(req.body.password)
+app.post( "/login", function ( req, res ) { 
 
-}, function ( err, docs ) {
-        if(docs) {
-            usersDB.update( {
-                _id: docs._id
-            }, {
-                $set: {
-                    status: 'Logged In_'+ new Date()
-                }
-            }, {},
+    usersDB.find({
+        selector: {
+            username: req.body.username,
+            password: btoa(req.body.password)
+        },
+        limit: 1
+    })
+    .then(function (result) {
+        if (result.docs.length) {
+            let user = result.docs[0];
+            usersDB.put({
+                ...user,
+                status: 'Logged In_'+ new Date()
+            });
             
-        );
+            res.send(user)
+        } else {
+            res.send(result)
         }
-        res.send( docs );
-    } );
+    })
     
 } );
 
 
 
-
 app.get( "/all", function ( req, res ) {
-    usersDB.find( {}, function ( err, docs ) {
-        res.send( docs );
-    } );
+    usersDB.allDocs({
+        include_docs: true
+    }).then(function (result) {
+        res.send( result.rows );
+    }).catch(function (err) {
+        res.status( 500 ).send( err );
+        console.log(err);
+    });
 } );
 
 
 
 app.delete( "/user/:userId", function ( req, res ) {
-    usersDB.remove( {
-        _id: parseInt(req.params.userId)
-    }, function ( err, numRemoved ) {
-        if ( err ) res.status( 500 ).send( err );
-        else res.sendStatus( 200 );
-    } );
+    let id = req.params.userId;
+
+    usersDB.get(id).then(function( user ) {
+        return usersDB.remove( user );
+    }).then(function (result) {
+        res.sendStatus( 200 );
+    }).catch(function ( err ) {
+        res.status( 500 ).send( err );
+        console.log( err );
+    })
+    
 } );
 
  
-app.post( "/post" , function ( req, res ) {   
+app.post( "/post" , async function ( req, res ) {   
     let User = { 
-            "username": req.body.username,
-            "password": btoa(req.body.password),
-            "fullname": req.body.fullname,
-            "perm_products": req.body.perm_products == "on" ? 1 : 0,
-            "perm_categories": req.body.perm_categories == "on" ? 1 : 0,
-            "perm_transactions": req.body.perm_transactions == "on" ? 1 : 0,
-            "perm_users": req.body.perm_users == "on" ? 1 : 0,
-            "perm_settings": req.body.perm_settings == "on" ? 1 : 0,
-            "status": ""
-          }
-
-    if(req.body.id == "") { 
-       User._id = Math.floor(Date.now() / 1000);
-       usersDB.insert( User, function ( err, user ) {
-            if ( err ) res.status( 500 ).send( req );
-            else res.send( user );
-        });
+        "username": req.body.username,
+        "password": btoa(req.body.password),
+        "fullname": req.body.fullname,
+        "perm_products": req.body.perm_products == "on" ? 1 : 0,
+        "perm_categories": req.body.perm_categories == "on" ? 1 : 0,
+        "perm_transactions": req.body.perm_transactions == "on" ? 1 : 0,
+        "perm_users": req.body.perm_users == "on" ? 1 : 0,
+        "perm_settings": req.body.perm_settings == "on" ? 1 : 0
     }
-    else { 
-        usersDB.update( {
-            _id: parseInt(req.body.id)
-                    }, {
-                        $set: {
-                            username: req.body.username,
-                            password: btoa(req.body.password),
-                            fullname: req.body.fullname,
-                            perm_products: req.body.perm_products == "on" ? 1 : 0,
-                            perm_categories: req.body.perm_categories == "on" ? 1 : 0,
-                            perm_transactions: req.body.perm_transactions == "on" ? 1 : 0,
-                            perm_users: req.body.perm_users == "on" ? 1 : 0,
-                            perm_settings: req.body.perm_settings == "on" ? 1 : 0
-                        }
-                    }, {}, function (
-            err,
-            numReplaced,
-            user
-        ) {
-            if ( err ) res.status( 500 ).send( err );
-            else res.sendStatus( 200 );
-        } );
 
+
+    if (req.body.id) {
+
+        try {
+            var user = await usersDB.get((req.body.id).toString());
+            if (!User.password) {
+                delete User.password;
+            }
+            await usersDB.put({ ...user, ...User });
+            res.sendStatus( 200 );
+        } catch (err) {
+            res.status( 500 ).send( err );
+            console.log(err);
+        }
+    } else {
+        
+        try {
+            User._id = (Math.floor(Date.now() / 1000)).toString();
+            await usersDB.put({ ...User, "status": "" })
+            res.sendStatus( 200 )
+        } catch (err) {
+            res.status( 500 ).send( err );
+            console.log(err);
+        }
     }
 
 });
 
 
 app.get( "/check", function ( req, res ) {
-    usersDB.findOne( {
-        _id: 1
-}, function ( err, docs ) {
-        if(!docs) {
-            let User = { 
-                "_id": 1,
-                "username": "admin",
-                "password": btoa("admin"),
-                "fullname": "Administrator",
-                "perm_products": 1,
-                "perm_categories": 1,
-                "perm_transactions": 1,
-                "perm_users": 1,
-                "perm_settings": 1,
-                "status": ""
-              }
-            usersDB.insert( User, function ( err, user ) {                            
-            });
+    usersDB.get('1').then(function (result) {
+        res.send( result );
+    }).catch(function (err) {
+
+        let user = { 
+            "_id": '1',
+            "username": "admin",
+            "password": btoa("admin"),
+            "fullname": "Administrator",
+            "perm_products": 1,
+            "perm_categories": 1,
+            "perm_transactions": 1,
+            "perm_users": 1,
+            "perm_settings": 1,
+            "status": ""
         }
-    } );
+
+        usersDB.put(user);
+        console.log(err);
+    });
 } );
- 
+
+module.exports = app;

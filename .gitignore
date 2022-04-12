@@ -1,4 +1,9 @@
+package-lock.json
+yarn.lock
 /node_modules
-undefined
 .env
-/db
+config.js
+/db/*
+!/db/index.html
+release-builds
+windows_installer

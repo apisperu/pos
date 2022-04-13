@@ -308,7 +308,7 @@ app.get("/:transactionId/pdf", async function(req, res) {
   let transaction = await transactionsDB.get(id);
 
   let json = await apisperu.jsonInvoice(transaction);
-
+  
   apisperu.pdfInvoice(json).then(r => {
     res.header("Content-Type", "application/pdf");
     res.end(r.data);

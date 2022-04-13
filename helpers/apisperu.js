@@ -71,7 +71,7 @@ async function jsonInvoice(data){
         let igv = (valorVenta * settings.percentage) / 100;
         let precioUnitario = (valorVenta + igv) / item.quantity;
 
-        json.details.push({
+        let detail = {
             "codProducto": item.id,
             "unidad": "NIU",
             "descripcion": item.product_name,
@@ -84,13 +84,24 @@ async function jsonInvoice(data){
             "tipAfeIgv": 10,
             "totalImpuestos": igv.toFixed(2),
             "mtoPrecioUnitario": precioUnitario.toFixed(2)
-        })
-        
+        };
+
+        // exonerados
+        if (!data.tax) {
+          detail.porcentajeIgv = 0;
+          detail.igv = 0;
+          detail.tipAfeIgv = 20;
+          detail.totalImpuestos = 0;
+          detail.mtoPrecioUnitario = item.price
+        }
+
+        json.details.push(detail);
     }
 
-    // Codígo para exonerados
-    if (!settings.charge_tax) {
-
+    // exonerados
+    if (!data.tax) {
+      json.mtoOperGravadas = 0;
+      json.mtoOperExoneradas = data.subtotal;
     }
 
     return json;

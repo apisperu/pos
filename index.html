@@ -538,7 +538,7 @@
                                     <option value="6">RUC</option>
                                 </select>
                                 <input type="text" class="form-control" placeholder="Número de documento" aria-describedby="sizing-addon1" name="document_number" id="document_number" required="required">
-                                <span class="help-block">Pulsar enter para la busqueda avanzada</span>
+                                <span class="help-block">Presione enter para la busqueda avanzada</span>
                             </div>
                               <div class="form-group">
                                   <label for="userName">Teléfono</label>
@@ -1021,9 +1021,10 @@
                                         <div class="pull-right p-t-10"> % </div>
                                     </div>
                                     <br><br>
-                                    <div class="form-group hidden">
+                                    <div class="form-group">
 
                                     <label><input type="checkbox" name="charge_tax" id="charge_tax"> Cobrar Impuestos</label>
+                                    <span class="help-block">Deshabilitar esta opción para emitir comprobantes exonerados de igv. </span>
                                     </div>
                                     <div class="form-group">       
                                     <label for="userName"><span id="rmv_logo" class="btn btn-xs btn-warning">Quitar</span> Logo </label>              
@@ -1089,13 +1090,13 @@
                             <div class="col-md-12">
                                 <div class="form-group">
                                     <label>Token de emisión electrónica</label>
-                                    <textarea name="token" class="form-control" id="token"></textarea>
+                                    <textarea name="token" class="form-control" id="token" required="required"></textarea>
                                 </div>   
                             </div>
                             <div class="col-md-12">
                                 <div class="form-group">
                                     <label>Token de consulta DNI/RUC</label>
-                                    <textarea name="token_consulta" class="form-control" id="token_consulta"></textarea>
+                                    <textarea name="token_consulta" class="form-control" id="token_consulta" required="required"></textarea>
                                 </div>   
                             </div>
                         </div>           

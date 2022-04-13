@@ -122,11 +122,11 @@ if (auth == undefined) {
 
 } else {
 
-    $('#loading').show();
+    // $('#loading').show();
 
-    setTimeout(function () {
-        $('#loading').hide();
-    }, 2000);
+    $('#loading').hide();
+    // setTimeout(function () {
+    // }, 2000);
 
     platform = storage.get('settings') || {};
 
@@ -141,6 +141,10 @@ if (auth == undefined) {
     $.get(api + 'users/user/' + user._id, function (data) {
         user = data;
         $('#loggedin-user').text(user.fullname);
+    }).fail(function(err) {
+        $("#loading").show();
+        authenticate();
+        console.log(err);
     });
 
 

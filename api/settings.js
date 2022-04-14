@@ -3,10 +3,21 @@ const multer = require("multer");
 const fs = require('fs');
 const PouchDB = require('pouchdb');
 const CONFIG = require('../config');
+const archiver = require('archiver');
+const AdmZip = require("adm-zip");
+
 
 let settingsDB = new PouchDB(CONFIG.DB_HOST + 'settings');
 
-let upload = multer();
+
+const storage = multer.diskStorage({
+    destination: __dirname + '/../',
+    filename: function(req, file, callback){
+        callback(null, 'db.zip'); // 
+    }
+});
+let upload = multer({ storage: storage });
+let uploadLogo = multer();
 
 app.get( "/", function ( req, res ) {
     res.send( "Settings API" );
@@ -21,7 +32,7 @@ app.get( "/all", function ( req, res ) {
     });
 } );
  
-app.post( "/", upload.single('imagename'), async function ( req, res ) {
+app.post( "/", uploadLogo.single('imagename'), async function ( req, res ) {
     let Settings = {  
         _id: '1',
         settings: {
@@ -92,6 +103,48 @@ app.post( "/", upload.single('imagename'), async function ( req, res ) {
             res.status( 500 ).send( err );
             console.log(err);
         }
+    }
+});
+
+app.get( "/export", async function ( req, res ) {
+    var archive = archiver('zip');
+
+    archive.on('error', function(err) {
+        return res.status(500).send({error: err.message});
+    });
+
+    //on stream closed we can end the request
+    archive.on('end', function() {
+        console.log('Archive wrote %d bytes', archive.pointer());
+    });
+
+    //set the archive name
+    res.attachment('db.zip');
+
+    //this is the streaming magic
+    archive.pipe(res);
+
+    archive.directory(__dirname + '/../db/', false);
+    archive.finalize();
+});
+
+app.post( "/import", upload.single('file'), async function ( req, res ) {
+    try {
+        var dirPath  = __dirname + "/../db.zip";
+        var destPath = __dirname + "/../";
+        
+        var zip = new AdmZip(dirPath);
+
+        // renombrar base de datos actual
+        fs.rename(destPath + 'db', destPath + 'db' + Date.now(), function (err) {
+            // if (err) throw err;
+            
+            zip.extractAllTo(destPath + 'db/', true);
+            res.sendStatus( 200 )
+        });
+    } catch (err) {
+        res.status( 500 ).send( err );
+        console.log(err);
     }
 });
 

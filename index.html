@@ -1103,7 +1103,17 @@
                         <div class="form-group">
                                 <input id="save_settings" type="submit" class="btn btn-default btn-block waves-effect waves-light" value="Guardar Ajustes">
                         </div>
-                </form>
+                        <hr />
+                    </form>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <button class="btn btn-info btn-block" onclick="$(this).exportBackup()">Exportar</button>
+                            </div>
+                            <div class="col-md-6">
+                                <button class="btn btn-warning btn-block" onclick="$(this).importBackup()">Importar</button>
+                            </div>
+                        </div>
+
                     </div>
                </div>
           </div>

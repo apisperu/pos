@@ -114,7 +114,6 @@ $.fn.serializeObject = function () {
 auth = storage.get('auth');
 user = storage.get('user');
 
-
 if (auth == undefined) {
     $.get(api + 'users/check/', function (data) { });
     $("#loading").show();
@@ -142,8 +141,12 @@ if (auth == undefined) {
         user = data;
         $('#loggedin-user').text(user.fullname);
     }).fail(function(err) {
-        $("#loading").show();
-        authenticate();
+        storage.delete('auth');
+        storage.delete('user');
+        
+        ipcRenderer.send('app-reload', '');
+        // $("#loading").show();
+        // authenticate();
         console.log(err);
     });
 
@@ -175,7 +178,7 @@ if (auth == undefined) {
 
 
         setTimeout(function () {
-            if (settings == undefined && auth != undefined) {
+            if (!settings && auth) {
                 $('#settingsModal').modal('show');
             }
             else {
@@ -190,7 +193,7 @@ if (auth == undefined) {
         $("#settingsModal").on("hide.bs.modal", function () {
 
             setTimeout(function () {
-                if (settings == undefined && auth != undefined) {
+                if (!settings  && auth) {
                     $('#settingsModal').modal('show');
                 }
             }, 1000);
@@ -2909,6 +2912,82 @@ $.fn.statusSummary = async function(index) {
         );
 
         loadTransactions();
+    })
+}
+
+$.fn.exportBackup = async function() {
+
+    let confirmation = await Swal.fire({
+        title: "¿Desea generar una copia de seguridad?",
+        text: "Esto descargará un archivo zip que contiene toda su base de datos",
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: '¡Sí, Descargar!'
+    })
+
+    if (!confirmation.isConfirmed) {
+        return;
+    }
+
+    location.href = api + "settings/export";
+    // $.ajax({
+    //     xhrFields: {
+    //        responseType: 'blob' 
+    //     },
+    //     type:'GET',
+    //     url:api + "settings/export"
+    // }).done(function(data){
+    //     console.log(data)
+    // });
+}
+
+$.fn.importBackup = async function() {
+    Swal.fire({
+        title: '¿Desea realizar una importacíón?',
+        html: 'Esto reemplazará la base de datos actual. Se recomienda hacer una copia de seguridad antes. <br/><br/>Seleccione un archivo zip.',
+        icon: 'question',
+        input: 'file',
+        inputAttributes: {
+          autocapitalize: 'off'
+        },
+        showCancelButton: true,
+        confirmButtonText: 'Importar',
+        cancelButtonText: 'Cancelar',
+        showLoaderOnConfirm: true,
+        preConfirm: (zip) => {
+            
+            if (!zip) {
+                return false;
+            }
+            
+            let formData = new FormData();
+            formData.append("file", zip);
+
+            return fetch(api + 'settings/import', {method: "POST", body: formData})
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(response.statusText)
+                    }
+                    return response;
+                })
+                .catch(error => {
+                    Swal.showValidationMessage(
+                        `La importación ha falladdo: ${error}`
+                    )
+                })
+        },
+        allowOutsideClick: () => !Swal.isLoading()
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            await Swal.fire({
+                title: `Base de datos importada`
+            })
+            storage.delete('auth');
+            storage.delete('user');
+            ipcRenderer.send('app-relaunch', '');
+        }
     })
 }
 

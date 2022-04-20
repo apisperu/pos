@@ -42,6 +42,7 @@
     "pouchdb": "^7.2.2",
     "pouchdb-find": "^7.2.2",
     "print-js": "^1.0.63",
+    "qrcode": "^1.5.0",
     "socket.io": "^2.4.0",
     "sweetalert2": "^9.5.4",
     "xmlhttprequest": "^1.8.0"

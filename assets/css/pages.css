@@ -17,7 +17,8 @@
   display: block; 
   height: calc(100vh - 215px);
   overflow: auto;
-  overflow: hidden;
+  /* overflow: hidden; */
+  overflow-y: scroll;
 }
 
 

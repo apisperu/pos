@@ -875,15 +875,18 @@ if (auth == undefined) {
                 cache: false,
                 processData: false,
                 success: function (data) {
-                    // obtener qr
-                    try {
-                        $.get(api + 'transactions/' + data._id + '/qr', function(data){
-                            $('#viewTransaction table').after('<br /><div style="text-align: center;">' + data + '</div>')
-                            receipt += '<br /><div style="text-align: center;">' + data + '</div>';
-                        });
-                    } catch (error) {
-                        console.log(error)
-                    }
+                    if (data.document_type.code === '01' || data.document_type.code === '03') {
+                        // obtener qr
+                        try {
+                            $.get(api + 'transactions/' + data._id + '/qr', function(data){
+                                // $('#viewTransaction table').after('<br /><div style="text-align: center;">' + data + '</div>')
+                                $('#viewTransaction table').after('<br /><div style="text-align: center;"><img src="' + data + '" /></div>')
+                                receipt += '<br /><div style="text-align: center;">' + data + '</div>';
+                            });
+                        } catch (error) {
+                            console.log(error)
+                        }
+                    } 
             
                     cart = [];
                     $('#viewTransaction').html('');
@@ -2513,14 +2516,17 @@ $.fn.viewTransaction = function (index) {
          </p>
         </div>`;
 
-    // obtener qr
-    try {
-        $.get(api + 'transactions/' + allTransactions[index]._id + '/qr', function(data){
-            $('#viewTransaction table').after('<br /><div style="text-align: center;">' + data + '</div>')
-            receipt += '<br /><div style="text-align: center;">' + data + '</div>';
-        });
-    } catch (error) {
-        console.log(error)
+    if (allTransactions[index].document_type.code === '01' || allTransactions[index].document_type.code === '03') {
+        // obtener qr
+        try {
+            $.get(api + 'transactions/' + allTransactions[index]._id + '/qr', function(data){
+                // $('#viewTransaction table').after('<br /><div style="text-align: center;">' + data + '</div>')
+                $('#viewTransaction table').after('<br /><div style="text-align: center;"><img src="' + data + '" /></div>')
+                receipt += '<br /><div style="text-align: center;">' + data + '</div>';
+            });
+        } catch (error) {
+            console.log(error)
+        }
     }
 
 

@@ -7,6 +7,9 @@ const PouchDB = require('pouchdb');
 const PouchdbFind = require('pouchdb-find');
 const apiResults = require('../helpers/apiResults');
 const CONFIG = require('../config');
+const QRCode = require('qrcode')
+const moment = require('moment');
+
 
 PouchDB.plugin(PouchdbFind);
 
@@ -323,12 +326,23 @@ app.get("/:transactionId/qr", async function(req, res) {
   let transaction = await transactionsDB.get(id);
   let json = await apisperu.jsonQrSale(transaction);
 
-  apisperu.qrSale(json).then(r => {
-    // res.header("Content-Type", "application/pdf");
-    res.end(r.data);
-  }).catch(err => {
+  let emision = moment(new Date(json.emision)).format("YYYY-MM-DD");
+  let str = json.ruc + '|' + json.tipo + '|' + json.serie + '|' + json.numero + '|' + json.igv.toFixed(2) + '|' + json.total + '|' +  emision + '|' + json.clienteTipo + '|' + json.clienteNumero + '|';
+  QRCode.toDataURL(str)
+  .then(url => {
+    res.end(url);
+  })
+  .catch(err => {
+    console.error(err)
     res.status( 500 ).send( err );
-  });
+  })
+
+  // apisperu.qrSale(json).then(r => {
+  //   // res.header("Content-Type", "application/pdf");
+  //   res.end(r.data);
+  // }).catch(err => {
+  //   res.status( 500 ).send( err );
+  // });
 });
 
 

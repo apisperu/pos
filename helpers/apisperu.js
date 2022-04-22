@@ -77,22 +77,22 @@ async function jsonInvoice(data){
             "descripcion": item.product_name,
             "cantidad": item.quantity,
             "mtoValorUnitario": item.price,
-            "mtoValorVenta": valorVenta.toFixed(2),
-            "mtoBaseIgv": valorVenta.toFixed(2),
-            "porcentajeIgv": settings.percentage,
-            "igv": igv.toFixed(2),
-            "tipAfeIgv": 10,
-            "totalImpuestos": igv.toFixed(2),
-            "mtoPrecioUnitario": precioUnitario.toFixed(2)
+            "mtoValorVenta": parseFloat(valorVenta.toFixed(4)),
+            "mtoBaseIgv": parseFloat(valorVenta.toFixed(4)),
+            "porcentajeIgv": parseFloat(settings.percentage),
+            "igv": parseFloat(igv.toFixed(4)),
+            "tipAfeIgv": "10",
+            "totalImpuestos": parseFloat(igv.toFixed(4)),
+            "mtoPrecioUnitario": parseFloat(precioUnitario.toFixed(4))
         };
 
         // exonerados
         if (!data.tax) {
           detail.porcentajeIgv = 0;
           detail.igv = 0;
-          detail.tipAfeIgv = 20;
+          detail.tipAfeIgv = "20";
           detail.totalImpuestos = 0;
-          detail.mtoPrecioUnitario = item.price
+          detail.mtoPrecioUnitario = parseFloat(item.price)
         }
 
         json.details.push(detail);

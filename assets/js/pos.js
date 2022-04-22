@@ -430,9 +430,14 @@ if (auth == undefined) {
                 id: data._id,
                 product_name: data.name,
                 sku: data.sku,
-                price: data.price,
+                price: parseFloat(data.price),
                 quantity: 1
             };
+
+            // actualizar el precio en caso esté incluido el igv
+            if (settings.charge_tax && settings.price_with_tax) {
+                item.price = parseFloat((data.price / 1.18).toFixed(4));
+            }
 
             if ($(this).isExist(item)) {
                 $(this).qtIncrement(index);
@@ -790,7 +795,7 @@ if (auth == undefined) {
             <tr>                        
                 <td><b>Subtotal</b></td>
                 <td>:</td>
-                <td><b>${settings.symbol}${subTotal.toFixed(2)}</b></td>
+                <td><b>${settings.symbol}${parseFloat(subTotal).toFixed(2)}</b></td>
             </tr>
             <!--<tr>
                 <td>Descuento</td>
@@ -846,15 +851,15 @@ if (auth == undefined) {
                 discount: discount,
                 customer: customer,
                 status: status,
-                subtotal: parseFloat(subTotal).toFixed(2),
-                tax: totalVat,
+                subtotal: parseFloat(parseFloat(subTotal).toFixed(4)),
+                tax: parseFloat(totalVat.toFixed(4)),
                 order_type: 1,
                 items: cart,
                 date: currentTime,
                 payment_type: paymentType,
-                total: orderTotal,
-                paid: paid,
-                change: change,
+                total: parseFloat(orderTotal),
+                paid: parseFloat(paid),
+                change: parseFloat(change),
                 _id: orderNumber,
                 till: platform.till,
                 mac: platform.mac,
@@ -1014,8 +1019,8 @@ if (auth == undefined) {
                         id: product.id,
                         product_name: product.product_name,
                         sku: product.sku,
-                        price: product.price,
-                        quantity: product.quantity
+                        price: parseFloat(product.price),
+                        quantity: parseFloat(product.quantity)
                     };
                     cart.push(item);
                 })
@@ -1037,8 +1042,8 @@ if (auth == undefined) {
                         id: product.id,
                         product_name: product.product_name,
                         sku: product.sku,
-                        price: product.price,
-                        quantity: product.quantity
+                        price: parseFloat(product.price),
+                        quantity: parseFloat(product.quantity)
                     };
                     cart.push(item);
                 })
@@ -1747,6 +1752,15 @@ if (auth == undefined) {
             formData['app'] = $('#app').val();
             formData['mac'] = mac_address;
             formData['till'] = 1;
+            
+            if (!formData.charge_tax && formData.price_with_tax) {
+                Swal.fire(
+                    '¡Uy!',
+                    'Si selecciona la opción de "Impuestos incluidos en el precio" debe asegurarse de que la opción "Cobrar Impuestos" esté seleccionado.' ,
+                    'warning'
+                );
+                return;
+            }
 
             $('#settings_form').append('<input type="hidden" name="app" value="' + formData.app + '" />');
 
@@ -2102,6 +2116,10 @@ function loadSettings() {
         if (settings.charge_tax) {
             $('#charge_tax').prop("checked", true);
         }
+        if (settings.price_with_tax) {
+            $('#price_with_tax').prop("checked", true);
+        }
+        
         if (settings.logo) {
             $('#logoname').hide();
             $('#current_logo').html(`<img src="${settings.logo}" alt="">`);
@@ -2289,8 +2307,8 @@ function loadTransactions() {
                         sold.push({
                             id: id,
                             product: item,
-                            qty: quantity,
-                            price: price
+                            qty: parseFloat(quantity),
+                            price: parseFloat(price)
                         });
                     }
                    
@@ -2488,7 +2506,7 @@ $.fn.viewTransaction = function (index) {
         <tr>                        
             <td><b>Subtotal</b></td>
             <td>:</td>
-            <td><b>${settings.symbol}${allTransactions[index].subtotal}</b></td>
+            <td><b>${settings.symbol}${parseFloat(allTransactions[index].subtotal).toFixed(2)}</b></td>
         </tr>
         <!--<tr>
             <td>Descuento</td>

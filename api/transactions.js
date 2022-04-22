@@ -335,23 +335,6 @@ app.get("/:transactionId/qr", async function(req, res) {
     console.error(err)
     res.status( 500 ).send( err );
   }
-
-
-  // QRCode.toDataURL(str)
-  // .then(url => {
-  //   res.end(url);
-  // })
-  // .catch(err => {
-  //   console.error(err)
-  //   res.status( 500 ).send( err );
-  // })
-
-  // apisperu.qrSale(json).then(r => {
-  //   // res.header("Content-Type", "application/pdf");
-  //   res.end(r.data);
-  // }).catch(err => {
-  //   res.status( 500 ).send( err );
-  // });
 });
 
 

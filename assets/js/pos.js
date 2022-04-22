@@ -470,7 +470,7 @@ if (auth == undefined) {
             let grossTotal;
             $('#total').text(cart.length);
             $.each(cart, function (index, data) {
-                total += data.quantity * data.price;
+                total = parseFloat(total) + (data.quantity * data.price);
             });
             total = total - $("#inputDiscount").val();
             $('#price').text(settings.symbol + total.toFixed(2));
@@ -563,7 +563,7 @@ if (auth == undefined) {
       
             if (product[0].doc.stock == 1) {
                 if (item.quantity < product[0].doc.quantity) {
-                    item.quantity += 1;
+                    item.quantity = parseFloat(item.quantity) + 1;
                     $(this).renderTable(cart);
                 }
 
@@ -576,7 +576,7 @@ if (auth == undefined) {
                 }
             }
             else {
-                item.quantity += 1;
+                item.quantity = parseFloat(item.quantity) + 1;
                 $(this).renderTable(cart);
             }
 
@@ -586,7 +586,7 @@ if (auth == undefined) {
         $.fn.qtDecrement = function (i) {
             if (item.quantity > 1) {
                 item = cart[i];
-                item.quantity -= 1;
+                item.quantity = parseFloat(item.quantity) - 1;;
                 $(this).renderTable(cart);
             }
         }
@@ -986,7 +986,7 @@ if (auth == undefined) {
         $.fn.calculatePrice = function (data) {
             totalPrice = 0;
             $.each(data.products, function (index, product) {
-                totalPrice += product.price * product.quantity;
+                totalPrice = parseFloat(totalPrice) + (product.price * product.quantity);
             })
 
             let vat = (totalPrice * data.vat) / 100;
@@ -2195,7 +2195,7 @@ function loadTransactions() {
             allTransactions = [...transactions];
 
             transactions.forEach((trans, index) => {
-                sales += parseFloat(trans.total);
+                sales = parseFloat(sales) + parseFloat(trans.total);
                 transact++;
 
                 trans.items.forEach(item => {
@@ -2301,7 +2301,7 @@ function loadTransactions() {
                         result[item].forEach(i => {
                             id = i.id;
                             price = i.price;
-                            quantity += i.quantity;
+                            quantity = parseFloat(quantity) + i.quantity;
                         });
 
                         sold.push({
@@ -2369,7 +2369,7 @@ function loadSoldProducts() {
     $('#product_sales').empty();
 
     sold.forEach((item, index) => {
-        items += item.qty;
+        items = parseFloat(items) + item.qty;
         products++;
 
         let product = allProducts.filter(function (selected) {

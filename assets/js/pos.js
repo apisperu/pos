@@ -699,6 +699,11 @@ if (auth == undefined) {
             let tax_row = "";
             let documentType = JSON.parse($("#documentType").val())
 
+            if ($('#overWrite').val()) {
+                customer.name = $('#overWrite').val();
+            }
+            
+
             if (paid != "") {
                 payment = `<tr>
                         <td>Pagado</td>
@@ -3032,6 +3037,18 @@ $('#tills').change(function () {
 $('#users').change(function () {
     by_user = $(this).find('option:selected').val();
     loadTransactions();
+});
+
+$('#customer').change(function () {
+    const obj = JSON.parse($('#customer').val());
+    console.log(obj);
+    if (obj.document_type.number === '00000000') {
+
+        $('#overWrite').show();
+    } else {
+        $('#overWrite').hide();
+        $('#overWrite').val('');
+    }
 });
 
 

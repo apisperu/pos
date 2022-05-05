@@ -274,17 +274,31 @@ if (auth == undefined) {
 
             $.get(api + 'customers/all', function (customers) {
                 
-                $('#customer').html(`<option value="" selected="selected">Seleccione un cliente</option>`);
+                var anonymousCustomer = '';
 
+                
+                $('#customer').html(`<option value="" selected="selected">Seleccione un cliente</option>`);
+                
                 customers.forEach(cust => {
                     cust = cust.doc;
                     cust.id = cust._id;
-
+                    
                     let customer = `<option value='${JSON.stringify(cust)}'>${cust.document_type.number + ' - ' + cust.name}</option>`;
                     $('#customer').append(customer);
-                });
-                $('#customer').selectpicker('refresh');
+                   
+                    if (cust.document_type.number === '00000000') {
+                        anonymousCustomer = JSON.stringify(cust);
+                    }
 
+                });
+                
+                $('#customer').selectpicker('refresh');
+                $('#customer').val(anonymousCustomer);
+                $('#customer').selectpicker('refresh');
+                
+                if (anonymousCustomer) {
+                    $('#overWrite').show();
+                }
                 //  $('#customer').chosen();
 
             });
@@ -3041,9 +3055,8 @@ $('#users').change(function () {
 
 $('#customer').change(function () {
     const obj = JSON.parse($('#customer').val());
-    console.log(obj);
-    if (obj.document_type.number === '00000000') {
-
+    
+    if (obj.document_type.number === '00000000' && obj.document_type.code === '0') {
         $('#overWrite').show();
     } else {
         $('#overWrite').hide();

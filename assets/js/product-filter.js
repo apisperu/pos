@@ -84,9 +84,20 @@ $(document).ready(function(){
             $("#cardInfo .input-group-addon").text("Check Info");
        }else if(this.id == 'card'){
            $("#cardInfo").show();
+           $("#creditInfo").hide();
+           $("#digits").show();
+           $("#paymentAmount").show();
            $("#cardInfo .input-group-addon").text("Info. de la tarjeta");
        }else if(this.id == 'cash'){
            $("#cardInfo").hide();
+           $("#creditInfo").hide();
+           $("#digits").show();
+           $("#paymentAmount").show();
+       }else if(this.id == 'credit'){
+        $("#cardInfo").hide();
+        $("#creditInfo").show();
+        $("#digits").hide();
+        $("#paymentAmount").hide();
        }
     });
 

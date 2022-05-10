@@ -1207,6 +1207,7 @@ if (auth == undefined) {
         $("#confirmPayment").hide();
 
         $("#cardInfo").hide();
+        $("#creditInfo").hide();
 
         $("#payment").on('input', function () {
             $(this).calculateChange();

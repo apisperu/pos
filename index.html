@@ -405,6 +405,7 @@
                           <div class="list-group">
                               <a href="javascript:void(0)" id="cash" onclick="$('#paymentType').val(JSON.stringify({ 'name': 'Efectivo' }))" class="list-group-item active">Efectivo</a>
                               <a href="javascript:void(0)" id="card" onclick="$('#paymentType').val(JSON.stringify({ 'name': 'Tarjeta' }))" class="list-group-item">Tarjeta</a>
+                              <a href="javascript:void(0)" id="credit" onclick="$('#paymentType').val(JSON.stringify({ 'name': 'Credito' }))" class="list-group-item">Crédito</a>
                               <input type="hidden" id="paymentType" value='{ "name": "Efectivo" }'/>
                           </div>
                           <br/>
@@ -428,12 +429,12 @@
                               <input id="payablePrice" readonly type="number"  class="form-control" aria-describedby="basic-addon3">
                           </div>
                           <br>
-                          <div class="input-group">
+                          <div class="input-group" id="paymentAmount">
                               <span class="input-group-addon" id="basic-addon3">Payment  <span id="payment_curr"></span> </span>
                               <input type="text" placeholder="0.0" class="form-control" id="payment" aria-describedby="basic-addon3">
                           </div>
                           <hr>
-                          <div class="row">
+                          <div class="row" id="digits">
                               <div class="col-md-9">
                                   <div class="row">
                                       <div class="col-md-3">
@@ -496,9 +497,28 @@
                               <span class="input-group-addon" id="basic-addon3">Info. de la tarjeta</span>
                               <input type="text" class="form-control" id="paymentInfo" aria-describedby="basic-addon3">
                           </div>
-                      </div>
-                  </div>
-              </div>
+                          <div id="creditInfo">
+                            <fieldset class="form-group border p-3">
+                                <legend class="w-auto px-2">Cuotas</legend>
+                                <div class="row">
+                                    <div class="col-md-5">
+                                      <label for="creditDate">Fecha:</label>
+                                        <input type="date" name="creditDate" id="creditDate"  class="form-control">
+                                    </div>
+                                    <div class="col-md-5">
+                                      <label for="credit">Monto:</label>
+                                      <input type="number" name="credit" id="credit"  class="form-control">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button id="addCreditDate" data-toggle="modal" data-target="#newCustomer" class="btn btn-success"><i class="fa fa-plus"></i></button>
+                                        <button id="removeCreditDate" data-toggle="modal" data-target="#newCustomer" class="btn btn-danger"><i class="fa fa-times"></i></button>
+                                    </div>
+                                </div>
+                            </fieldset>
+                          </div>
+                        </div>
+                    </div>
+                </div>
               <div class="modal-footer">
                   <div class="row">
                       <div class="col-md-3">

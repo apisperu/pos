@@ -425,12 +425,12 @@
                       </div>
                       <div class="col-md-8">
                           <div class="input-group">
-                              <span class="input-group-addon" id="basic-addon3">Price <span id="price_curr"></span>
+                              <span class="input-group-addon" id="basic-addon3">Precio <span id="price_curr"></span>
                               <input id="payablePrice" readonly type="number"  class="form-control" aria-describedby="basic-addon3">
                           </div>
                           <br>
                           <div class="input-group" id="paymentAmount">
-                              <span class="input-group-addon" id="basic-addon3">Payment  <span id="payment_curr"></span> </span>
+                              <span class="input-group-addon" id="basic-addon3">Pago <span id="payment_curr"></span> </span>
                               <input type="text" placeholder="0.0" class="form-control" id="payment" aria-describedby="basic-addon3">
                           </div>
                           <hr>
@@ -502,16 +502,24 @@
                                 <legend class="w-auto px-2">Cuotas</legend>
                                 <div class="row">
                                     <div class="col-md-5">
-                                      <label for="creditDate">Fecha:</label>
+                                        <label for="creditDate">Fecha:</label>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label for="credit">Monto:</label>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button id="addCreditDate"  class="btn btn-success" onclick="$(this).newDue()"><i class="fa fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-5">
                                         <input type="date" name="creditDate" id="creditDate"  class="form-control">
                                     </div>
                                     <div class="col-md-5">
-                                      <label for="credit">Monto:</label>
                                       <input type="number" name="credit" id="credit"  class="form-control">
                                     </div>
                                     <div class="col-md-2">
-                                        <button id="addCreditDate" data-toggle="modal" data-target="#newCustomer" class="btn btn-success"><i class="fa fa-plus"></i></button>
-                                        <button id="removeCreditDate" data-toggle="modal" data-target="#newCustomer" class="btn btn-danger"><i class="fa fa-times"></i></button>
+                                        <button id="removeCreditDate"  class="btn btn-danger" onclick="$(this).deleteDue()"><i class="fa fa-times"></i></button>
                                     </div>
                                 </div>
                             </fieldset>

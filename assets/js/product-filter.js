@@ -72,7 +72,7 @@ $(document).ready(function(){
             searchCustomerOrders();
         }          
     });
- 
+
 
 
     var $list = $('.list-group-item').click(function () {
@@ -131,4 +131,20 @@ $(document).ready(function(){
         }
     }
 
+    $.fn.calculateDues = function () {
+        var dues = 0;
+
+        var  credits = $('#creditInfo input[type=number]');
+
+        $.each( credits, function( key, value ) {
+            
+            dues += parseFloat($(value).val() || 0);
+            
+          });
+        if (dues === parseFloat($('#payablePrice').val())) {
+            $("#confirmPayment").show();
+        } else {
+            $("#confirmPayment").hide();            
+        }
+    }
 })

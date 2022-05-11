@@ -109,7 +109,23 @@ $.fn.serializeObject = function () {
     });
     return o;
 };
+$.fn.newDue = function () {
 
+    $('#creditInfo fieldset').append(`<div class="row"><div class="col-md-5">
+    <input type="date" name="creditDate" id="creditDate"  class="form-control">
+</div>
+<div class="col-md-5">
+  <input type="number" name="credit" id="credit"  class="form-control">
+</div>
+<div class="col-md-2">
+    <button id="removeCreditDate"  onclick="$(this).deleteDue()" class="btn btn-danger"><i class="fa fa-times"></i></button>
+</div></div>`);
+}
+
+$.fn.deleteDue = function () {
+console.log($(this));
+    $(this).parents('.row').first().remove();
+}
 
 auth = storage.get('auth');
 user = storage.get('user');
@@ -140,10 +156,10 @@ if (auth == undefined) {
     $.get(api + 'users/user/' + user._id, function (data) {
         user = data;
         $('#loggedin-user').text(user.fullname);
-    }).fail(function(err) {
+    }).fail(function (err) {
         storage.delete('auth');
         storage.delete('user');
-        
+
         ipcRenderer.send('app-reload', '');
         // $("#loading").show();
         // authenticate();
@@ -153,9 +169,9 @@ if (auth == undefined) {
 
     $.get(api + 'settings/all', function (data) {
         settings = data.settings;
-        
+
         if (data._attachments && data._attachments.logo) {
-           settings.logo = 'data:' + data._attachments.logo.content_type + ';base64,' + data._attachments.logo.data;
+            settings.logo = 'data:' + data._attachments.logo.content_type + ';base64,' + data._attachments.logo.data;
         }
     });
 
@@ -193,7 +209,7 @@ if (auth == undefined) {
         $("#settingsModal").on("hide.bs.modal", function () {
 
             setTimeout(function () {
-                if (!settings  && auth) {
+                if (!settings && auth) {
                     $('#settingsModal').modal('show');
                 }
             }, 1000);
@@ -210,7 +226,7 @@ if (auth == undefined) {
         function loadProducts() {
 
             $.get(api + 'inventory/products', function (data) {
-                
+
                 data.forEach(item => {
                     item = item.doc;
                     item.price = parseFloat(item.price).toFixed(2);
@@ -273,29 +289,29 @@ if (auth == undefined) {
         function loadCustomers() {
 
             $.get(api + 'customers/all', function (customers) {
-                
+
                 var anonymousCustomer = '';
 
-                
+
                 $('#customer').html(`<option value="" selected="selected">Seleccione un cliente</option>`);
-                
+
                 customers.forEach(cust => {
                     cust = cust.doc;
                     cust.id = cust._id;
-                    
+
                     let customer = `<option value='${JSON.stringify(cust)}'>${cust.document_type.number + ' - ' + cust.name}</option>`;
                     $('#customer').append(customer);
-                   
+
                     if (cust.document_type.number === '00000000') {
                         anonymousCustomer = JSON.stringify(cust);
                     }
 
                 });
-                
+
                 $('#customer').selectpicker('refresh');
                 $('#customer').val(anonymousCustomer);
                 $('#customer').selectpicker('refresh');
-                
+
                 if (anonymousCustomer) {
                     $('#overWrite').show();
                 }
@@ -342,7 +358,7 @@ if (auth == undefined) {
             let req = {
                 skuCode: $("#skuCode").val()
             }
-            
+
             $.ajax({
                 url: api + 'inventory/product/sku',
                 type: 'POST',
@@ -385,7 +401,7 @@ if (auth == undefined) {
                 // error: function (data) {
                 //     
                 // }
-            }).fail( function( jqXHR, textStatus, errorThrown ) {
+            }).fail(function (jqXHR, textStatus, errorThrown) {
 
                 if (jqXHR.status === 500) {
                     // $(this).showValidationError(data);
@@ -574,7 +590,7 @@ if (auth == undefined) {
             let product = allProducts.filter(function (selected) {
                 return selected.doc._id == parseInt(item.id);
             });
-      
+
             if (product[0].doc.stock == 1) {
                 if (item.quantity < product[0].doc.quantity) {
                     item.quantity = parseFloat(item.quantity) + 1;
@@ -716,7 +732,7 @@ if (auth == undefined) {
             if ($('#overWrite').val()) {
                 customer.name = $('#overWrite').val();
             }
-            
+
 
             if (paid != "") {
                 payment = `<tr>
@@ -750,12 +766,12 @@ if (auth == undefined) {
 
             if (status === 0) {
                 if ($("#customer").val() == 0 && $("#refNumber").val() == "") {
-                Swal.fire(
-                    '¡Referencia requerida!',
-                    '¡Debe seleccionar un cliente <br> o ingrese una referencia!',
-                    'warning'
+                    Swal.fire(
+                        '¡Referencia requerida!',
+                        '¡Debe seleccionar un cliente <br> o ingrese una referencia!',
+                        'warning'
                     )
-                    
+
                     return;
                 }
 
@@ -886,7 +902,7 @@ if (auth == undefined) {
                 user_id: user._id,
                 document_type: documentType,
             }
-           
+
             if (holdOrderRev) {
                 data._rev = holdOrderRev
             }
@@ -902,7 +918,7 @@ if (auth == undefined) {
                     if (data.document_type.code === '01' || data.document_type.code === '03') {
                         // obtener qr
                         try {
-                            $.get(api + 'transactions/' + data._id + '/qr', function(data){
+                            $.get(api + 'transactions/' + data._id + '/qr', function (data) {
                                 // $('#viewTransaction table').after('<br /><div style="text-align: center;">' + data + '</div>')
                                 $('#viewTransaction table').after('<br /><div style="text-align: center;"><img src="' + data + '" /></div>')
                                 receipt += '<br /><div style="text-align: center;">' + data + '</div>';
@@ -910,8 +926,8 @@ if (auth == undefined) {
                         } catch (error) {
                             console.log(error)
                         }
-                    } 
-            
+                    }
+
                     cart = [];
                     $('#viewTransaction').html('');
                     $('#viewTransaction').html(receipt);
@@ -967,7 +983,7 @@ if (auth == undefined) {
 
 
         $.fn.randerHoldOrders = function (data, renderLocation, orderType) {
-    
+
             $.each(data, function (index, order) {
                 $(this).calculatePrice(order);
                 renderLocation.append(
@@ -1031,7 +1047,7 @@ if (auth == undefined) {
 
                 holdOrder = holdOrderList[index]._id;
                 holdOrderRev = holdOrderList[index]._rev;
-         
+
                 cart = [];
                 $.each(holdOrderList[index].items, function (index, product) {
                     item = {
@@ -1074,7 +1090,7 @@ if (auth == undefined) {
 
 
         $.fn.deleteOrder = function (index, type) {
-            
+
             switch (type) {
                 case 1: deleteId = holdOrderList[index]._id;
                     break;
@@ -1094,7 +1110,7 @@ if (auth == undefined) {
                 cancelButtonColor: '#d33',
                 confirmButtonText: '¡Sí, bórralo!'
             }).then((result) => {
-                
+
                 if (result.value) {
                     $.ajax({
                         url: api + 'transactions/delete',
@@ -1117,11 +1133,11 @@ if (auth == undefined) {
                     });
                 }
             })
-            .then(() => {
-                //volvemos a renderizar las ordenes 
-                $(this).getHoldOrders();
-                $(this).getCustomerOrders();
-            })
+                .then(() => {
+                    //volvemos a renderizar las ordenes 
+                    $(this).getHoldOrders();
+                    $(this).getCustomerOrders();
+                })
         }
 
 
@@ -1148,7 +1164,7 @@ if (auth == undefined) {
                 email: $('#emailAddress').val(),
                 document_type: {
                     code: $('#document_code').val(),
-                    number:$('#document_number').val()
+                    number: $('#document_number').val()
                 },
                 address: {
                     street: $('#customer_street').val(),
@@ -1188,9 +1204,9 @@ if (auth == undefined) {
                         $('#customer').append(
                             $('<option>', { text: data.document_type.number + ' - ' + data.name, value: `{"id": "${data._id}", "name": "${data.name}", "document_type": {"code": "${data.document_type.code}", "number": "${data.document_type.number}"}}`, selected: 'selected' })
                         );
-    
+
                         $('#customer').val(`{"id": "${data._id}", "name": "${data.name}", "document_type": {"code": "${data.document_type.code}", "number": "${data.document_type.number}"}}`).trigger('chosen:updated');
-                        
+
                         $('#customer').selectpicker('refresh');
                     }
 
@@ -1213,6 +1229,9 @@ if (auth == undefined) {
             $(this).calculateChange();
         });
 
+        $('#creditInfo').on('input','input[type=number]',function () {
+            $(this).calculateDues();
+        });
 
         $("#confirmPayment").on('click', function () {
             if ($('#payment').val() == "") {
@@ -1364,7 +1383,7 @@ if (auth == undefined) {
 
 
         $.fn.editProduct = function (index) {
-           
+
             $('#Products').modal('hide');
 
             $("#category option").filter(function () {
@@ -1398,7 +1417,7 @@ if (auth == undefined) {
             if (!customer) {
                 return
             }
-            
+
             customer = JSON.parse(customer)
 
             let id = customer.id;
@@ -1593,7 +1612,7 @@ if (auth == undefined) {
                 allUsers = [...users];
                 users.forEach((user, index) => {
                     user = user.doc;
-                    
+
                     state = [];
                     let class_name = '';
 
@@ -1646,7 +1665,7 @@ if (auth == undefined) {
                 product = product.doc;
                 counter++;
 
-                let category = allCategories.filter( category => category.id == product.category);
+                let category = allCategories.filter(category => category.id == product.category);
 
                 product_list += `<tr>
             <td><img id="`+ product._id + `"></td>
@@ -1689,7 +1708,7 @@ if (auth == undefined) {
             let counter = 0;
             $('#category_list').empty();
             $('#categoryList').DataTable().destroy();
-          
+
             allCategories.forEach((category, index) => {
 
                 counter++;
@@ -1772,11 +1791,11 @@ if (auth == undefined) {
             formData['app'] = $('#app').val();
             formData['mac'] = mac_address;
             formData['till'] = 1;
-            
+
             if (!formData.charge_tax && formData.price_with_tax) {
                 Swal.fire(
                     '¡Uy!',
-                    'Si selecciona la opción de "Impuestos incluidos en el precio" debe asegurarse de que la opción "Cobrar Impuestos" esté seleccionado.' ,
+                    'Si selecciona la opción de "Impuestos incluidos en el precio" debe asegurarse de que la opción "Cobrar Impuestos" esté seleccionado.',
                     'warning'
                 );
                 return;
@@ -2041,11 +2060,11 @@ if (auth == undefined) {
     });
 
     $('#document_number').on('keypress', async function (e) {
-        if(e.which === 13) {
+        if (e.which === 13) {
             e.preventDefault();
-            
+
             $(this).attr("disabled", "disabled");
-            
+
             if ($('#document_code').val() && $('#document_number').val()) {
 
                 if ($('#document_code').val() === '1' && $('#document_number').val().length !== 8) {
@@ -2074,14 +2093,14 @@ if (auth == undefined) {
                         'Error interno, verifique el token',
                         'error'
                     );
-                    
+
                     console.log(err)
                 })
             }
 
             $(this).removeAttr("disabled");
         }
-  });
+    });
 }
 
 
@@ -2093,7 +2112,7 @@ $.fn.print = function () {
 
 function loadDniRuc(type, number) {
     return $.get(api + 'customers/search/' + type + '/' + number, function (data) {
-        
+
         if (type === '1') {
             $('#userName').val(data.nombres + ' ' + data.apellidoPaterno + ' ' + data.apellidoMaterno);
         }
@@ -2106,16 +2125,16 @@ function loadDniRuc(type, number) {
             $('#customer_city').val(data.departamento);
             $('#customer_zip').val(data.ubigeo);
         }
-        
+
     });
 }
 
 function loadSettings() {
     return $.get(api + 'settings/all', function (data) {
         settings = data.settings;
-        
+
         if (data._attachments && data._attachments.logo) {
-           settings.logo = 'data:' + data._attachments.logo.content_type + ';base64,' + data._attachments.logo.data;
+            settings.logo = 'data:' + data._attachments.logo.content_type + ';base64,' + data._attachments.logo.data;
         }
 
         $("#settings_id").val("1");
@@ -2139,7 +2158,7 @@ function loadSettings() {
         if (settings.price_with_tax) {
             $('#price_with_tax').prop("checked", true);
         }
-        
+
         if (settings.logo) {
             $('#logoname').hide();
             $('#current_logo').html(`<img src="${settings.logo}" alt="">`);
@@ -2153,7 +2172,7 @@ function loadSettings() {
         let ticket = settings.document_types.find(s => s.code === "12");
         let boleta = settings.document_types.find(s => s.code === "03");
         let factura = settings.document_types.find(s => s.code === "01");
-        
+
 
         $("#serie_t").val(ticket.serie);
         $("#next_correlative_t").val(ticket.next_correlative);
@@ -2172,7 +2191,7 @@ function loadSettings() {
 function loadCustomer(id) {
     return $.get(api + 'customers/customer/' + id, function (data) {
         let customer = data;
-        
+
         $('#customer_id').val(customer._id);
         $('#userName').val(customer.name);
         $('#document_code').val(customer.document_type.code);
@@ -2222,7 +2241,7 @@ function loadTransactions() {
                     sold_items.push(item);
                 });
 
-                
+
 
                 if (!tills.includes(trans.till)) {
                     tills.push(trans.till);
@@ -2257,7 +2276,7 @@ function loadTransactions() {
                         suntaState += '<br />Por Anular'
                     }
                 }
-                
+
                 counter++;
                 transaction_list += `<tr class="${trClass}">
                                 <!--<td>${trans.order}</td>-->
@@ -2286,10 +2305,10 @@ function loadTransactions() {
                                             <!--<li><a href="#">Cambiar Estado</a></li>-->
                                             ${trans.sunat_state !== 'success' && trans.sunat_state !== 'null' ? '<li><a href="#" onClick="$(this).resend(' + index + ')">Reenviar a Sunat</a></li> <li role="separator" class="divider"></li>' : ''}
                                             
-                                            ${trans.document_type.code === '01' && trans.sunat_state !== 'null' ? '<li><a href="#" onClick="$(this).sendVoided(' + index + ')">Comunicar Baja</a></li>' : '' }   
+                                            ${trans.document_type.code === '01' && trans.sunat_state !== 'null' ? '<li><a href="#" onClick="$(this).sendVoided(' + index + ')">Comunicar Baja</a></li>' : ''}   
                                             ${trans.document_type.code === '01' ? '<li><a href="#" onClick="$(this).statusVoided(' + index + ')">Consultar Estado de Baja</a></li>' : ''}
                                         
-                                            ${trans.document_type.code === '03' && trans.sunat_state !== 'null' ? '<li><a href="#" onClick="$(this).sendSummaryNullable(' + index + ')">Anular Mediante Resumen</a></li><li role="separator" class="divider"></li>' : '' }
+                                            ${trans.document_type.code === '03' && trans.sunat_state !== 'null' ? '<li><a href="#" onClick="$(this).sendSummaryNullable(' + index + ')">Anular Mediante Resumen</a></li><li role="separator" class="divider"></li>' : ''}
                                             ${trans.document_type.code === '03' ? '<li><a href="#" onClick="$(this).statusSummary(' + index + ')">Consultar Estado de Resumen</a></li>' : ''}
 
                                             <li role="separator" class="divider"></li>
@@ -2300,7 +2319,7 @@ function loadTransactions() {
                                 </td>
                                 </tr>
                     `;
-                
+
                 if (counter == transactions.length) {
                     $('#total_sales #counter').text(settings.symbol + parseFloat(sales).toFixed(2));
                     $('#total_transactions #counter').text(transact);
@@ -2331,15 +2350,15 @@ function loadTransactions() {
                             price: parseFloat(price)
                         });
                     }
-                   
+
                     loadSoldProducts();
-                    
+
                     if (by_user == 0 && by_till == 0) {
                         userFilter(users);
                         tillFilter(tills);
                     }
-                
-                    
+
+
                     $('#transaction_list').html(transaction_list);
                     $('#transactionList').DataTable({
                         "order": [[1, "desc"]]
@@ -2396,7 +2415,7 @@ function loadSoldProducts() {
             selected = selected.doc;
             return selected._id == item.id;
         });
-    
+
         counter++;
 
         sold_list += `<tr>
@@ -2423,7 +2442,7 @@ function userFilter(users) {
         let u = allUsers.filter(function (usr) {
             return usr.doc._id == user;
         });
-        
+
         $('#users').append(`<option value="${user}">${u[0].doc.fullname}</option>`);
     });
 
@@ -2446,7 +2465,7 @@ $.fn.viewTransaction = function (index) {
     transaction_index = index;
 
     let discount = allTransactions[index].discount;
-    let customer = !allTransactions[index].customer? 'Seleccione un cliente' : allTransactions[index].customer.username;
+    let customer = !allTransactions[index].customer ? 'Seleccione un cliente' : allTransactions[index].customer.username;
     let refNumber = allTransactions[index].ref_number != "" ? allTransactions[index].ref_number : allTransactions[index].order;
     let orderNumber = allTransactions[index].order;
     let type = allTransactions[index].payment_type.name;
@@ -2557,7 +2576,7 @@ $.fn.viewTransaction = function (index) {
     if (allTransactions[index].document_type.code === '01' || allTransactions[index].document_type.code === '03') {
         // obtener qr
         try {
-            $.get(api + 'transactions/' + allTransactions[index]._id + '/qr', function(data){
+            $.get(api + 'transactions/' + allTransactions[index]._id + '/qr', function (data) {
                 // $('#viewTransaction table').after('<br /><div style="text-align: center;">' + data + '</div>')
                 $('#viewTransaction table').after('<br /><div style="text-align: center;"><img src="' + data + '" /></div>')
                 receipt += '<br /><div style="text-align: center;">' + data + '</div>';
@@ -2578,12 +2597,12 @@ $.fn.viewTransaction = function (index) {
 
 $.fn.viewLogs = function (index) {
     let id = allTransactions[index]._id;
-    
+
 
     $.ajax({
         type: 'GET',
         url: api + "logs/by-transaction?id=" + id
-    }).done(function(data){
+    }).done(function (data) {
 
         $('#viewLogs table tbody').html('');
         $("#logsModal h4").html('Historial <b>' + allTransactions[index].serie + '-' + allTransactions[index].correlative + '</b>')
@@ -2616,7 +2635,7 @@ function downloadp(filename, data) {
 }
 
 
-$.fn.downloadXML = function(index) {
+$.fn.downloadXML = function (index) {
     let id = allTransactions[index]._id;
     let serie = allTransactions[index].serie;
     let correlative = allTransactions[index].correlative;
@@ -2624,28 +2643,28 @@ $.fn.downloadXML = function(index) {
     $.ajax({
         type: 'GET',
         url: api + "transactions/" + id + "/xml"
-    }).done(function(data){
+    }).done(function (data) {
         downloadx(serie + '-' + correlative + '.xml', data)
     })
 }
 
-$.fn.downloadPDF = function(index) {
+$.fn.downloadPDF = function (index) {
     let id = allTransactions[index]._id;
     let serie = allTransactions[index].serie;
     let correlative = allTransactions[index].correlative;
 
     $.ajax({
         xhrFields: {
-           responseType: 'blob' 
+            responseType: 'blob'
         },
-        type:'GET',
-        url:api + "transactions/" + id + "/pdf"
-    }).done(function(data){
+        type: 'GET',
+        url: api + "transactions/" + id + "/pdf"
+    }).done(function (data) {
         downloadp(serie + '-' + correlative + '.pdf', data)
     });
 }
 
-$.fn.downloadCDR = function(index) {
+$.fn.downloadCDR = function (index) {
     let data = '';
     let serie = allTransactions[index].serie;
     let correlative = allTransactions[index].correlative;
@@ -2655,14 +2674,14 @@ $.fn.downloadCDR = function(index) {
     } else if (allTransactions[index].document_type.code === '01') {
         data = allTransactions[index].sunat_response.cdrZip;
     }
-    
+
     var element = document.createElement('a');
     element.setAttribute('href', 'data:text/plain;base64,' + data);
     element.setAttribute('download', serie + '-' + correlative + '.zip');
     element.click();
 }
 
-$.fn.sendVoided = async function(index) {
+$.fn.sendVoided = async function (index) {
     let confirmation = await Swal.fire({
         title: "¿Comunicar Baja?",
         text: "Esto comunicará el documento a SUNAT para su baja.",
@@ -2678,7 +2697,7 @@ $.fn.sendVoided = async function(index) {
     }
 
     let id = allTransactions[index]._id;
-    
+
     if (allTransactions[index].sunat_state === 'null') {
         return Swal.fire(
             '¡Ups!',
@@ -2690,14 +2709,14 @@ $.fn.sendVoided = async function(index) {
     $.ajax({
         type: 'POST',
         url: api + "transactions/voided/" + id
-    }).done(function(data){
+    }).done(function (data) {
         if (data.sunatResponse.success) {
             Swal.fire(
                 '¡Solicitud de comunicación de Baja!',
                 'Ticket generado: ' + data.sunatResponse.ticket,
                 'success'
             )
-            
+
             loadTransactions();
         } else {
             Swal.fire(
@@ -2715,7 +2734,7 @@ $.fn.sendVoided = async function(index) {
     })
 }
 
-$.fn.statusVoided = async function(index) {
+$.fn.statusVoided = async function (index) {
     let confirmation = await Swal.fire({
         title: "¿Consultar Estado de Baja?",
         text: "Esto consultará el estado de la comunicación de baja.",
@@ -2729,14 +2748,14 @@ $.fn.statusVoided = async function(index) {
     if (!confirmation.isConfirmed) {
         return;
     }
-    
+
     let id = allTransactions[index]._id;
-    
+
     $.ajax({
         type: 'POST',
         url: api + "transactions/voided/" + id + "/status"
-    }).done(function(data){
-        
+    }).done(function (data) {
+
         if (data.success) {
             Swal.fire(
                 '¡Comunicación de Baja!',
@@ -2763,7 +2782,7 @@ $.fn.statusVoided = async function(index) {
     })
 }
 
-$.fn.resend = async function(index) {
+$.fn.resend = async function (index) {
     let confirmation = await Swal.fire({
         title: "¿Desea volver a enviar el comprobante?",
         text: "Esto enviará un resumen diario en caso de boletas y para facturas el envío será directo.",
@@ -2788,18 +2807,18 @@ $.fn.resend = async function(index) {
 
     let id = allTransactions[index]._id;
 
-    if(allTransactions[index].document_type.code === '03') {
+    if (allTransactions[index].document_type.code === '03') {
         $.ajax({
             type: 'POST',
             url: api + "transactions/summary/" + id
-        }).done(function(data) {
+        }).done(function (data) {
             if (data.sunatResponse.success) {
                 Swal.fire(
                     '¡Resumen Diario!',
                     'Ticket generado: ' + data.sunatResponse.ticket,
                     'success'
                 )
-                
+
                 loadTransactions();
             } else {
                 Swal.fire(
@@ -2815,18 +2834,18 @@ $.fn.resend = async function(index) {
                 'error'
             );
         })
-    } else if(allTransactions[index].document_type.code === '01') {
+    } else if (allTransactions[index].document_type.code === '01') {
         $.ajax({
             type: 'POST',
             url: api + "transactions/invoice/" + id
-        }).done(function(data) {
+        }).done(function (data) {
             if (data.sunatResponse.success) {
                 Swal.fire(
                     '¡Comprobante Electrónico!',
                     data.sunatResponse.cdrResponse.code + '|' + data.sunatResponse.cdrResponse.description + '<br /><br />' + data.sunatResponse.cdrResponse.notes.toString(),
                     'success'
                 )
-                
+
                 loadTransactions();
             } else {
                 Swal.fire(
@@ -2846,7 +2865,7 @@ $.fn.resend = async function(index) {
 
 }
 
-$.fn.sendSummaryNullable = async function(index) {
+$.fn.sendSummaryNullable = async function (index) {
     let confirmation = await Swal.fire({
         title: "¿Desea Anular el comprobante?",
         text: "Esto enviará un resumen diario para anular el comprobante.",
@@ -2862,7 +2881,7 @@ $.fn.sendSummaryNullable = async function(index) {
     }
 
     let id = allTransactions[index]._id;
-    
+
     if (allTransactions[index].sunat_state === 'null') {
         return Swal.fire(
             '¡Ups!',
@@ -2874,19 +2893,19 @@ $.fn.sendSummaryNullable = async function(index) {
     $.ajax({
         type: 'POST',
         url: api + "transactions/set-nullable/" + id
-    }).done(function(data){
+    }).done(function (data) {
 
         $.ajax({
             type: 'POST',
             url: api + "transactions/summary/" + id
-        }).done(function(data) {
+        }).done(function (data) {
             if (data.sunatResponse.success) {
                 Swal.fire(
                     '¡Resumen Diario!',
                     'Ticket generado: ' + data.sunatResponse.ticket,
                     'success'
                 )
-                
+
                 loadTransactions();
             } else {
                 Swal.fire(
@@ -2911,7 +2930,7 @@ $.fn.sendSummaryNullable = async function(index) {
     })
 }
 
-$.fn.statusSummary = async function(index) {
+$.fn.statusSummary = async function (index) {
     let confirmation = await Swal.fire({
         title: "¿Consultar Estado de Resumen?",
         text: "Esto consultará el estado del resumen diario.",
@@ -2925,14 +2944,14 @@ $.fn.statusSummary = async function(index) {
     if (!confirmation.isConfirmed) {
         return;
     }
-    
+
     let id = allTransactions[index]._id;
-    
+
     $.ajax({
         type: 'POST',
         url: api + "transactions/summary/" + id + "/status"
-    }).done(function(data){
-        
+    }).done(function (data) {
+
         if (data.success) {
             Swal.fire(
                 '¡Resumen Diario!',
@@ -2959,7 +2978,7 @@ $.fn.statusSummary = async function(index) {
     })
 }
 
-$.fn.exportBackup = async function() {
+$.fn.exportBackup = async function () {
 
     let confirmation = await Swal.fire({
         title: "¿Desea generar una copia de seguridad?",
@@ -2987,29 +3006,29 @@ $.fn.exportBackup = async function() {
     // });
 }
 
-$.fn.importBackup = async function() {
+$.fn.importBackup = async function () {
     Swal.fire({
         title: '¿Desea realizar una importacíón?',
         html: 'Esto reemplazará la base de datos actual. Se recomienda hacer una copia de seguridad antes. <br/><br/>Seleccione un archivo zip.',
         icon: 'question',
         input: 'file',
         inputAttributes: {
-          autocapitalize: 'off'
+            autocapitalize: 'off'
         },
         showCancelButton: true,
         confirmButtonText: 'Importar',
         cancelButtonText: 'Cancelar',
         showLoaderOnConfirm: true,
         preConfirm: (zip) => {
-            
+
             if (!zip) {
                 return false;
             }
-            
+
             let formData = new FormData();
             formData.append("file", zip);
 
-            return fetch(api + 'settings/import', {method: "POST", body: formData})
+            return fetch(api + 'settings/import', { method: "POST", body: formData })
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(response.statusText)
@@ -3056,7 +3075,7 @@ $('#users').change(function () {
 
 $('#customer').change(function () {
     const obj = JSON.parse($('#customer').val());
-    
+
     if (obj.document_type.number === '00000000' && obj.document_type.code === '0') {
         $('#overWrite').show();
     } else {

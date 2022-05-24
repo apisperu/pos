@@ -132,16 +132,30 @@ $(document).ready(function(){
     }
 
     $.fn.calculateDues = function () {
+        
         var dues = 0;
+        var valDate = true;
 
         var  credits = $('#creditInfo input[type=number]');
+        var  dates = $('.dateInfo');
 
         $.each( credits, function( key, value ) {
             
             dues += parseFloat($(value).val() || 0);
             
-          });
-        if (dues === parseFloat($('#payablePrice').val())) {
+        });
+        
+        $.each( dates, function( key, value ) {
+            console.log(value);
+
+            if ( !$(value).val()) {
+                
+                valDate = false;
+            };
+            
+        });
+
+        if (dues === parseFloat($('#payablePrice').val()) && valDate ) {
             $("#confirmPayment").show();
         } else {
             $("#confirmPayment").hide();            

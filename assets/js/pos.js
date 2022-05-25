@@ -1229,7 +1229,7 @@ if (auth == undefined) {
             $(this).calculateChange();
         });
 
-        $('#creditInfo').on('input','input[type=number]', 'input[type=date]' ,function () {
+        $('#creditInfo').on('input','input[type=number], input[type=date]' ,function () {
             $(this).calculateDues();
         });
 

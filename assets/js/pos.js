@@ -112,10 +112,10 @@ $.fn.serializeObject = function () {
 $.fn.newDue = function () {
 
     $('#creditInfo fieldset').append(`<div class="row"><div class="col-md-5">
-    <input type="date" name="creditDate" id="creditDate"  class="form-control">
+    <input type="date" name="creditDate" id="creditDate"  class="form-control dateInfo">
 </div>
 <div class="col-md-5">
-  <input type="number" name="credit" id="credit"  class="form-control">
+  <input type="number" name="credit" id="credit"  class="form-control" oninput="$(this).calculateDues()">
 </div>
 <div class="col-md-2">
     <button id="removeCreditDate"  onclick="$(this).deleteDue()" class="btn btn-danger"><i class="fa fa-times"></i></button>

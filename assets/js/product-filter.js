@@ -119,6 +119,7 @@ $(document).ready(function(){
 
     $.fn.calculateChange = function () {
         var change = $("#payablePrice").val() - $("#payment").val();
+        //console.log(change);
         if(change <= 0){
             $("#change").text(change.toFixed(2));
         }else{
@@ -135,16 +136,22 @@ $(document).ready(function(){
         
         var dues = 0;
         var valDate = true;
+        var isEmpty  = false;
 
         var  credits = $('#creditInfo input[type=number]');
         var  dates = $('.dateInfo');
 
         $.each( credits, function( key, value ) {
-            
+            if ($(value).val() === '' || $(value).val() === '0') {
+                isEmpty  = true;
+            }
             dues += parseFloat($(value).val() || 0);
-            
         });
-        
+        if (isEmpty) {
+            $("#confirmPayment").hide(); 
+            return;
+        }
+
         $.each( dates, function( key, value ) {
             console.log(value);
 
@@ -152,10 +159,10 @@ $(document).ready(function(){
                 
                 valDate = false;
             };
-            
+            console.log($(value).val());
         });
 
-        if (dues === parseFloat($('#payablePrice').val()) && valDate ) {
+        if (dues.toFixed(2) === parseFloat($('#payablePrice').val()).toFixed(2) && valDate ) {
             $("#confirmPayment").show();
         } else {
             $("#confirmPayment").hide();            

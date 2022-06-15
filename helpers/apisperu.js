@@ -62,6 +62,9 @@ async function jsonInvoice(data){
           }
         ]
     }
+    // if(data.dues.length) {
+    // json.formaPago.tipo = "Credito";
+    // }
 
     json.details = [];
 

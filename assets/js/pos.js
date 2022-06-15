@@ -111,11 +111,11 @@ $.fn.serializeObject = function () {
 };
 $.fn.newDue = function () {
 
-    $('#creditInfo fieldset').append(`<div class="row"><div class="col-md-5">
-    <input type="date" name="creditDate" id="creditDate"  class="form-control dateInfo">
+    $('#creditInfo fieldset').append(`<div class="row credit"><div class="col-md-5">
+    <input type="date" name="creditDate" class="form-control dateInfo">
 </div>
 <div class="col-md-5">
-  <input type="number" name="credit" id="credit"  class="form-control" oninput="$(this).calculateDues()">
+  <input type="number" name="creditAmount" class="form-control amountInfo" oninput="$(this).calculateDues()">
 </div>
 <div class="col-md-2">
     <button id="removeCreditDate"  onclick="$(this).deleteDue()" class="btn btn-danger"><i class="fa fa-times"></i></button>
@@ -123,7 +123,7 @@ $.fn.newDue = function () {
 }
 
 $.fn.deleteDue = function () {
-console.log($(this));
+    console.log($(this));
     $(this).parents('.row').first().remove();
 }
 
@@ -251,10 +251,10 @@ if (auth == undefined) {
 
                     let item_info = `<div class="col-lg-2 box ${item.category}"
                                 onclick="$(this).addToCart(${item._id}, ${item.quantity}, ${item.stock})">
-                            <div class="widget-panel widget-style-2 ">                    
-                            <div id="image"><img src="${item.image}" id="product_img" alt=""></div>                    
+                            <div class="widget-panel widget-style-2 ">
+                            <div id="image"><img src="${item.image}" id="product_img" alt=""></div>
                                         <div class="text-muted m-t-5 text-center">
-                                        <div class="name" id="product_name">${item.name}</div> 
+                                        <div class="name" id="product_name">${item.name}</div>
                                         <span class="sku">${item.sku}</span>
                                         <span class="stock">STOCK </span><span class="count">${item.stock == 1 ? item.quantity : 'N/A'}</span></div>
                                         <sp class="text-success text-center"><b data-plugin="counterup">${settings.symbol}  ${item.price}</b> </sp>
@@ -399,7 +399,7 @@ if (auth == undefined) {
 
                 }
                 // error: function (data) {
-                //     
+                //
                 // }
             }).fail(function (jqXHR, textStatus, errorThrown) {
 
@@ -793,13 +793,13 @@ if (auth == undefined) {
             }
 
 
-            receipt = `<div style="font-size: 10px;">                            
+            receipt = `<div style="font-size: 10px;">
         <p style="text-align: center;">
         ${settings.img == "" ? settings.img : '<img style="max-width: 50px;max-width: 100px;" src ="' + settings.logo + '" /><br>'}
             <span style="font-size: 22px;">${settings.legal_name}</span> <br>
             ${settings.address.street} ${settings.address.district} ${settings.address.city} ${settings.address.state}<br>
-            ${settings.contact != '' ? 'Teléfono: ' + settings.contact + '<br>' : ''} 
-            ${settings.vat_no != '' ? 'RUC ' + settings.vat_no + '<br>' : ''} 
+            ${settings.contact != '' ? 'Teléfono: ' + settings.contact + '<br>' : ''}
+            ${settings.vat_no != '' ? 'RUC ' + settings.vat_no + '<br>' : ''}
             ${documentType.name ? '<span style="font-size: 15px; text-transform: uppercase;">' + documentType.name + '</span> <br />' : ''}
             <span style="font-size: 15px; text-transform: uppercase;" id="serieCorrelativo"></span> <br />
 
@@ -825,9 +825,9 @@ if (auth == undefined) {
             </tr>
             </thead>
             <tbody>
-            ${items}                
-     
-            <tr>                        
+            ${items}
+
+            <tr>
                 <td><b>Subtotal</b></td>
                 <td>:</td>
                 <td><b>${settings.symbol}${parseFloat(subTotal).toFixed(2)}</b></td>
@@ -837,9 +837,9 @@ if (auth == undefined) {
                 <td>:</td>
                 <td>${discount > 0 ? settings.symbol + parseFloat(discount).toFixed(2) : ''}</td>
             </tr>-->
-            
+
             ${tax_row}
-        
+
             <tr>
                 <td><h3>Total</h3></td>
                 <td><h3>:</h3></td>
@@ -903,6 +903,24 @@ if (auth == undefined) {
                 document_type: documentType,
             }
 
+            var dataCredit = [];
+
+            var credits = $('#creditInfo .credit');
+
+            $.each(credits, function (key, value) {
+                var date;
+                var amount;
+                date = $(value).find(".dateInfo").val();
+                amount = $(value).find(".amountInfo").val();
+                dataCredit.push({
+                    date: date,
+                    amount: amount,
+                });
+            });
+            console.log(dataCredit);
+        
+            data.dues = dataCredit;
+
             if (holdOrderRev) {
                 data._rev = holdOrderRev
             }
@@ -960,7 +978,8 @@ if (auth == undefined) {
             $("#refNumber").val('');
             $("#change").text('');
             $("#payment").val('');
-
+            $("#creditInfo .row.credit").remove(); 
+          
         }
 
 
@@ -1134,7 +1153,7 @@ if (auth == undefined) {
                 }
             })
                 .then(() => {
-                    //volvemos a renderizar las ordenes 
+                    //volvemos a renderizar las ordenes
                     $(this).getHoldOrders();
                     $(this).getCustomerOrders();
                 })
@@ -1229,12 +1248,15 @@ if (auth == undefined) {
             $(this).calculateChange();
         });
 
-        $('#creditInfo').on('input','input[type=number], input[type=date]' ,function () {
+        $('#creditInfo').on('input', 'input[type=number], input[type=date]', function () {
             $(this).calculateDues();
         });
 
         $("#confirmPayment").on('click', function () {
-            if ($('#payment').val() == "") {
+            var typePaymentString = $('#paymentType').val();
+            var typePaymentObject = JSON.parse(typePaymentString);
+
+            if ($('#payment').val() == "" && typePaymentObject.name != 'Credito') {
                 Swal.fire(
                     '¡No!',
                     '¡Por favor, introduzca la cantidad que se pagó!',
@@ -1714,7 +1736,7 @@ if (auth == undefined) {
                 counter++;
 
                 category_list += `<tr>
-     
+
             <td>${category.doc.name}</td>
             <td><span class="btn-group"><button onClick="$(this).editCategory(${index})" class="btn btn-warning"><i class="fa fa-edit"></i></button><button onClick="$(this).deleteCategory(\'${category.doc._id}\')" class="btn btn-danger"><i class="fa fa-trash"></i></button></span></td></tr>`;
             });
@@ -2292,7 +2314,7 @@ function loadTransactions() {
 
                                 <td class="text-center">
                                     <div class="btn-group">
-                                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">        
+                                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                             <span class="glyphicon glyphicon-option-vertical" aria-hidden="true"></span>
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-right">
@@ -2304,10 +2326,10 @@ function loadTransactions() {
                                             <li role="separator" class="divider"></li>
                                             <!--<li><a href="#">Cambiar Estado</a></li>-->
                                             ${trans.sunat_state !== 'success' && trans.sunat_state !== 'null' ? '<li><a href="#" onClick="$(this).resend(' + index + ')">Reenviar a Sunat</a></li> <li role="separator" class="divider"></li>' : ''}
-                                            
-                                            ${trans.document_type.code === '01' && trans.sunat_state !== 'null' ? '<li><a href="#" onClick="$(this).sendVoided(' + index + ')">Comunicar Baja</a></li>' : ''}   
+
+                                            ${trans.document_type.code === '01' && trans.sunat_state !== 'null' ? '<li><a href="#" onClick="$(this).sendVoided(' + index + ')">Comunicar Baja</a></li>' : ''}
                                             ${trans.document_type.code === '01' ? '<li><a href="#" onClick="$(this).statusVoided(' + index + ')">Consultar Estado de Baja</a></li>' : ''}
-                                        
+
                                             ${trans.document_type.code === '03' && trans.sunat_state !== 'null' ? '<li><a href="#" onClick="$(this).sendSummaryNullable(' + index + ')">Anular Mediante Resumen</a></li><li role="separator" class="divider"></li>' : ''}
                                             ${trans.document_type.code === '03' ? '<li><a href="#" onClick="$(this).statusSummary(' + index + ')">Consultar Estado de Resumen</a></li>' : ''}
 
@@ -2509,12 +2531,12 @@ $.fn.viewTransaction = function (index) {
 
 
 
-    receipt = `<div style="font-size: 10px;">                            
+    receipt = `<div style="font-size: 10px;">
         <p style="text-align: center;">
         ${settings.img == "" ? settings.img : '<img style="max-width: 50px;max-width: 100px;" src ="' + settings.logo + '" /><br>'}
             <span style="font-size: 17px;">${settings.legal_name}</span> <br>
             ${settings.address.street} ${settings.address.district} ${settings.address.city} ${settings.address.state} <br>
-            ${settings.contact != '' ? 'Teléfono: ' + settings.contact + '<br>' : ''} 
+            ${settings.contact != '' ? 'Teléfono: ' + settings.contact + '<br>' : ''}
             ${settings.vat_no != '' ? 'RUC ' + settings.vat_no + '<br>' : ''}
             ${allTransactions[index].document_type.name ? '<span style="font-size: 15px; text-transform: uppercase;">' + allTransactions[index].document_type.name + '</span> <br />' : ''}
             <span style="font-size: 15px; text-transform: uppercase;"><b>${allTransactions[index].serie || ''} - ${allTransactions[index].correlative || ''}</b></span> <br />
@@ -2540,9 +2562,9 @@ $.fn.viewTransaction = function (index) {
         </tr>
         </thead>
         <tbody>
-        ${items}                
- 
-        <tr>                        
+        ${items}
+
+        <tr>
             <td><b>Subtotal</b></td>
             <td>:</td>
             <td><b>${settings.symbol}${parseFloat(allTransactions[index].subtotal).toFixed(2)}</b></td>
@@ -2552,9 +2574,9 @@ $.fn.viewTransaction = function (index) {
             <td>:</td>
             <td>${discount > 0 ? settings.symbol + parseFloat(allTransactions[index].discount).toFixed(2) : ''}</td>
         </tr>-->
-        
+
         ${tax_row}
-    
+
         <tr>
             <td><h3>Total</h3></td>
             <td><h3>:</h3></td>
@@ -2997,7 +3019,7 @@ $.fn.exportBackup = async function () {
     location.href = api + "settings/export";
     // $.ajax({
     //     xhrFields: {
-    //        responseType: 'blob' 
+    //        responseType: 'blob'
     //     },
     //     type:'GET',
     //     url:api + "settings/export"

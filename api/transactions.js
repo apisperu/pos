@@ -9,6 +9,7 @@ const apiResults = require('../helpers/apiResults');
 const CONFIG = require('../config');
 const QRCode = require('qrcode')
 const moment = require('moment');
+const console = require("console");
 
 
 PouchDB.plugin(PouchdbFind);
@@ -136,7 +137,7 @@ app.get("/by-date", function(req, res) {
 
 app.post("/new", async function(req, res) {
   let newTransaction = req.body;
-
+  console.log(newTransaction);
   // obtener serie y correlativo
   if (newTransaction.document_type && newTransaction.status) {
     let documentType = await Settings.getDocumentType(newTransaction.document_type.code)
@@ -160,6 +161,7 @@ app.post("/new", async function(req, res) {
     }
   }
   
+  console.log(newTransaction);
   
   transactionsDB.put({
     ...newTransaction,
@@ -169,6 +171,8 @@ app.post("/new", async function(req, res) {
     let transaction = await transactionsDB.get(result.id);
 
     if(transaction.paid >= transaction.total){
+      Inventory.decrementInventory(transaction.items);
+    }else if (transaction.dues.length && !transaction.paid) {
       Inventory.decrementInventory(transaction.items);
     }
 

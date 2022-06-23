@@ -2443,7 +2443,7 @@ function loadSoldProducts() {
         sold_list += `<tr>
             <td>${item.product}</td>
             <td>${item.qty}</td>
-            <td>${product[0].stock == 1 ? product.length > 0 ? product[0].quantity : '' : 'N/A'}</td>
+            <td>${product[0] && product[0].stock == 1 ? product.length > 0 ? product[0].quantity : '' : 'N/A'}</td>
             <td>${settings.symbol + (item.qty * parseFloat(item.price)).toFixed(2)}</td>
             </tr>`;
         if (counter == sold.length) {

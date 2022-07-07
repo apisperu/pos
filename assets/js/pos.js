@@ -647,6 +647,7 @@ if (auth == undefined) {
                         cart = [];
                         $(this).renderTable(cart);
                         holdOrder = 0;
+                        holdOrderRev = 0;
 
                         Swal.fire(
                             '¡Limpiado!',
@@ -938,7 +939,7 @@ if (auth == undefined) {
                         try {
                             $.get(api + 'transactions/' + data._id + '/qr', function (data) {
                                 // $('#viewTransaction table').after('<br /><div style="text-align: center;">' + data + '</div>')
-                                $('#viewTransaction table').after('<br /><div style="text-align: center;"><img src="' + data + '" /></div>')
+                                $('#viewTransaction table').first().after('<br /><div style="text-align: center;"><img src="' + data + '" /></div>')
                                 receipt += '<br /><div style="text-align: center;">' + data + '</div>';
                             });
                         } catch (error) {
@@ -947,6 +948,8 @@ if (auth == undefined) {
                     }
 
                     cart = [];
+                    holdOrder = 0;
+                    holdOrderRev = 0;
                     $('#viewTransaction').html('');
                     $('#viewTransaction').html(receipt);
                     // insertar correlativo
@@ -1090,6 +1093,8 @@ if (auth == undefined) {
 
 
                 holdOrder = customerOrderList[index]._id;
+                holdOrderRev = holdOrderList[index]._rev;
+
                 cart = [];
                 $.each(customerOrderList[index].items, function (index, product) {
                     item = {
@@ -2318,8 +2323,7 @@ function loadTransactions() {
                                             <span class="glyphicon glyphicon-option-vertical" aria-hidden="true"></span>
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-right">
-                                            ${!trans.paid ? '<li class="disabled"><a href="#">Reimprimir</a></li>' : '<li><a href="#" onClick="$(this).viewTransaction(' + index + ')">Reimprimir</a></li>'}
-                                            <li role="separator" class="divider"></li>
+                                            <li><a href="#" onClick="$(this).viewTransaction('${index}')">Reimprimir</a></li>                                            <li role="separator" class="divider"></li>
                                             <li><a href="#" onClick="$(this).downloadXML('${index}')">Descargar XML</a></li>
                                             <li><a href="#" onClick="$(this).downloadPDF('${index}')">Descargar PDF</a></li>
                                             <li><a href="#" onClick="$(this).downloadCDR('${index}')">Descargar CDR</a></li>
@@ -2485,7 +2489,7 @@ function tillFilter(tills) {
 $.fn.viewTransaction = function (index) {
 
     transaction_index = index;
-
+    
     let discount = allTransactions[index].discount;
     let customer = !allTransactions[index].customer ? 'Seleccione un cliente' : allTransactions[index].customer.username;
     let refNumber = allTransactions[index].ref_number != "" ? allTransactions[index].ref_number : allTransactions[index].order;
@@ -2501,7 +2505,7 @@ $.fn.viewTransaction = function (index) {
     });
 
 
-    if (allTransactions[index].paid != "") {
+    if (allTransactions[index].paid) {
         payment = `<tr>
                     <td>Pagado</td>
                     <td>:</td>
@@ -2517,6 +2521,38 @@ $.fn.viewTransaction = function (index) {
                     <td>:</td>
                     <td>${type}</td>
                 </tr>`
+    }
+
+    if (allTransactions[index].dues.length && !allTransactions[index].paid) {
+        let dues = '';
+        
+        for (let i = 0; i < allTransactions[index].dues.length; i++) {
+            let due = allTransactions[index].dues[i];
+
+            dues += '<tr>';
+            dues += `<td>${i + 1}</td>`;
+            dues += `<td>${due.date}</td>`;
+            dues += `<td>${due.amount}</td>`;
+            dues += '</tr>';
+        }
+        payment = `<tr>
+                    <td>Método</td>
+                    <td>:</td>
+                    <td>${type}</td>
+                </tr>
+                <tr><td colspan="3"><br /></td></tr>
+                <tr>
+                    <td colspan="3">
+                    <table width="100%">
+                        <tr>
+                            <th>Cuotas</th>
+                            <th>Fecha Venc.</th>
+                            <th>Monto</th>
+                        </tr>
+                        ${dues}
+                    </table>
+                    </td>
+                </tr>`;
     }
 
 
@@ -2600,7 +2636,7 @@ $.fn.viewTransaction = function (index) {
         try {
             $.get(api + 'transactions/' + allTransactions[index]._id + '/qr', function (data) {
                 // $('#viewTransaction table').after('<br /><div style="text-align: center;">' + data + '</div>')
-                $('#viewTransaction table').after('<br /><div style="text-align: center;"><img src="' + data + '" /></div>')
+                $('#viewTransaction table').first().after('<br /><div style="text-align: center;"><img src="' + data + '" /></div>')
                 receipt += '<br /><div style="text-align: center;">' + data + '</div>';
             });
         } catch (error) {

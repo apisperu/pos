@@ -137,7 +137,7 @@ app.get("/by-date", function(req, res) {
 
 app.post("/new", async function(req, res) {
   let newTransaction = req.body;
-  console.log(newTransaction);
+
   // obtener serie y correlativo
   if (newTransaction.document_type && newTransaction.status) {
     let documentType = await Settings.getDocumentType(newTransaction.document_type.code)
@@ -161,8 +161,6 @@ app.post("/new", async function(req, res) {
     }
   }
   
-  console.log(newTransaction);
-  
   transactionsDB.put({
     ...newTransaction,
     _id: newTransaction._id.toString(),
@@ -171,9 +169,9 @@ app.post("/new", async function(req, res) {
     let transaction = await transactionsDB.get(result.id);
 
     if(transaction.paid >= transaction.total){
-      Inventory.decrementInventory(transaction.items);
+      await Inventory.decrementInventory(transaction.items);
     }else if (transaction.dues.length && !transaction.paid) {
-      Inventory.decrementInventory(transaction.items);
+      await Inventory.decrementInventory(transaction.items);
     }
 
     // Aumentar al siguiente correlativo
@@ -242,7 +240,7 @@ app.put("/new", async function(req, res) {
     });
   }).then(async function(result) {
     if(newTransaction.paid >= newTransaction.total){
-      Inventory.decrementInventory(newTransaction.items);
+      await Inventory.decrementInventory(newTransaction.items);
     }
 
     // Aumentar al siguiente correlativo

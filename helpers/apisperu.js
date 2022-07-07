@@ -62,9 +62,21 @@ async function jsonInvoice(data){
           }
         ]
     }
-    // if(data.dues.length) {
-    // json.formaPago.tipo = "Credito";
-    // }
+
+    // forma de pago a crédito
+    if(data.dues.length && !data.paid) {
+      json.formaPago.tipo  = "Credito";
+      json.formaPago.monto = data.total;
+
+      json.cuotas = [];
+      for (const due of data.dues) {
+       json.cuotas.push({
+        "moneda": "PEN",
+        "monto": due.amount,
+        "fechaPago": due.date + "T00:00:00-05:00"
+       }) 
+      }
+    }
 
     json.details = [];
 

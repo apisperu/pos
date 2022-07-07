@@ -148,35 +148,20 @@ app.post( "/product/sku", function ( req, res ) {
     });
 } );
 
-app.decrementInventory = function ( products ) {
-    async.eachSeries(products, function (transactionProduct, callback){
-
-        inventoryDB.get(transactionProduct.id)
-            .then( product => {
-                if (!product || !product.quantity) callback();
-                let updateQuantity = parseInt(product.quantity) - parseInt( transactionProduct.quantity);
-                return { product, updateQuantity };
-            })
-            .then(result => {
-                updateProduct(result.product, result.updateQuantity)
-            }).catch((err) => {
-            console.log(err);
-          });
-
-    });
+app.decrementInventory = async function ( products ) {
+    try {
+        for (let i = 0; i < products.length; i++) {
+            let item = products[i];
+            let product = await inventoryDB.get(item.id);
+            
+            if (product._id) {
+                let updateQuantity = parseInt(product.quantity) - parseInt(item.quantity);
+                await inventoryDB.put({ ...product, quantity: updateQuantity });
+            }
+        }
+    } catch (err) {
+        console.log(err)
+    }
 };
-
-const updateProduct = (product, updateQuantity) => {
-
-    inventoryDB.get(product._id).then(doc => {
-
-    //modificamos quantity
-    doc.quantity = updateQuantity;
-
-    return inventoryDB.put({ ...doc, _id: doc._id, _rev: doc._rev });
-
-    }).catch(err => console.log(err));
-
-}
 
 module.exports = app;

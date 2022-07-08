@@ -119,7 +119,7 @@ $(document).ready(function(){
 
     $.fn.calculateChange = function () {
         var change = $("#payablePrice").val() - $("#payment").val();
-        //console.log(change);
+
         if(change <= 0){
             $("#change").text(change.toFixed(2));
         }else{
@@ -153,13 +153,11 @@ $(document).ready(function(){
         }
 
         $.each( dates, function( key, value ) {
-            console.log(value);
 
             if ( !$(value).val()) {
                 
                 valDate = false;
             };
-            console.log($(value).val());
         });
 
         if (dues.toFixed(2) === parseFloat($('#payablePrice').val()).toFixed(2) && valDate ) {

@@ -737,8 +737,23 @@ if (auth == undefined) {
                 customer.name = $('#overWrite').val();
             }
 
+            var dataCredit = [];
+            var credits = $('#creditInfo .credit');
 
-            if (paid != "") {
+            $.each(credits, function (key, value) {
+
+                let date;
+                let amount;
+                date = $(value).find(".dateInfo").val();
+                amount = $(value).find(".amountInfo").val();
+                dataCredit.push({
+                    date: date,
+                    amount: amount,
+                });
+            });
+
+
+            if (paid) {
                 payment = `<tr>
                         <td>Pagado</td>
                         <td>:</td>
@@ -756,6 +771,37 @@ if (auth == undefined) {
                     </tr>`
             }
 
+            if (dataCredit.length && !paid) {
+                let dues = '';
+                
+                for (let i = 0; i < dataCredit.length; i++) {
+                    let due = dataCredit[i];
+                    dues += '<tr>';
+                    dues += `<td>${i + 1}</td>`;
+                    dues += `<td>${due.date}</td>`;
+                    dues += `<td>${due.amount}</td>`;
+                    dues += '</tr>';
+                }
+                
+                payment = `<tr>
+                            <td>Método</td>
+                            <td>:</td>
+                            <td>${type}</td>
+                        </tr>
+                        <tr><td colspan="3"><br /></td></tr>
+                        <tr>
+                            <td colspan="3">
+                            <table width="100%">
+                                <tr>
+                                    <th>Cuotas</th>
+                                    <th>Fecha Venc.</th>
+                                    <th>Monto</th>
+                                </tr>
+                                ${dues}
+                            </table>
+                            </td>
+                        </tr>`;
+            }
 
 
             if (settings.charge_tax) {
@@ -785,9 +831,7 @@ if (auth == undefined) {
 
             $(".loading").show();
 
-
-            if (holdOrder != 0) {
-
+            if (holdOrder) {
                 orderNumber = holdOrder;
                 method = 'PUT'
             }
@@ -906,22 +950,6 @@ if (auth == undefined) {
                 user_id: user._id,
                 document_type: documentType,
             }
-
-            var dataCredit = [];
-
-            var credits = $('#creditInfo .credit');
-
-            $.each(credits, function (key, value) {
-
-                var date;
-                var amount;
-                date = $(value).find(".dateInfo").val();
-                amount = $(value).find(".amountInfo").val();
-                dataCredit.push({
-                    date: date,
-                    amount: amount,
-                });
-            });
         
             data.dues = dataCredit;
 
@@ -2533,6 +2561,7 @@ $.fn.viewTransaction = function (index) {
             dues += `<td>${due.amount}</td>`;
             dues += '</tr>';
         }
+
         payment = `<tr>
                     <td>Método</td>
                     <td>:</td>

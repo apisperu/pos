@@ -247,3 +247,35 @@ margin-right: 30px;
 #paymentModel .list-group .list-group-item {
   line-height: 3rem;
 }
+
+
+.ribbon {
+  background-color: #ef7900;
+  overflow: hidden;
+  white-space: nowrap;
+  /* top left corner */
+  position: absolute;
+  left: -34px;
+  top: 34px;
+  /* for 45 deg rotation */
+  -webkit-transform: rotate(-45deg);
+     -moz-transform: rotate(-45deg);
+      -ms-transform: rotate(-45deg);
+       -o-transform: rotate(-45deg);
+          transform: rotate(-45deg);
+  /* for creating shadow */
+  -webkit-box-shadow: 0 0 10px #888;
+     -moz-box-shadow: 0 0 10px #888;
+          box-shadow: 0 0 10px #888;
+  z-index: 5;
+  width: 160px;
+}
+.ribbon a {
+  color: #fff;
+  display: block;
+  font: bold 100% 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  margin: 1px 0;
+  padding: 4px 10px;
+  text-align: center;
+  text-decoration: none;
+}

@@ -9,7 +9,7 @@ let state = [];
 let sold_items = [];
 let item;
 let auth;
-let holdOrder = 0;
+// let holdOrder = 0;
 let holdOrderRev = 0;
 let vat = 0;
 let perms = null;
@@ -61,6 +61,9 @@ let end_date = moment(end).toDate();
 let by_till = 0;
 let by_user = 0;
 let by_status = 1;
+
+// definir variables que permitan escuchar eventos (get, set)
+varWindow('holdOrder');
 
 $(function () {
 
@@ -686,10 +689,12 @@ if (auth == undefined) {
 
 
         $("#hold").on('click', function () {
-
             if (cart.length != 0) {
-
                 $("#dueModal").modal('toggle');
+
+                if (!holdOrder) {
+                    $('#refNumber').val('')
+                }
             } else {
                 Swal.fire(
                     '¡Uy!',
@@ -711,9 +716,7 @@ if (auth == undefined) {
             let payment = 0;
 
             cart.forEach(item => {
-
                 items += "<tr><td>" + item.product_name + "</td><td>" + item.quantity + "</td><td>" + settings.symbol + parseFloat(item.price).toFixed(2) + "</td></tr>";
-
             });
 
             let currentTime = new Date(moment());
@@ -909,6 +912,7 @@ if (auth == undefined) {
             var credits = $('#creditInfo .credit');
 
             $.each(credits, function (key, value) {
+
                 var date;
                 var amount;
                 date = $(value).find(".dateInfo").val();
@@ -918,7 +922,6 @@ if (auth == undefined) {
                     amount: amount,
                 });
             });
-            console.log(dataCredit);
         
             data.dues = dataCredit;
 
@@ -1127,14 +1130,13 @@ if (auth == undefined) {
 
             Swal.fire({
                 title: "¿Eliminar pedido?",
-                text: "Esto eliminará el pedido. ¡Estas seguro que quieres borrarlo!",
+                text: "Esto eliminará el pedido. ¿Estas seguro que quieres borrarlo?",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
                 cancelButtonColor: '#d33',
                 confirmButtonText: '¡Sí, bórralo!'
             }).then((result) => {
-
                 if (result.value) {
                     $.ajax({
                         url: api + 'transactions/delete',
@@ -1143,25 +1145,21 @@ if (auth == undefined) {
                         contentType: 'application/json; charset=utf-8',
                         cache: false,
                         success: function (data) {
-
                             Swal.fire(
                                 '¡Eliminado!',
                                 '¡Has eliminado el pedido!',
                                 'success'
                             )
 
+                            $(this).getHoldOrders();
+                            $(this).getCustomerOrders();
+
                         }, error: function (data) {
                             $(".loading").hide();
-
                         }
                     });
                 }
             })
-                .then(() => {
-                    //volvemos a renderizar las ordenes
-                    $(this).getHoldOrders();
-                    $(this).getCustomerOrders();
-                })
         }
 
 
@@ -3226,3 +3224,16 @@ $('#quit').click(function () {
 });
 
 
+// Events
+varWindowEventListenerSet('holdOrder', (oldVal, newVal) => {
+    if (newVal) {
+      $('#card-box').css('background-color', '#fff3f3');
+      $('#card-box .ribbon').show();
+
+      let order = holdOrderList.find(order => order._id === newVal);
+      $('#card-box .ribbon a').text(order.ref_number);
+    } else{
+      $('#card-box').css('background-color', '');
+      $('#card-box .ribbon').hide();
+    }
+})

@@ -215,6 +215,9 @@
       <div class="row">
           <div class="col-md-4">
               <div class="card-box" id="card-box">
+                  <div class="ribbon" style="display: none;">
+                    <a href="#"></a>
+                  </div>
                   <div class="col-md-12">
                       <div class="row">
                           <div class="col-md-9">
@@ -509,17 +512,6 @@
                                     </div>
                                     <div class="col-md-2">
                                         <button id="addCreditDate"  class="btn btn-success" onclick="$(this).newDue();$(this).calculateDues() "><i class="fa fa-plus"></i></button>
-                                    </div>
-                                </div>
-                                <div class="row credit">
-                                    <div class="col-md-5">
-                                        <input type="date" name="creditDate"  class="form-control dateInfo">
-                                    </div>
-                                    <div class="col-md-5">
-                                      <input type="number" name="creditAmount" class="form-control amountInfo">
-                                    </div>
-                                    <div class="col-md-2">
-                                        <button id="removeCreditDate"  class="btn btn-danger" onclick="$(this).deleteDue()"><i class="fa fa-times"></i></button>
                                     </div>
                                 </div>
                             </fieldset>

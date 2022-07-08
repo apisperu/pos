@@ -327,6 +327,8 @@ a:focus {
   background-clip: padding-box;
   margin-bottom: 20px;
   background-color: #ffffff;
+  position: relative;
+  overflow: hidden;
 }
 /* Grid page */
 .grid-structure .grid-container {

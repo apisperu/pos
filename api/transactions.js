@@ -168,9 +168,9 @@ app.post("/new", async function(req, res) {
     
     let transaction = await transactionsDB.get(result.id);
 
-    if(transaction.paid >= transaction.total){
+    if(transaction.paid >= transaction.total && transaction.status){
       await Inventory.decrementInventory(transaction.items);
-    }else if (transaction.dues.length && !transaction.paid) {
+    } else if (transaction.dues.length && !transaction.paid && transaction.status) {
       await Inventory.decrementInventory(transaction.items);
     }
 
@@ -269,18 +269,16 @@ app.put("/new", async function(req, res) {
 
 
 app.post( "/delete", function ( req, res ) {
- let transaction = req.body;
- 
-  // transactionsDB.remove( {
-  //     _id: transaction.orderId
-  // }, function ( err, numRemoved ) {
-  //     if ( err ) res.status( 500 ).send( err );
-  //     else res.sendStatus( 200 );
-  // } );
+  let id = req.body.orderId;
 
-  transactionsDB.get(transaction.orderId)
-    .then(doc => transactionsDB.remove(doc))
-    .catch(err => console.log(err));
+  transactionsDB.get(id).then(function(trans) {
+    return transactionsDB.remove(trans);
+  }).then(function (result) {
+      res.sendStatus( 200 );
+  }).catch(function (err) {
+      res.status( 500 ).send( err );
+      console.log(err);
+  });
 
 });
 

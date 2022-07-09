@@ -64,6 +64,7 @@ let by_status = 1;
 
 // definir variables que permitan escuchar eventos (get, set)
 varWindow('holdOrder');
+varWindow('customerSelected');
 
 $(function () {
 
@@ -293,7 +294,7 @@ if (auth == undefined) {
 
             $.get(api + 'customers/all', function (customers) {
 
-                var anonymousCustomer = '';
+                var anonymousCustomer = {};
 
 
                 $('#customer').html(`<option value="" selected="selected">Seleccione un cliente</option>`);
@@ -302,24 +303,23 @@ if (auth == undefined) {
                     cust = cust.doc;
                     cust.id = cust._id;
 
-                    let customer = `<option value='${JSON.stringify(cust)}'>${cust.document_type.number + ' - ' + cust.name}</option>`;
+                    let customer = `<option value='${cust._id}'>${cust.document_type.number + ' - ' + cust.name}</option>`;
                     $('#customer').append(customer);
 
                     if (cust.document_type.number === '00000000') {
-                        anonymousCustomer = JSON.stringify(cust);
+                        anonymousCustomer = cust;
+                        customerSelected = cust;
                     }
 
                 });
 
                 $('#customer').selectpicker('refresh');
-                $('#customer').val(anonymousCustomer);
+                $('#customer').val(anonymousCustomer._id);
                 $('#customer').selectpicker('refresh');
 
-                if (anonymousCustomer) {
+                if (anonymousCustomer._id) {
                     $('#overWrite').show();
                 }
-                //  $('#customer').chosen();
-
             });
 
         }
@@ -722,7 +722,7 @@ if (auth == undefined) {
             let currentTime = new Date(moment());
 
             let discount = $("#inputDiscount").val();
-            let customer = $("#customer").val() ? JSON.parse($("#customer").val()) : {};
+            let customer = customerSelected;
             let date = moment(currentTime).format("YYYY-MM-DD HH:mm:ss");
             let paid = $("#payment").val() == "" ? "" : parseFloat($("#payment").val()).toFixed(2);
             let change = $("#change").text() == "" ? "" : parseFloat($("#change").text()).toFixed(2);
@@ -1243,7 +1243,7 @@ if (auth == undefined) {
                     if ($('#customer_id').val()) {
                         Swal.fire("¡Cliente actualizado!", "¡El cliente se actualizó con éxito!", "success");
                         $('#customer option:selected').replaceWith(
-                            $('<option>', { text: data.document_type.number + ' - ' + data.name, value: `{"id": "${data._id}", "name": "${data.name}", "document_type": {"code": "${data.document_type.code}", "number": "${data.document_type.number}"}}`, selected: 'selected' })
+                            $('<option>', { text: data.document_type.number + ' - ' + data.name, value: data._id, selected: 'selected' })
                         );
 
                         $('#customer').selectpicker('refresh');
@@ -1252,13 +1252,15 @@ if (auth == undefined) {
                         Swal.fire("¡Cliente agregado!", "¡El cliente se agregó con éxito!", "success");
                         $("#customer option:selected").removeAttr('selected');
                         $('#customer').append(
-                            $('<option>', { text: data.document_type.number + ' - ' + data.name, value: `{"id": "${data._id}", "name": "${data.name}", "document_type": {"code": "${data.document_type.code}", "number": "${data.document_type.number}"}}`, selected: 'selected' })
+                            $('<option>', { text: data.document_type.number + ' - ' + data.name, value: data._id, selected: 'selected' })
                         );
 
-                        $('#customer').val(`{"id": "${data._id}", "name": "${data.name}", "document_type": {"code": "${data.document_type.code}", "number": "${data.document_type.number}"}}`).trigger('chosen:updated');
+                        $('#customer').val(data._id).trigger('chosen:updated');
 
                         $('#customer').selectpicker('refresh');
                     }
+
+                    customerSelected = data;
 
 
                 }, error: function (data) {
@@ -1465,15 +1467,13 @@ if (auth == undefined) {
         }
 
         $.fn.editCustomer = function () {
-            let customer = $('#customer').val();
+            let customer = customerSelected;
 
-            if (!customer) {
+            if (!customer._id) {
                 return
             }
 
-            customer = JSON.parse(customer)
-
-            let id = customer.id;
+            let id = customer._id;
             loadCustomer(id);
             $('#newCustomer').modal('show');
         }
@@ -3159,14 +3159,24 @@ $('#users').change(function () {
 });
 
 $('#customer').change(function () {
-    const obj = JSON.parse($('#customer').val());
+    let id = $('#customer').val();
 
-    if (obj.document_type.number === '00000000' && obj.document_type.code === '0') {
-        $('#overWrite').show();
+    if (id) {
+        $.get(api + 'customers/customer/' + id, function (customer) {
+            customerSelected = customer;
+
+            if (customer.document_type.number === '00000000' && customer.document_type.code === '0') {
+                $('#overWrite').show();
+            } else {
+                $('#overWrite').hide();
+                $('#overWrite').val('');
+            }
+        });
     } else {
         $('#overWrite').hide();
         $('#overWrite').val('');
     }
+
 });
 
 

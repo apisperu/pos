@@ -5,10 +5,18 @@
   "author": "Apisperu",
   "private": true,
   "main": "start.js",
+  "productName": "Punto de Venta",
   "build": {
     "appId": "01",
-    "directories": {
-      "buildResources": "assets"
+    "productName": "Punto de Venta",
+    "target": "NSIS",
+    "nsis": {
+      "allowToChangeInstallationDirectory": true,
+      "oneClick": false 
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "build/icons/icon.ico"
     }
   },
   "dependencies": {
@@ -19,7 +27,6 @@
     "body-parser": "^1.18.2",
     "btoa": "^1.2.1",
     "dotenv": "^16.0.0",
-    "electron": "11.1.0",
     "electron-context-menu": "^0.15.1",
     "electron-store": "^5.1.0",
     "electron-winstaller": "^4.0.0",
@@ -50,7 +57,7 @@
   "scripts": {
     "electron": "cross-env NODE_ENV=dev nodemon --exec \"\"electron .\"\"",
     "electron-build": "electron-builder",
-    "package-win": "electron-packager . pos --overwrite --asar=false --platform=win32 --arch=x64 --icon=assets/images/icon.ico --prune=true --out=release-builds --version-string.ProductName=\"pos\""
+    "dist:windows": "cross-env electron-builder --windows --ia32"
   },
   "browserslist": {
     "production": [
@@ -66,6 +73,7 @@
   },
   "devDependencies": {
     "cross-env": "^6.0.3",
+    "electron": "11.1.0",
     "electron-builder": "^21.2.0",
     "electron-is-dev": "^1.1.0",
     "electron-wix-msi": "^4.0.0",

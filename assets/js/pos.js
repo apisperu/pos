@@ -1446,6 +1446,7 @@ if (auth == undefined) {
             }).prop("selected", true);
 
             $('#productName').val(allProducts[index].doc.name);
+            $('#barcode').val(allProducts[index].doc.barcode);
             $('#product_price').val(allProducts[index].doc.price);
             $('#quantity').val(allProducts[index].doc.quantity);
 
@@ -1734,7 +1735,7 @@ if (auth == undefined) {
                     $('#product_list').html(product_list);
                     products.forEach(pro => {
                         pro = pro.doc;
-                        $("#" + pro._id + "").JsBarcode(pro._id, {
+                        $("#" + pro._id + "").JsBarcode(pro.barcode, {
                             width: 2,
                             height: 25,
                             fontSize: 14

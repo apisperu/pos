@@ -624,26 +624,30 @@
                         <input type="hidden" name="img" id="img">
                         <input type="hidden" name="remove" id="remove_img">
                         <div class="form-group">
-                            <label for="userName">Categoría</label>
+                            <label for="category">Categoría</label>
                             <select name="category" class="form-control" id="category"></select>
                         </div>
                         <div class="form-group">
-                            <label for="userName">Nombre del Producto</label>
+                            <label for="productName">Nombre del Producto</label>
                             <input type="text" required="required"  name="name" parsley-trigger="change" placeholder="Ingrese el nombre del producto" class="form-control" id="productName">
                         </div>
                         <div class="form-group">
-                            <label for="userName">Precio</label>
+                            <label for="barcode">Código de barras</label>
+                            <input type="text"  name="barcode" parsley-trigger="change" placeholder="Ingrese el nombre del producto" class="form-control" id="barcode">
+                        </div>
+                        <div class="form-group">
+                            <label for="product_price">Precio</label>
                             <input type="text" required="required" name="price" placeholder="Ingrese el Precio" class="form-control" id="product_price">
                         </div>
                         <div class="form-group">
-                            <label for="userName">Stock</label>
+                            <label for="quantity">Stock</label>
                             <input type="text" name="quantity" placeholder="Ingrese el stock disponible" class="form-control" id="quantity">
                         </div>
                         <div class="form-group">
                             <label><input type="checkbox" name="stock" id="stock" style="max-width: 30px; float: left;">  Desactivar Control de Stock </label>
                         </div>
                         <div class="form-group">
-                            <label for="userName"><span id="rmv_img" class="btn btn-xs btn-warning">Quitar</span> Imagen </label>                      
+                            <label for="imagename"><span id="rmv_img" class="btn btn-xs btn-warning">Quitar</span> Imagen </label>                      
                             <div id="current_img"></div>
                             <input type="file" name="imagename" id="imagename">                            
                         </div>

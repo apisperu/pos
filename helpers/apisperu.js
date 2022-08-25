@@ -63,6 +63,21 @@ async function jsonInvoice(data){
         ]
     }
 
+    // forma de pago a crédito
+    if(data.dues.length && !data.paid) {
+      json.formaPago.tipo  = "Credito";
+      json.formaPago.monto = data.total;
+
+      json.cuotas = [];
+      for (const due of data.dues) {
+       json.cuotas.push({
+        "moneda": "PEN",
+        "monto": due.amount,
+        "fechaPago": due.date + "T00:00:00-05:00"
+       }) 
+      }
+    }
+
     json.details = [];
 
     for (let i = 0; i < data.items.length; i++) {
@@ -71,26 +86,37 @@ async function jsonInvoice(data){
         let igv = (valorVenta * settings.percentage) / 100;
         let precioUnitario = (valorVenta + igv) / item.quantity;
 
-        json.details.push({
+        let detail = {
             "codProducto": item.id,
             "unidad": "NIU",
             "descripcion": item.product_name,
             "cantidad": item.quantity,
             "mtoValorUnitario": item.price,
-            "mtoValorVenta": valorVenta.toFixed(2),
-            "mtoBaseIgv": valorVenta.toFixed(2),
-            "porcentajeIgv": settings.percentage,
-            "igv": igv.toFixed(2),
-            "tipAfeIgv": 10,
-            "totalImpuestos": igv.toFixed(2),
-            "mtoPrecioUnitario": precioUnitario.toFixed(2)
-        })
-        
+            "mtoValorVenta": parseFloat(valorVenta.toFixed(4)),
+            "mtoBaseIgv": parseFloat(valorVenta.toFixed(4)),
+            "porcentajeIgv": parseFloat(settings.percentage),
+            "igv": parseFloat(igv.toFixed(4)),
+            "tipAfeIgv": "10",
+            "totalImpuestos": parseFloat(igv.toFixed(4)),
+            "mtoPrecioUnitario": parseFloat(precioUnitario.toFixed(4))
+        };
+
+        // exonerados
+        if (!data.tax) {
+          detail.porcentajeIgv = 0;
+          detail.igv = 0;
+          detail.tipAfeIgv = "20";
+          detail.totalImpuestos = 0;
+          detail.mtoPrecioUnitario = parseFloat(item.price)
+        }
+
+        json.details.push(detail);
     }
 
-    // Codígo para exonerados
-    if (!settings.charge_tax) {
-
+    // exonerados
+    if (!data.tax) {
+      json.mtoOperGravadas = 0;
+      json.mtoOperExoneradas = data.subtotal;
     }
 
     return json;

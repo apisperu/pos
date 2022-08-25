@@ -51,7 +51,8 @@ app.post( "/product", upload.single('imagename'), async function ( req, res ) {
         category: req.body.category,
         quantity: req.body.quantity == "" ? 0 : req.body.quantity,
         name: req.body.name,
-        stock: req.body.stock == "on" ? 0 : 1
+        stock: req.body.stock == "on" ? 0 : 1,
+        barcode: req.body.barcode || ''
     }
 
     
@@ -94,33 +95,6 @@ app.post( "/product", upload.single('imagename'), async function ( req, res ) {
             console.log(err);
         }
     }
-
-
-    // if(req.body.id == "") { 
-    //     Product._id = (Math.floor(Date.now() / 1000)).toString();
-    //     inventoryDB.put({ ...Product }).then(function (result) {
-    //         res.sendStatus( 200 )
-    //     }).catch(function (err) {
-    //         res.status( 500 ).send( err );
-    //         console.log(err);
-    //     });
-    // }
-    // else { 
-    //     inventoryDB.get((req.body.id).toString()).then(function(response) {
-    //         return inventoryDB.put({
-    //         _id: req.body.id.toString(),
-    //         _rev: response._rev,
-    //         ...Product,
-    //         });
-    //     }).then(function(response) {
-    //         res.sendStatus( 200 );
-    //     }).catch(function (err) {
-    //         res.status( 500 ).send( err );
-    //         console.log(err);
-    //     });
-
-    // }
-
 });
  
 app.delete( "/product/:productId", function ( req, res ) {
@@ -139,44 +113,42 @@ app.delete( "/product/:productId", function ( req, res ) {
 app.post( "/product/sku", function ( req, res ) {
     var request = req.body;
 
-
-    inventoryDB.get(request.skuCode).then(function (result) {
-        res.send( result );
+    inventoryDB.find({
+        selector: { barcode: request.skuCode },
+        limit: 1
+    }).then(function (result) {
+        if (result.docs.length) {
+            res.send( result.docs[0] );
+        } else {
+            res.send( result );
+        }
     }).catch(function (err) {
         res.status( 500 ).send( err );
         console.log(err);
     });
+
+    // inventoryDB.get(request.skuCode).then(function (result) {
+    //     res.send( result );
+    // }).catch(function (err) {
+    //     res.status( 500 ).send( err );
+    //     console.log(err);
+    // });
 } );
 
-app.decrementInventory = function ( products ) {
-    async.eachSeries(products, function (transactionProduct, callback){
-
-        inventoryDB.get(transactionProduct.id)
-            .then( product => {
-                if (!product || !product.quantity) callback();
-                let updateQuantity = parseInt(product.quantity) - parseInt( transactionProduct.quantity);
-                return { product, updateQuantity };
-            })
-            .then(result => {
-                updateProduct(result.product, result.updateQuantity)
-            }).catch((err) => {
-            console.log(err);
-          });
-
-    });
+app.decrementInventory = async function ( products ) {
+    try {
+        for (let i = 0; i < products.length; i++) {
+            let item = products[i];
+            let product = await inventoryDB.get(item.id);
+            
+            if (product._id) {
+                let updateQuantity = parseInt(product.quantity) - parseInt(item.quantity);
+                await inventoryDB.put({ ...product, quantity: updateQuantity });
+            }
+        }
+    } catch (err) {
+        console.log(err)
+    }
 };
-
-const updateProduct = (product, updateQuantity) => {
-
-    inventoryDB.get(product._id).then(doc => {
-
-    //modificamos quantity
-    doc.quantity = updateQuantity;
-
-    return inventoryDB.put({ ...doc, _id: doc._id, _rev: doc._rev });
-
-    }).catch(err => console.log(err));
-
-}
 
 module.exports = app;

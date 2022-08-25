@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <title>Punto de Venta</title>
+    <base href="./" >
     <link href="assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
     <link href="assets/css/core.css" rel="stylesheet" type="text/css" />
     <link href="assets/css/components.css" rel="stylesheet" type="text/css" />
@@ -215,6 +216,9 @@
       <div class="row">
           <div class="col-md-4">
               <div class="card-box" id="card-box">
+                  <div class="ribbon" style="display: none;">
+                    <a href="#"></a>
+                  </div>
                   <div class="col-md-12">
                       <div class="row">
                           <div class="col-md-9">
@@ -226,6 +230,9 @@
                               <button id="newCustomerModal" data-toggle="modal" data-target="#newCustomer" class="btn btn-success"><i class="fa fa-plus"></i></button>
                           </div>
                       </div>
+                      <div class="form-group m-t-5 ">
+                        <input type="text" required id="overWrite" name="overWrite" style="display:none;" class="form-control" placeholder="¿Desea sobreescribir el nombre del cliente?" >
+                    </div>
                       <div class="input-group m-t-5">
                           <form action="" id="searchBarCode">
                               <input type="text" required id="skuCode" name="skuCode" class="form-control" placeholder="Escanee el código de barras o escriba el número y luego presione enter" aria-label="Recipient's username" aria-describedby="basic-addon2">
@@ -402,6 +409,7 @@
                           <div class="list-group">
                               <a href="javascript:void(0)" id="cash" onclick="$('#paymentType').val(JSON.stringify({ 'name': 'Efectivo' }))" class="list-group-item active">Efectivo</a>
                               <a href="javascript:void(0)" id="card" onclick="$('#paymentType').val(JSON.stringify({ 'name': 'Tarjeta' }))" class="list-group-item">Tarjeta</a>
+                              <a href="javascript:void(0)" id="credit" onclick="$('#paymentType').val(JSON.stringify({ 'name': 'Credito' }))" class="list-group-item">Crédito</a>
                               <input type="hidden" id="paymentType" value='{ "name": "Efectivo" }'/>
                           </div>
                           <br/>
@@ -421,16 +429,16 @@
                       </div>
                       <div class="col-md-8">
                           <div class="input-group">
-                              <span class="input-group-addon" id="basic-addon3">Price <span id="price_curr"></span>
+                              <span class="input-group-addon" id="basic-addon3">Precio <span id="price_curr"></span>
                               <input id="payablePrice" readonly type="number"  class="form-control" aria-describedby="basic-addon3">
                           </div>
                           <br>
-                          <div class="input-group">
-                              <span class="input-group-addon" id="basic-addon3">Payment  <span id="payment_curr"></span> </span>
+                          <div class="input-group" id="paymentAmount">
+                              <span class="input-group-addon" id="basic-addon3">Pago <span id="payment_curr"></span> </span>
                               <input type="text" placeholder="0.0" class="form-control" id="payment" aria-describedby="basic-addon3">
                           </div>
                           <hr>
-                          <div class="row">
+                          <div class="row" id="digits">
                               <div class="col-md-9">
                                   <div class="row">
                                       <div class="col-md-3">
@@ -493,9 +501,25 @@
                               <span class="input-group-addon" id="basic-addon3">Info. de la tarjeta</span>
                               <input type="text" class="form-control" id="paymentInfo" aria-describedby="basic-addon3">
                           </div>
-                      </div>
-                  </div>
-              </div>
+                          <div id="creditInfo">
+                            <fieldset class="form-group border p-3">
+                                <legend class="w-auto px-2">Cuotas</legend>
+                                <div class="row">
+                                    <div class="col-md-5">
+                                        <label for="creditDate">Fecha:</label>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label for="credit">Monto:</label>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button id="addCreditDate"  class="btn btn-success" onclick="$(this).newDue();$(this).calculateDues() "><i class="fa fa-plus"></i></button>
+                                    </div>
+                                </div>
+                            </fieldset>
+                          </div>
+                        </div>
+                    </div>
+                </div>
               <div class="modal-footer">
                   <div class="row">
                       <div class="col-md-3">
@@ -536,9 +560,10 @@
                                 <select class="form-control" name="document_code" id="document_code">
                                     <option value="1" selected>DNI</option>
                                     <option value="6">RUC</option>
+                                    <option value="0">SIN DOCUMENTO</option>
                                 </select>
                                 <input type="text" class="form-control" placeholder="Número de documento" aria-describedby="sizing-addon1" name="document_number" id="document_number" required="required">
-                                <span class="help-block">Pulsar enter para la busqueda avanzada</span>
+                                <span class="help-block">Presione enter para la busqueda avanzada</span>
                             </div>
                               <div class="form-group">
                                   <label for="userName">Teléfono</label>
@@ -599,26 +624,30 @@
                         <input type="hidden" name="img" id="img">
                         <input type="hidden" name="remove" id="remove_img">
                         <div class="form-group">
-                            <label for="userName">Categoría</label>
+                            <label for="category">Categoría</label>
                             <select name="category" class="form-control" id="category"></select>
                         </div>
                         <div class="form-group">
-                            <label for="userName">Nombre del Producto</label>
+                            <label for="productName">Nombre del Producto</label>
                             <input type="text" required="required"  name="name" parsley-trigger="change" placeholder="Ingrese el nombre del producto" class="form-control" id="productName">
                         </div>
                         <div class="form-group">
-                            <label for="userName">Precio</label>
+                            <label for="barcode">Código de barras</label>
+                            <input type="text"  name="barcode" parsley-trigger="change" placeholder="Ingrese el nombre del producto" class="form-control" id="barcode">
+                        </div>
+                        <div class="form-group">
+                            <label for="product_price">Precio</label>
                             <input type="text" required="required" name="price" placeholder="Ingrese el Precio" class="form-control" id="product_price">
                         </div>
                         <div class="form-group">
-                            <label for="userName">Stock</label>
+                            <label for="quantity">Stock</label>
                             <input type="text" name="quantity" placeholder="Ingrese el stock disponible" class="form-control" id="quantity">
                         </div>
                         <div class="form-group">
                             <label><input type="checkbox" name="stock" id="stock" style="max-width: 30px; float: left;">  Desactivar Control de Stock </label>
                         </div>
                         <div class="form-group">
-                            <label for="userName"><span id="rmv_img" class="btn btn-xs btn-warning">Quitar</span> Imagen </label>                      
+                            <label for="imagename"><span id="rmv_img" class="btn btn-xs btn-warning">Quitar</span> Imagen </label>                      
                             <div id="current_img"></div>
                             <input type="file" name="imagename" id="imagename">                            
                         </div>
@@ -1021,9 +1050,14 @@
                                         <div class="pull-right p-t-10"> % </div>
                                     </div>
                                     <br><br>
-                                    <div class="form-group hidden">
+                                    <div class="form-group">
 
-                                    <label><input type="checkbox" name="charge_tax" id="charge_tax"> Cobrar Impuestos</label>
+                                        <label><input type="checkbox" name="charge_tax" id="charge_tax"> Cobrar Impuestos</label>
+                                        <span class="help-block">Deshabilitar esta opción para emitir comprobantes exonerados de igv. </span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label><input type="checkbox" name="price_with_tax" id="price_with_tax"> Impuestos incluidos en el precio</label>
+                                        <span class="help-block">Establecer si los impuestos están incluidos en el precio del producto. </span>
                                     </div>
                                     <div class="form-group">       
                                     <label for="userName"><span id="rmv_logo" class="btn btn-xs btn-warning">Quitar</span> Logo </label>              
@@ -1089,20 +1123,30 @@
                             <div class="col-md-12">
                                 <div class="form-group">
                                     <label>Token de emisión electrónica</label>
-                                    <textarea name="token" class="form-control" id="token"></textarea>
+                                    <textarea name="token" class="form-control" id="token" required="required"></textarea>
                                 </div>   
                             </div>
                             <div class="col-md-12">
                                 <div class="form-group">
                                     <label>Token de consulta DNI/RUC</label>
-                                    <textarea name="token_consulta" class="form-control" id="token_consulta"></textarea>
+                                    <textarea name="token_consulta" class="form-control" id="token_consulta" required="required"></textarea>
                                 </div>   
                             </div>
                         </div>           
                         <div class="form-group">
                                 <input id="save_settings" type="submit" class="btn btn-default btn-block waves-effect waves-light" value="Guardar Ajustes">
                         </div>
-                </form>
+                        <hr />
+                    </form>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <button class="btn btn-info btn-block" onclick="$(this).exportBackup()">Exportar</button>
+                            </div>
+                            <div class="col-md-6">
+                                <button class="btn btn-warning btn-block" onclick="$(this).importBackup()">Importar</button>
+                            </div>
+                        </div>
+
                     </div>
                </div>
           </div>

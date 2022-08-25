@@ -72,6 +72,11 @@ ipcMain.on('app-reload', (event, arg) => {
   mainWindow.reload();
 });
 
+ipcMain.on('app-relaunch', (event, arg) => {
+  mainWindow.reload();
+  app.relaunch()
+  app.exit()
+});
 
 
 contextMenu({

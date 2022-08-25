@@ -7,6 +7,10 @@ const PouchDB = require('pouchdb');
 const PouchdbFind = require('pouchdb-find');
 const apiResults = require('../helpers/apiResults');
 const CONFIG = require('../config');
+const QRCode = require('qrcode')
+const moment = require('moment');
+const console = require("console");
+
 
 PouchDB.plugin(PouchdbFind);
 
@@ -157,7 +161,6 @@ app.post("/new", async function(req, res) {
     }
   }
   
-  
   transactionsDB.put({
     ...newTransaction,
     _id: newTransaction._id.toString(),
@@ -165,8 +168,10 @@ app.post("/new", async function(req, res) {
     
     let transaction = await transactionsDB.get(result.id);
 
-    if(transaction.paid >= transaction.total){
-      Inventory.decrementInventory(transaction.items);
+    if(transaction.paid >= transaction.total && transaction.status){
+      await Inventory.decrementInventory(transaction.items);
+    } else if (transaction.dues.length && !transaction.paid && transaction.status) {
+      await Inventory.decrementInventory(transaction.items);
     }
 
     // Aumentar al siguiente correlativo
@@ -235,7 +240,7 @@ app.put("/new", async function(req, res) {
     });
   }).then(async function(result) {
     if(newTransaction.paid >= newTransaction.total){
-      Inventory.decrementInventory(newTransaction.items);
+      await Inventory.decrementInventory(newTransaction.items);
     }
 
     // Aumentar al siguiente correlativo
@@ -264,18 +269,16 @@ app.put("/new", async function(req, res) {
 
 
 app.post( "/delete", function ( req, res ) {
- let transaction = req.body;
- 
-  // transactionsDB.remove( {
-  //     _id: transaction.orderId
-  // }, function ( err, numRemoved ) {
-  //     if ( err ) res.status( 500 ).send( err );
-  //     else res.sendStatus( 200 );
-  // } );
+  let id = req.body.orderId;
 
-  transactionsDB.get(transaction.orderId)
-    .then(doc => transactionsDB.remove(doc))
-    .catch(err => console.log(err));
+  transactionsDB.get(id).then(function(trans) {
+    return transactionsDB.remove(trans);
+  }).then(function (result) {
+      res.sendStatus( 200 );
+  }).catch(function (err) {
+      res.status( 500 ).send( err );
+      console.log(err);
+  });
 
 });
 
@@ -308,7 +311,7 @@ app.get("/:transactionId/pdf", async function(req, res) {
   let transaction = await transactionsDB.get(id);
 
   let json = await apisperu.jsonInvoice(transaction);
-
+  
   apisperu.pdfInvoice(json).then(r => {
     res.header("Content-Type", "application/pdf");
     res.end(r.data);
@@ -320,15 +323,18 @@ app.get("/:transactionId/pdf", async function(req, res) {
 app.get("/:transactionId/qr", async function(req, res) {
   let id  = req.params.transactionId;
 
-  let transaction = await transactionsDB.get(id);
-  let json = await apisperu.jsonQrSale(transaction);
-
-  apisperu.qrSale(json).then(r => {
-    // res.header("Content-Type", "application/pdf");
-    res.end(r.data);
-  }).catch(err => {
+  try {
+    let transaction = await transactionsDB.get(id);
+    let json = await apisperu.jsonQrSale(transaction);
+    let emision = moment(new Date(json.emision)).format("YYYY-MM-DD");
+    let str = json.ruc + '|' + json.tipo + '|' + json.serie + '|' + json.numero + '|' + parseFloat(json.igv).toFixed(2) + '|' + json.total + '|' +  emision + '|' + json.clienteTipo + '|' + json.clienteNumero + '|';
+  
+    let qr = await QRCode.toDataURL(str);
+    res.end(qr);
+  } catch (err) {
+    console.error(err)
     res.status( 500 ).send( err );
-  });
+  }
 });
 
 

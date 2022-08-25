@@ -72,7 +72,7 @@ $(document).ready(function(){
             searchCustomerOrders();
         }          
     });
- 
+
 
 
     var $list = $('.list-group-item').click(function () {
@@ -84,9 +84,20 @@ $(document).ready(function(){
             $("#cardInfo .input-group-addon").text("Check Info");
        }else if(this.id == 'card'){
            $("#cardInfo").show();
+           $("#creditInfo").hide();
+           $("#digits").show();
+           $("#paymentAmount").show();
            $("#cardInfo .input-group-addon").text("Info. de la tarjeta");
        }else if(this.id == 'cash'){
            $("#cardInfo").hide();
+           $("#creditInfo").hide();
+           $("#digits").show();
+           $("#paymentAmount").show();
+       }else if(this.id == 'credit'){
+        $("#cardInfo").hide();
+        $("#creditInfo").show();
+        $("#digits").hide();
+        $("#paymentAmount").hide();
        }
     });
 
@@ -108,6 +119,7 @@ $(document).ready(function(){
 
     $.fn.calculateChange = function () {
         var change = $("#payablePrice").val() - $("#payment").val();
+
         if(change <= 0){
             $("#change").text(change.toFixed(2));
         }else{
@@ -120,4 +132,38 @@ $(document).ready(function(){
         }
     }
 
+    $.fn.calculateDues = function () {
+        
+        var dues = 0;
+        var valDate = true;
+        var isEmpty  = false;
+
+        var  credits = $('#creditInfo input[type=number]');
+        var  dates = $('.dateInfo');
+
+        $.each( credits, function( key, value ) {
+            if ($(value).val() === '' || $(value).val() === '0') {
+                isEmpty  = true;
+            }
+            dues += parseFloat($(value).val() || 0);
+        });
+        if (isEmpty) {
+            $("#confirmPayment").hide(); 
+            return;
+        }
+
+        $.each( dates, function( key, value ) {
+
+            if ( !$(value).val()) {
+                
+                valDate = false;
+            };
+        });
+
+        if (dues.toFixed(2) === parseFloat($('#payablePrice').val()).toFixed(2) && valDate ) {
+            $("#confirmPayment").show();
+        } else {
+            $("#confirmPayment").hide();            
+        }
+    }
 })

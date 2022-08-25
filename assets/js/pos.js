@@ -9,7 +9,7 @@ let state = [];
 let sold_items = [];
 let item;
 let auth;
-let holdOrder = 0;
+// let holdOrder = 0;
 let holdOrderRev = 0;
 let vat = 0;
 let perms = null;
@@ -62,6 +62,10 @@ let by_till = 0;
 let by_user = 0;
 let by_status = 1;
 
+// definir variables que permitan escuchar eventos (get, set)
+varWindow('holdOrder');
+varWindow('customerSelected');
+
 $(function () {
 
     function cb(start, end) {
@@ -109,11 +113,26 @@ $.fn.serializeObject = function () {
     });
     return o;
 };
+$.fn.newDue = function () {
 
+    $('#creditInfo fieldset').append(`<div class="row credit"><div class="col-md-5">
+    <input type="date" name="creditDate" class="form-control dateInfo">
+</div>
+<div class="col-md-5">
+  <input type="number" name="creditAmount" class="form-control amountInfo" oninput="$(this).calculateDues()">
+</div>
+<div class="col-md-2">
+    <button id="removeCreditDate"  onclick="$(this).deleteDue()" class="btn btn-danger"><i class="fa fa-times"></i></button>
+</div></div>`);
+}
+
+$.fn.deleteDue = function () {
+    console.log($(this));
+    $(this).parents('.row').first().remove();
+}
 
 auth = storage.get('auth');
 user = storage.get('user');
-
 
 if (auth == undefined) {
     $.get(api + 'users/check/', function (data) { });
@@ -122,11 +141,11 @@ if (auth == undefined) {
 
 } else {
 
-    $('#loading').show();
+    // $('#loading').show();
 
-    setTimeout(function () {
-        $('#loading').hide();
-    }, 2000);
+    $('#loading').hide();
+    // setTimeout(function () {
+    // }, 2000);
 
     platform = storage.get('settings') || {};
 
@@ -141,14 +160,22 @@ if (auth == undefined) {
     $.get(api + 'users/user/' + user._id, function (data) {
         user = data;
         $('#loggedin-user').text(user.fullname);
+    }).fail(function (err) {
+        storage.delete('auth');
+        storage.delete('user');
+
+        ipcRenderer.send('app-reload', '');
+        // $("#loading").show();
+        // authenticate();
+        console.log(err);
     });
 
 
     $.get(api + 'settings/all', function (data) {
         settings = data.settings;
-        
+
         if (data._attachments && data._attachments.logo) {
-           settings.logo = 'data:' + data._attachments.logo.content_type + ';base64,' + data._attachments.logo.data;
+            settings.logo = 'data:' + data._attachments.logo.content_type + ';base64,' + data._attachments.logo.data;
         }
     });
 
@@ -171,7 +198,7 @@ if (auth == undefined) {
 
 
         setTimeout(function () {
-            if (settings == undefined && auth != undefined) {
+            if (!settings && auth) {
                 $('#settingsModal').modal('show');
             }
             else {
@@ -186,7 +213,7 @@ if (auth == undefined) {
         $("#settingsModal").on("hide.bs.modal", function () {
 
             setTimeout(function () {
-                if (settings == undefined && auth != undefined) {
+                if (!settings && auth) {
                     $('#settingsModal').modal('show');
                 }
             }, 1000);
@@ -203,7 +230,7 @@ if (auth == undefined) {
         function loadProducts() {
 
             $.get(api + 'inventory/products', function (data) {
-                
+
                 data.forEach(item => {
                     item = item.doc;
                     item.price = parseFloat(item.price).toFixed(2);
@@ -228,10 +255,10 @@ if (auth == undefined) {
 
                     let item_info = `<div class="col-lg-2 box ${item.category}"
                                 onclick="$(this).addToCart(${item._id}, ${item.quantity}, ${item.stock})">
-                            <div class="widget-panel widget-style-2 ">                    
-                            <div id="image"><img src="${item.image}" id="product_img" alt=""></div>                    
+                            <div class="widget-panel widget-style-2 ">
+                            <div id="image"><img src="${item.image}" id="product_img" alt=""></div>
                                         <div class="text-muted m-t-5 text-center">
-                                        <div class="name" id="product_name">${item.name}</div> 
+                                        <div class="name" id="product_name">${item.name}</div>
                                         <span class="sku">${item.sku}</span>
                                         <span class="stock">STOCK </span><span class="count">${item.stock == 1 ? item.quantity : 'N/A'}</span></div>
                                         <sp class="text-success text-center"><b data-plugin="counterup">${settings.symbol}  ${item.price}</b> </sp>
@@ -266,20 +293,33 @@ if (auth == undefined) {
         function loadCustomers() {
 
             $.get(api + 'customers/all', function (customers) {
-                
+
+                var anonymousCustomer = {};
+
+
                 $('#customer').html(`<option value="" selected="selected">Seleccione un cliente</option>`);
 
                 customers.forEach(cust => {
                     cust = cust.doc;
                     cust.id = cust._id;
 
-                    let customer = `<option value='${JSON.stringify(cust)}'>${cust.document_type.number + ' - ' + cust.name}</option>`;
+                    let customer = `<option value='${cust._id}'>${cust.document_type.number + ' - ' + cust.name}</option>`;
                     $('#customer').append(customer);
+
+                    if (cust.document_type.number === '00000000') {
+                        anonymousCustomer = cust;
+                        customerSelected = cust;
+                    }
+
                 });
+
+                $('#customer').selectpicker('refresh');
+                $('#customer').val(anonymousCustomer._id);
                 $('#customer').selectpicker('refresh');
 
-                //  $('#customer').chosen();
-
+                if (anonymousCustomer._id) {
+                    $('#overWrite').show();
+                }
             });
 
         }
@@ -321,7 +361,7 @@ if (auth == undefined) {
             let req = {
                 skuCode: $("#skuCode").val()
             }
-            
+
             $.ajax({
                 url: api + 'inventory/product/sku',
                 type: 'POST',
@@ -362,9 +402,9 @@ if (auth == undefined) {
 
                 }
                 // error: function (data) {
-                //     
+                //
                 // }
-            }).fail( function( jqXHR, textStatus, errorThrown ) {
+            }).fail(function (jqXHR, textStatus, errorThrown) {
 
                 if (jqXHR.status === 500) {
                     // $(this).showValidationError(data);
@@ -423,9 +463,14 @@ if (auth == undefined) {
                 id: data._id,
                 product_name: data.name,
                 sku: data.sku,
-                price: data.price,
+                price: parseFloat(data.price),
                 quantity: 1
             };
+
+            // actualizar el precio en caso esté incluido el igv
+            if (settings.charge_tax && settings.price_with_tax) {
+                item.price = parseFloat((data.price / 1.18).toFixed(4));
+            }
 
             if ($(this).isExist(item)) {
                 $(this).qtIncrement(index);
@@ -458,7 +503,7 @@ if (auth == undefined) {
             let grossTotal;
             $('#total').text(cart.length);
             $.each(cart, function (index, data) {
-                total += data.quantity * data.price;
+                total = parseFloat(total) + (data.quantity * data.price);
             });
             total = total - $("#inputDiscount").val();
             $('#price').text(settings.symbol + total.toFixed(2));
@@ -548,10 +593,10 @@ if (auth == undefined) {
             let product = allProducts.filter(function (selected) {
                 return selected.doc._id == parseInt(item.id);
             });
-      
+
             if (product[0].doc.stock == 1) {
                 if (item.quantity < product[0].doc.quantity) {
-                    item.quantity += 1;
+                    item.quantity = parseFloat(item.quantity) + 1;
                     $(this).renderTable(cart);
                 }
 
@@ -564,7 +609,7 @@ if (auth == undefined) {
                 }
             }
             else {
-                item.quantity += 1;
+                item.quantity = parseFloat(item.quantity) + 1;
                 $(this).renderTable(cart);
             }
 
@@ -574,7 +619,7 @@ if (auth == undefined) {
         $.fn.qtDecrement = function (i) {
             if (item.quantity > 1) {
                 item = cart[i];
-                item.quantity -= 1;
+                item.quantity = parseFloat(item.quantity) - 1;;
                 $(this).renderTable(cart);
             }
         }
@@ -605,6 +650,7 @@ if (auth == undefined) {
                         cart = [];
                         $(this).renderTable(cart);
                         holdOrder = 0;
+                        holdOrderRev = 0;
 
                         Swal.fire(
                             '¡Limpiado!',
@@ -643,10 +689,12 @@ if (auth == undefined) {
 
 
         $("#hold").on('click', function () {
-
             if (cart.length != 0) {
-
                 $("#dueModal").modal('toggle');
+
+                if (!holdOrder) {
+                    $('#refNumber').val('')
+                }
             } else {
                 Swal.fire(
                     '¡Uy!',
@@ -668,15 +716,13 @@ if (auth == undefined) {
             let payment = 0;
 
             cart.forEach(item => {
-
                 items += "<tr><td>" + item.product_name + "</td><td>" + item.quantity + "</td><td>" + settings.symbol + parseFloat(item.price).toFixed(2) + "</td></tr>";
-
             });
 
             let currentTime = new Date(moment());
 
             let discount = $("#inputDiscount").val();
-            let customer = $("#customer").val() ? JSON.parse($("#customer").val()) : {};
+            let customer = customerSelected;
             let date = moment(currentTime).format("YYYY-MM-DD HH:mm:ss");
             let paid = $("#payment").val() == "" ? "" : parseFloat($("#payment").val()).toFixed(2);
             let change = $("#change").text() == "" ? "" : parseFloat($("#change").text()).toFixed(2);
@@ -687,7 +733,27 @@ if (auth == undefined) {
             let tax_row = "";
             let documentType = JSON.parse($("#documentType").val())
 
-            if (paid != "") {
+            if ($('#overWrite').val()) {
+                customer.name = $('#overWrite').val();
+            }
+
+            var dataCredit = [];
+            var credits = $('#creditInfo .credit');
+
+            $.each(credits, function (key, value) {
+
+                let date;
+                let amount;
+                date = $(value).find(".dateInfo").val();
+                amount = $(value).find(".amountInfo").val();
+                dataCredit.push({
+                    date: date,
+                    amount: amount,
+                });
+            });
+
+
+            if (paid) {
                 payment = `<tr>
                         <td>Pagado</td>
                         <td>:</td>
@@ -705,6 +771,37 @@ if (auth == undefined) {
                     </tr>`
             }
 
+            if (dataCredit.length && !paid) {
+                let dues = '';
+                
+                for (let i = 0; i < dataCredit.length; i++) {
+                    let due = dataCredit[i];
+                    dues += '<tr>';
+                    dues += `<td>${i + 1}</td>`;
+                    dues += `<td>${due.date}</td>`;
+                    dues += `<td>${due.amount}</td>`;
+                    dues += '</tr>';
+                }
+                
+                payment = `<tr>
+                            <td>Método</td>
+                            <td>:</td>
+                            <td>${type}</td>
+                        </tr>
+                        <tr><td colspan="3"><br /></td></tr>
+                        <tr>
+                            <td colspan="3">
+                            <table width="100%">
+                                <tr>
+                                    <th>Cuotas</th>
+                                    <th>Fecha Venc.</th>
+                                    <th>Monto</th>
+                                </tr>
+                                ${dues}
+                            </table>
+                            </td>
+                        </tr>`;
+            }
 
 
             if (settings.charge_tax) {
@@ -719,12 +816,12 @@ if (auth == undefined) {
 
             if (status === 0) {
                 if ($("#customer").val() == 0 && $("#refNumber").val() == "") {
-                Swal.fire(
-                    '¡Referencia requerida!',
-                    '¡Debe seleccionar un cliente <br> o ingrese una referencia!',
-                    'warning'
+                    Swal.fire(
+                        '¡Referencia requerida!',
+                        '¡Debe seleccionar un cliente <br> o ingrese una referencia!',
+                        'warning'
                     )
-                    
+
                     return;
                 }
 
@@ -734,9 +831,7 @@ if (auth == undefined) {
 
             $(".loading").show();
 
-
-            if (holdOrder != 0) {
-
+            if (holdOrder) {
                 orderNumber = holdOrder;
                 method = 'PUT'
             }
@@ -746,13 +841,13 @@ if (auth == undefined) {
             }
 
 
-            receipt = `<div style="font-size: 10px;">                            
+            receipt = `<div style="font-size: 10px;">
         <p style="text-align: center;">
         ${settings.img == "" ? settings.img : '<img style="max-width: 50px;max-width: 100px;" src ="' + settings.logo + '" /><br>'}
             <span style="font-size: 22px;">${settings.legal_name}</span> <br>
             ${settings.address.street} ${settings.address.district} ${settings.address.city} ${settings.address.state}<br>
-            ${settings.contact != '' ? 'Teléfono: ' + settings.contact + '<br>' : ''} 
-            ${settings.vat_no != '' ? 'RUC ' + settings.vat_no + '<br>' : ''} 
+            ${settings.contact != '' ? 'Teléfono: ' + settings.contact + '<br>' : ''}
+            ${settings.vat_no != '' ? 'RUC ' + settings.vat_no + '<br>' : ''}
             ${documentType.name ? '<span style="font-size: 15px; text-transform: uppercase;">' + documentType.name + '</span> <br />' : ''}
             <span style="font-size: 15px; text-transform: uppercase;" id="serieCorrelativo"></span> <br />
 
@@ -778,21 +873,21 @@ if (auth == undefined) {
             </tr>
             </thead>
             <tbody>
-            ${items}                
-     
-            <tr>                        
+            ${items}
+
+            <tr>
                 <td><b>Subtotal</b></td>
                 <td>:</td>
-                <td><b>${settings.symbol}${subTotal.toFixed(2)}</b></td>
+                <td><b>${settings.symbol}${parseFloat(subTotal).toFixed(2)}</b></td>
             </tr>
             <!--<tr>
                 <td>Descuento</td>
                 <td>:</td>
                 <td>${discount > 0 ? settings.symbol + parseFloat(discount).toFixed(2) : ''}</td>
             </tr>-->
-            
+
             ${tax_row}
-        
+
             <tr>
                 <td><h3>Total</h3></td>
                 <td><h3>:</h3></td>
@@ -839,15 +934,15 @@ if (auth == undefined) {
                 discount: discount,
                 customer: customer,
                 status: status,
-                subtotal: parseFloat(subTotal).toFixed(2),
-                tax: totalVat,
+                subtotal: parseFloat(parseFloat(subTotal).toFixed(4)),
+                tax: parseFloat(totalVat.toFixed(4)),
                 order_type: 1,
                 items: cart,
                 date: currentTime,
                 payment_type: paymentType,
-                total: orderTotal,
-                paid: paid,
-                change: change,
+                total: parseFloat(orderTotal),
+                paid: parseFloat(paid),
+                change: parseFloat(change),
                 _id: orderNumber,
                 till: platform.till,
                 mac: platform.mac,
@@ -855,7 +950,9 @@ if (auth == undefined) {
                 user_id: user._id,
                 document_type: documentType,
             }
-           
+        
+            data.dues = dataCredit;
+
             if (holdOrderRev) {
                 data._rev = holdOrderRev
             }
@@ -868,17 +965,22 @@ if (auth == undefined) {
                 cache: false,
                 processData: false,
                 success: function (data) {
-                    // obtener qr
-                    try {
-                        $.get(api + 'transactions/' + data._id + '/qr', function(data){
-                            $('#viewTransaction table').after('<br /><div style="text-align: center;">' + data + '</div>')
-                            receipt += '<br /><div style="text-align: center;">' + data + '</div>';
-                        });
-                    } catch (error) {
-                        console.log(error)
+                    if (data.document_type.code === '01' || data.document_type.code === '03') {
+                        // obtener qr
+                        try {
+                            $.get(api + 'transactions/' + data._id + '/qr', function (data) {
+                                // $('#viewTransaction table').after('<br /><div style="text-align: center;">' + data + '</div>')
+                                $('#viewTransaction table').first().after('<br /><div style="text-align: center;"><img src="' + data + '" /></div>')
+                                receipt += '<br /><div style="text-align: center;">' + data + '</div>';
+                            });
+                        } catch (error) {
+                            console.log(error)
+                        }
                     }
-            
+
                     cart = [];
+                    holdOrder = 0;
+                    holdOrderRev = 0;
                     $('#viewTransaction').html('');
                     $('#viewTransaction').html(receipt);
                     // insertar correlativo
@@ -910,7 +1012,8 @@ if (auth == undefined) {
             $("#refNumber").val('');
             $("#change").text('');
             $("#payment").val('');
-
+            $("#creditInfo .row.credit").remove(); 
+          
         }
 
 
@@ -933,7 +1036,7 @@ if (auth == undefined) {
 
 
         $.fn.randerHoldOrders = function (data, renderLocation, orderType) {
-    
+
             $.each(data, function (index, order) {
                 $(this).calculatePrice(order);
                 renderLocation.append(
@@ -971,7 +1074,7 @@ if (auth == undefined) {
         $.fn.calculatePrice = function (data) {
             totalPrice = 0;
             $.each(data.products, function (index, product) {
-                totalPrice += product.price * product.quantity;
+                totalPrice = parseFloat(totalPrice) + (product.price * product.quantity);
             })
 
             let vat = (totalPrice * data.vat) / 100;
@@ -997,15 +1100,15 @@ if (auth == undefined) {
 
                 holdOrder = holdOrderList[index]._id;
                 holdOrderRev = holdOrderList[index]._rev;
-         
+
                 cart = [];
                 $.each(holdOrderList[index].items, function (index, product) {
                     item = {
                         id: product.id,
                         product_name: product.product_name,
                         sku: product.sku,
-                        price: product.price,
-                        quantity: product.quantity
+                        price: parseFloat(product.price),
+                        quantity: parseFloat(product.quantity)
                     };
                     cart.push(item);
                 })
@@ -1021,14 +1124,16 @@ if (auth == undefined) {
 
 
                 holdOrder = customerOrderList[index]._id;
+                holdOrderRev = holdOrderList[index]._rev;
+
                 cart = [];
                 $.each(customerOrderList[index].items, function (index, product) {
                     item = {
                         id: product.id,
                         product_name: product.product_name,
                         sku: product.sku,
-                        price: product.price,
-                        quantity: product.quantity
+                        price: parseFloat(product.price),
+                        quantity: parseFloat(product.quantity)
                     };
                     cart.push(item);
                 })
@@ -1040,7 +1145,7 @@ if (auth == undefined) {
 
 
         $.fn.deleteOrder = function (index, type) {
-            
+
             switch (type) {
                 case 1: deleteId = holdOrderList[index]._id;
                     break;
@@ -1053,14 +1158,13 @@ if (auth == undefined) {
 
             Swal.fire({
                 title: "¿Eliminar pedido?",
-                text: "Esto eliminará el pedido. ¡Estas seguro que quieres borrarlo!",
+                text: "Esto eliminará el pedido. ¿Estas seguro que quieres borrarlo?",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
                 cancelButtonColor: '#d33',
                 confirmButtonText: '¡Sí, bórralo!'
             }).then((result) => {
-                
                 if (result.value) {
                     $.ajax({
                         url: api + 'transactions/delete',
@@ -1069,24 +1173,20 @@ if (auth == undefined) {
                         contentType: 'application/json; charset=utf-8',
                         cache: false,
                         success: function (data) {
-
                             Swal.fire(
                                 '¡Eliminado!',
                                 '¡Has eliminado el pedido!',
                                 'success'
                             )
 
+                            $(this).getHoldOrders();
+                            $(this).getCustomerOrders();
+
                         }, error: function (data) {
                             $(".loading").hide();
-
                         }
                     });
                 }
-            })
-            .then(() => {
-                //volvemos a renderizar las ordenes 
-                $(this).getHoldOrders();
-                $(this).getCustomerOrders();
             })
         }
 
@@ -1114,7 +1214,7 @@ if (auth == undefined) {
                 email: $('#emailAddress').val(),
                 document_type: {
                     code: $('#document_code').val(),
-                    number:$('#document_number').val()
+                    number: $('#document_number').val()
                 },
                 address: {
                     street: $('#customer_street').val(),
@@ -1143,7 +1243,7 @@ if (auth == undefined) {
                     if ($('#customer_id').val()) {
                         Swal.fire("¡Cliente actualizado!", "¡El cliente se actualizó con éxito!", "success");
                         $('#customer option:selected').replaceWith(
-                            $('<option>', { text: data.document_type.number + ' - ' + data.name, value: `{"id": "${data._id}", "name": "${data.name}", "document_type": {"code": "${data.document_type.code}", "number": "${data.document_type.number}"}}`, selected: 'selected' })
+                            $('<option>', { text: data.document_type.number + ' - ' + data.name, value: data._id, selected: 'selected' })
                         );
 
                         $('#customer').selectpicker('refresh');
@@ -1152,13 +1252,15 @@ if (auth == undefined) {
                         Swal.fire("¡Cliente agregado!", "¡El cliente se agregó con éxito!", "success");
                         $("#customer option:selected").removeAttr('selected');
                         $('#customer').append(
-                            $('<option>', { text: data.document_type.number + ' - ' + data.name, value: `{"id": "${data._id}", "name": "${data.name}", "document_type": {"code": "${data.document_type.code}", "number": "${data.document_type.number}"}}`, selected: 'selected' })
+                            $('<option>', { text: data.document_type.number + ' - ' + data.name, value: data._id, selected: 'selected' })
                         );
-    
-                        $('#customer').val(`{"id": "${data._id}", "name": "${data.name}", "document_type": {"code": "${data.document_type.code}", "number": "${data.document_type.number}"}}`).trigger('chosen:updated');
-                        
+
+                        $('#customer').val(data._id).trigger('chosen:updated');
+
                         $('#customer').selectpicker('refresh');
                     }
+
+                    customerSelected = data;
 
 
                 }, error: function (data) {
@@ -1173,14 +1275,21 @@ if (auth == undefined) {
         $("#confirmPayment").hide();
 
         $("#cardInfo").hide();
+        $("#creditInfo").hide();
 
         $("#payment").on('input', function () {
             $(this).calculateChange();
         });
 
+        $('#creditInfo').on('input', 'input[type=number], input[type=date]', function () {
+            $(this).calculateDues();
+        });
 
         $("#confirmPayment").on('click', function () {
-            if ($('#payment').val() == "") {
+            var typePaymentString = $('#paymentType').val();
+            var typePaymentObject = JSON.parse(typePaymentString);
+
+            if ($('#payment').val() == "" && typePaymentObject.name != 'Credito') {
                 Swal.fire(
                     '¡No!',
                     '¡Por favor, introduzca la cantidad que se pagó!',
@@ -1329,7 +1438,7 @@ if (auth == undefined) {
 
 
         $.fn.editProduct = function (index) {
-           
+
             $('#Products').modal('hide');
 
             $("#category option").filter(function () {
@@ -1337,6 +1446,7 @@ if (auth == undefined) {
             }).prop("selected", true);
 
             $('#productName').val(allProducts[index].doc.name);
+            $('#barcode').val(allProducts[index].doc.barcode);
             $('#product_price').val(allProducts[index].doc.price);
             $('#quantity').val(allProducts[index].doc.quantity);
 
@@ -1358,15 +1468,13 @@ if (auth == undefined) {
         }
 
         $.fn.editCustomer = function () {
-            let customer = $('#customer').val();
+            let customer = customerSelected;
 
-            if (!customer) {
+            if (!customer._id) {
                 return
             }
-            
-            customer = JSON.parse(customer)
 
-            let id = customer.id;
+            let id = customer._id;
             loadCustomer(id);
             $('#newCustomer').modal('show');
         }
@@ -1558,7 +1666,7 @@ if (auth == undefined) {
                 allUsers = [...users];
                 users.forEach((user, index) => {
                     user = user.doc;
-                    
+
                     state = [];
                     let class_name = '';
 
@@ -1611,7 +1719,7 @@ if (auth == undefined) {
                 product = product.doc;
                 counter++;
 
-                let category = allCategories.filter( category => category.id == product.category);
+                let category = allCategories.filter(category => category.id == product.category);
 
                 product_list += `<tr>
             <td><img id="`+ product._id + `"></td>
@@ -1627,7 +1735,7 @@ if (auth == undefined) {
                     $('#product_list').html(product_list);
                     products.forEach(pro => {
                         pro = pro.doc;
-                        $("#" + pro._id + "").JsBarcode(pro._id, {
+                        $("#" + pro._id + "").JsBarcode(pro.barcode, {
                             width: 2,
                             height: 25,
                             fontSize: 14
@@ -1654,13 +1762,13 @@ if (auth == undefined) {
             let counter = 0;
             $('#category_list').empty();
             $('#categoryList').DataTable().destroy();
-          
+
             allCategories.forEach((category, index) => {
 
                 counter++;
 
                 category_list += `<tr>
-     
+
             <td>${category.doc.name}</td>
             <td><span class="btn-group"><button onClick="$(this).editCategory(${index})" class="btn btn-warning"><i class="fa fa-edit"></i></button><button onClick="$(this).deleteCategory(\'${category.doc._id}\')" class="btn btn-danger"><i class="fa fa-trash"></i></button></span></td></tr>`;
             });
@@ -1737,6 +1845,15 @@ if (auth == undefined) {
             formData['app'] = $('#app').val();
             formData['mac'] = mac_address;
             formData['till'] = 1;
+
+            if (!formData.charge_tax && formData.price_with_tax) {
+                Swal.fire(
+                    '¡Uy!',
+                    'Si selecciona la opción de "Impuestos incluidos en el precio" debe asegurarse de que la opción "Cobrar Impuestos" esté seleccionado.',
+                    'warning'
+                );
+                return;
+            }
 
             $('#settings_form').append('<input type="hidden" name="app" value="' + formData.app + '" />');
 
@@ -1997,11 +2114,11 @@ if (auth == undefined) {
     });
 
     $('#document_number').on('keypress', async function (e) {
-        if(e.which === 13) {
+        if (e.which === 13) {
             e.preventDefault();
-            
+
             $(this).attr("disabled", "disabled");
-            
+
             if ($('#document_code').val() && $('#document_number').val()) {
 
                 if ($('#document_code').val() === '1' && $('#document_number').val().length !== 8) {
@@ -2030,14 +2147,14 @@ if (auth == undefined) {
                         'Error interno, verifique el token',
                         'error'
                     );
-                    
+
                     console.log(err)
                 })
             }
 
             $(this).removeAttr("disabled");
         }
-  });
+    });
 }
 
 
@@ -2049,7 +2166,7 @@ $.fn.print = function () {
 
 function loadDniRuc(type, number) {
     return $.get(api + 'customers/search/' + type + '/' + number, function (data) {
-        
+
         if (type === '1') {
             $('#userName').val(data.nombres + ' ' + data.apellidoPaterno + ' ' + data.apellidoMaterno);
         }
@@ -2062,16 +2179,16 @@ function loadDniRuc(type, number) {
             $('#customer_city').val(data.departamento);
             $('#customer_zip').val(data.ubigeo);
         }
-        
+
     });
 }
 
 function loadSettings() {
     return $.get(api + 'settings/all', function (data) {
         settings = data.settings;
-        
+
         if (data._attachments && data._attachments.logo) {
-           settings.logo = 'data:' + data._attachments.logo.content_type + ';base64,' + data._attachments.logo.data;
+            settings.logo = 'data:' + data._attachments.logo.content_type + ';base64,' + data._attachments.logo.data;
         }
 
         $("#settings_id").val("1");
@@ -2092,6 +2209,10 @@ function loadSettings() {
         if (settings.charge_tax) {
             $('#charge_tax').prop("checked", true);
         }
+        if (settings.price_with_tax) {
+            $('#price_with_tax').prop("checked", true);
+        }
+
         if (settings.logo) {
             $('#logoname').hide();
             $('#current_logo').html(`<img src="${settings.logo}" alt="">`);
@@ -2105,7 +2226,7 @@ function loadSettings() {
         let ticket = settings.document_types.find(s => s.code === "12");
         let boleta = settings.document_types.find(s => s.code === "03");
         let factura = settings.document_types.find(s => s.code === "01");
-        
+
 
         $("#serie_t").val(ticket.serie);
         $("#next_correlative_t").val(ticket.next_correlative);
@@ -2124,7 +2245,7 @@ function loadSettings() {
 function loadCustomer(id) {
     return $.get(api + 'customers/customer/' + id, function (data) {
         let customer = data;
-        
+
         $('#customer_id').val(customer._id);
         $('#userName').val(customer.name);
         $('#document_code').val(customer.document_type.code);
@@ -2167,14 +2288,14 @@ function loadTransactions() {
             allTransactions = [...transactions];
 
             transactions.forEach((trans, index) => {
-                sales += parseFloat(trans.total);
+                sales = parseFloat(sales) + parseFloat(trans.total);
                 transact++;
 
                 trans.items.forEach(item => {
                     sold_items.push(item);
                 });
 
-                
+
 
                 if (!tills.includes(trans.till)) {
                     tills.push(trans.till);
@@ -2209,7 +2330,7 @@ function loadTransactions() {
                         suntaState += '<br />Por Anular'
                     }
                 }
-                
+
                 counter++;
                 transaction_list += `<tr class="${trClass}">
                                 <!--<td>${trans.order}</td>-->
@@ -2225,23 +2346,22 @@ function loadTransactions() {
 
                                 <td class="text-center">
                                     <div class="btn-group">
-                                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">        
+                                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                             <span class="glyphicon glyphicon-option-vertical" aria-hidden="true"></span>
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-right">
-                                            ${!trans.paid ? '<li class="disabled"><a href="#">Reimprimir</a></li>' : '<li><a href="#" onClick="$(this).viewTransaction(' + index + ')">Reimprimir</a></li>'}
-                                            <li role="separator" class="divider"></li>
+                                            <li><a href="#" onClick="$(this).viewTransaction('${index}')">Reimprimir</a></li>                                            <li role="separator" class="divider"></li>
                                             <li><a href="#" onClick="$(this).downloadXML('${index}')">Descargar XML</a></li>
                                             <li><a href="#" onClick="$(this).downloadPDF('${index}')">Descargar PDF</a></li>
                                             <li><a href="#" onClick="$(this).downloadCDR('${index}')">Descargar CDR</a></li>
                                             <li role="separator" class="divider"></li>
                                             <!--<li><a href="#">Cambiar Estado</a></li>-->
                                             ${trans.sunat_state !== 'success' && trans.sunat_state !== 'null' ? '<li><a href="#" onClick="$(this).resend(' + index + ')">Reenviar a Sunat</a></li> <li role="separator" class="divider"></li>' : ''}
-                                            
-                                            ${trans.document_type.code === '01' && trans.sunat_state !== 'null' ? '<li><a href="#" onClick="$(this).sendVoided(' + index + ')">Comunicar Baja</a></li>' : '' }   
+
+                                            ${trans.document_type.code === '01' && trans.sunat_state !== 'null' ? '<li><a href="#" onClick="$(this).sendVoided(' + index + ')">Comunicar Baja</a></li>' : ''}
                                             ${trans.document_type.code === '01' ? '<li><a href="#" onClick="$(this).statusVoided(' + index + ')">Consultar Estado de Baja</a></li>' : ''}
-                                        
-                                            ${trans.document_type.code === '03' && trans.sunat_state !== 'null' ? '<li><a href="#" onClick="$(this).sendSummaryNullable(' + index + ')">Anular Mediante Resumen</a></li><li role="separator" class="divider"></li>' : '' }
+
+                                            ${trans.document_type.code === '03' && trans.sunat_state !== 'null' ? '<li><a href="#" onClick="$(this).sendSummaryNullable(' + index + ')">Anular Mediante Resumen</a></li><li role="separator" class="divider"></li>' : ''}
                                             ${trans.document_type.code === '03' ? '<li><a href="#" onClick="$(this).statusSummary(' + index + ')">Consultar Estado de Resumen</a></li>' : ''}
 
                                             <li role="separator" class="divider"></li>
@@ -2252,7 +2372,7 @@ function loadTransactions() {
                                 </td>
                                 </tr>
                     `;
-                
+
                 if (counter == transactions.length) {
                     $('#total_sales #counter').text(settings.symbol + parseFloat(sales).toFixed(2));
                     $('#total_transactions #counter').text(transact);
@@ -2273,25 +2393,25 @@ function loadTransactions() {
                         result[item].forEach(i => {
                             id = i.id;
                             price = i.price;
-                            quantity += i.quantity;
+                            quantity = parseFloat(quantity) + i.quantity;
                         });
 
                         sold.push({
                             id: id,
                             product: item,
-                            qty: quantity,
-                            price: price
+                            qty: parseFloat(quantity),
+                            price: parseFloat(price)
                         });
                     }
-                   
+
                     loadSoldProducts();
-                    
+
                     if (by_user == 0 && by_till == 0) {
                         userFilter(users);
                         tillFilter(tills);
                     }
-                
-                    
+
+
                     $('#transaction_list').html(transaction_list);
                     $('#transactionList').DataTable({
                         "order": [[1, "desc"]]
@@ -2341,20 +2461,20 @@ function loadSoldProducts() {
     $('#product_sales').empty();
 
     sold.forEach((item, index) => {
-        items += item.qty;
+        items = parseFloat(items) + item.qty;
         products++;
 
         let product = allProducts.filter(function (selected) {
             selected = selected.doc;
             return selected._id == item.id;
         });
-    
+
         counter++;
 
         sold_list += `<tr>
             <td>${item.product}</td>
             <td>${item.qty}</td>
-            <td>${product[0].stock == 1 ? product.length > 0 ? product[0].quantity : '' : 'N/A'}</td>
+            <td>${product[0] && product[0].stock == 1 ? product.length > 0 ? product[0].quantity : '' : 'N/A'}</td>
             <td>${settings.symbol + (item.qty * parseFloat(item.price)).toFixed(2)}</td>
             </tr>`;
         if (counter == sold.length) {
@@ -2375,7 +2495,7 @@ function userFilter(users) {
         let u = allUsers.filter(function (usr) {
             return usr.doc._id == user;
         });
-        
+
         $('#users').append(`<option value="${user}">${u[0].doc.fullname}</option>`);
     });
 
@@ -2396,9 +2516,9 @@ function tillFilter(tills) {
 $.fn.viewTransaction = function (index) {
 
     transaction_index = index;
-
+    
     let discount = allTransactions[index].discount;
-    let customer = !allTransactions[index].customer? 'Seleccione un cliente' : allTransactions[index].customer.username;
+    let customer = !allTransactions[index].customer ? 'Seleccione un cliente' : allTransactions[index].customer.username;
     let refNumber = allTransactions[index].ref_number != "" ? allTransactions[index].ref_number : allTransactions[index].order;
     let orderNumber = allTransactions[index].order;
     let type = allTransactions[index].payment_type.name;
@@ -2412,7 +2532,7 @@ $.fn.viewTransaction = function (index) {
     });
 
 
-    if (allTransactions[index].paid != "") {
+    if (allTransactions[index].paid) {
         payment = `<tr>
                     <td>Pagado</td>
                     <td>:</td>
@@ -2430,6 +2550,39 @@ $.fn.viewTransaction = function (index) {
                 </tr>`
     }
 
+    if (allTransactions[index].dues.length && !allTransactions[index].paid) {
+        let dues = '';
+        
+        for (let i = 0; i < allTransactions[index].dues.length; i++) {
+            let due = allTransactions[index].dues[i];
+
+            dues += '<tr>';
+            dues += `<td>${i + 1}</td>`;
+            dues += `<td>${due.date}</td>`;
+            dues += `<td>${due.amount}</td>`;
+            dues += '</tr>';
+        }
+
+        payment = `<tr>
+                    <td>Método</td>
+                    <td>:</td>
+                    <td>${type}</td>
+                </tr>
+                <tr><td colspan="3"><br /></td></tr>
+                <tr>
+                    <td colspan="3">
+                    <table width="100%">
+                        <tr>
+                            <th>Cuotas</th>
+                            <th>Fecha Venc.</th>
+                            <th>Monto</th>
+                        </tr>
+                        ${dues}
+                    </table>
+                    </td>
+                </tr>`;
+    }
+
 
 
     if (settings.charge_tax) {
@@ -2442,12 +2595,12 @@ $.fn.viewTransaction = function (index) {
 
 
 
-    receipt = `<div style="font-size: 10px;">                            
+    receipt = `<div style="font-size: 10px;">
         <p style="text-align: center;">
         ${settings.img == "" ? settings.img : '<img style="max-width: 50px;max-width: 100px;" src ="' + settings.logo + '" /><br>'}
             <span style="font-size: 17px;">${settings.legal_name}</span> <br>
             ${settings.address.street} ${settings.address.district} ${settings.address.city} ${settings.address.state} <br>
-            ${settings.contact != '' ? 'Teléfono: ' + settings.contact + '<br>' : ''} 
+            ${settings.contact != '' ? 'Teléfono: ' + settings.contact + '<br>' : ''}
             ${settings.vat_no != '' ? 'RUC ' + settings.vat_no + '<br>' : ''}
             ${allTransactions[index].document_type.name ? '<span style="font-size: 15px; text-transform: uppercase;">' + allTransactions[index].document_type.name + '</span> <br />' : ''}
             <span style="font-size: 15px; text-transform: uppercase;"><b>${allTransactions[index].serie || ''} - ${allTransactions[index].correlative || ''}</b></span> <br />
@@ -2473,21 +2626,21 @@ $.fn.viewTransaction = function (index) {
         </tr>
         </thead>
         <tbody>
-        ${items}                
- 
-        <tr>                        
+        ${items}
+
+        <tr>
             <td><b>Subtotal</b></td>
             <td>:</td>
-            <td><b>${settings.symbol}${allTransactions[index].subtotal}</b></td>
+            <td><b>${settings.symbol}${parseFloat(allTransactions[index].subtotal).toFixed(2)}</b></td>
         </tr>
         <!--<tr>
             <td>Descuento</td>
             <td>:</td>
             <td>${discount > 0 ? settings.symbol + parseFloat(allTransactions[index].discount).toFixed(2) : ''}</td>
         </tr>-->
-        
+
         ${tax_row}
-    
+
         <tr>
             <td><h3>Total</h3></td>
             <td><h3>:</h3></td>
@@ -2506,14 +2659,17 @@ $.fn.viewTransaction = function (index) {
          </p>
         </div>`;
 
-    // obtener qr
-    try {
-        $.get(api + 'transactions/' + allTransactions[index]._id + '/qr', function(data){
-            $('#viewTransaction table').after('<br /><div style="text-align: center;">' + data + '</div>')
-            receipt += '<br /><div style="text-align: center;">' + data + '</div>';
-        });
-    } catch (error) {
-        console.log(error)
+    if (allTransactions[index].document_type.code === '01' || allTransactions[index].document_type.code === '03') {
+        // obtener qr
+        try {
+            $.get(api + 'transactions/' + allTransactions[index]._id + '/qr', function (data) {
+                // $('#viewTransaction table').after('<br /><div style="text-align: center;">' + data + '</div>')
+                $('#viewTransaction table').first().after('<br /><div style="text-align: center;"><img src="' + data + '" /></div>')
+                receipt += '<br /><div style="text-align: center;">' + data + '</div>';
+            });
+        } catch (error) {
+            console.log(error)
+        }
     }
 
 
@@ -2527,12 +2683,12 @@ $.fn.viewTransaction = function (index) {
 
 $.fn.viewLogs = function (index) {
     let id = allTransactions[index]._id;
-    
+
 
     $.ajax({
         type: 'GET',
         url: api + "logs/by-transaction?id=" + id
-    }).done(function(data){
+    }).done(function (data) {
 
         $('#viewLogs table tbody').html('');
         $("#logsModal h4").html('Historial <b>' + allTransactions[index].serie + '-' + allTransactions[index].correlative + '</b>')
@@ -2565,7 +2721,7 @@ function downloadp(filename, data) {
 }
 
 
-$.fn.downloadXML = function(index) {
+$.fn.downloadXML = function (index) {
     let id = allTransactions[index]._id;
     let serie = allTransactions[index].serie;
     let correlative = allTransactions[index].correlative;
@@ -2573,28 +2729,28 @@ $.fn.downloadXML = function(index) {
     $.ajax({
         type: 'GET',
         url: api + "transactions/" + id + "/xml"
-    }).done(function(data){
+    }).done(function (data) {
         downloadx(serie + '-' + correlative + '.xml', data)
     })
 }
 
-$.fn.downloadPDF = function(index) {
+$.fn.downloadPDF = function (index) {
     let id = allTransactions[index]._id;
     let serie = allTransactions[index].serie;
     let correlative = allTransactions[index].correlative;
 
     $.ajax({
         xhrFields: {
-           responseType: 'blob' 
+            responseType: 'blob'
         },
-        type:'GET',
-        url:api + "transactions/" + id + "/pdf"
-    }).done(function(data){
+        type: 'GET',
+        url: api + "transactions/" + id + "/pdf"
+    }).done(function (data) {
         downloadp(serie + '-' + correlative + '.pdf', data)
     });
 }
 
-$.fn.downloadCDR = function(index) {
+$.fn.downloadCDR = function (index) {
     let data = '';
     let serie = allTransactions[index].serie;
     let correlative = allTransactions[index].correlative;
@@ -2604,14 +2760,14 @@ $.fn.downloadCDR = function(index) {
     } else if (allTransactions[index].document_type.code === '01') {
         data = allTransactions[index].sunat_response.cdrZip;
     }
-    
+
     var element = document.createElement('a');
     element.setAttribute('href', 'data:text/plain;base64,' + data);
     element.setAttribute('download', serie + '-' + correlative + '.zip');
     element.click();
 }
 
-$.fn.sendVoided = async function(index) {
+$.fn.sendVoided = async function (index) {
     let confirmation = await Swal.fire({
         title: "¿Comunicar Baja?",
         text: "Esto comunicará el documento a SUNAT para su baja.",
@@ -2627,7 +2783,7 @@ $.fn.sendVoided = async function(index) {
     }
 
     let id = allTransactions[index]._id;
-    
+
     if (allTransactions[index].sunat_state === 'null') {
         return Swal.fire(
             '¡Ups!',
@@ -2639,14 +2795,14 @@ $.fn.sendVoided = async function(index) {
     $.ajax({
         type: 'POST',
         url: api + "transactions/voided/" + id
-    }).done(function(data){
+    }).done(function (data) {
         if (data.sunatResponse.success) {
             Swal.fire(
                 '¡Solicitud de comunicación de Baja!',
                 'Ticket generado: ' + data.sunatResponse.ticket,
                 'success'
             )
-            
+
             loadTransactions();
         } else {
             Swal.fire(
@@ -2664,7 +2820,7 @@ $.fn.sendVoided = async function(index) {
     })
 }
 
-$.fn.statusVoided = async function(index) {
+$.fn.statusVoided = async function (index) {
     let confirmation = await Swal.fire({
         title: "¿Consultar Estado de Baja?",
         text: "Esto consultará el estado de la comunicación de baja.",
@@ -2678,14 +2834,14 @@ $.fn.statusVoided = async function(index) {
     if (!confirmation.isConfirmed) {
         return;
     }
-    
+
     let id = allTransactions[index]._id;
-    
+
     $.ajax({
         type: 'POST',
         url: api + "transactions/voided/" + id + "/status"
-    }).done(function(data){
-        
+    }).done(function (data) {
+
         if (data.success) {
             Swal.fire(
                 '¡Comunicación de Baja!',
@@ -2712,7 +2868,7 @@ $.fn.statusVoided = async function(index) {
     })
 }
 
-$.fn.resend = async function(index) {
+$.fn.resend = async function (index) {
     let confirmation = await Swal.fire({
         title: "¿Desea volver a enviar el comprobante?",
         text: "Esto enviará un resumen diario en caso de boletas y para facturas el envío será directo.",
@@ -2737,18 +2893,18 @@ $.fn.resend = async function(index) {
 
     let id = allTransactions[index]._id;
 
-    if(allTransactions[index].document_type.code === '03') {
+    if (allTransactions[index].document_type.code === '03') {
         $.ajax({
             type: 'POST',
             url: api + "transactions/summary/" + id
-        }).done(function(data) {
+        }).done(function (data) {
             if (data.sunatResponse.success) {
                 Swal.fire(
                     '¡Resumen Diario!',
                     'Ticket generado: ' + data.sunatResponse.ticket,
                     'success'
                 )
-                
+
                 loadTransactions();
             } else {
                 Swal.fire(
@@ -2764,18 +2920,18 @@ $.fn.resend = async function(index) {
                 'error'
             );
         })
-    } else if(allTransactions[index].document_type.code === '01') {
+    } else if (allTransactions[index].document_type.code === '01') {
         $.ajax({
             type: 'POST',
             url: api + "transactions/invoice/" + id
-        }).done(function(data) {
+        }).done(function (data) {
             if (data.sunatResponse.success) {
                 Swal.fire(
                     '¡Comprobante Electrónico!',
                     data.sunatResponse.cdrResponse.code + '|' + data.sunatResponse.cdrResponse.description + '<br /><br />' + data.sunatResponse.cdrResponse.notes.toString(),
                     'success'
                 )
-                
+
                 loadTransactions();
             } else {
                 Swal.fire(
@@ -2795,7 +2951,7 @@ $.fn.resend = async function(index) {
 
 }
 
-$.fn.sendSummaryNullable = async function(index) {
+$.fn.sendSummaryNullable = async function (index) {
     let confirmation = await Swal.fire({
         title: "¿Desea Anular el comprobante?",
         text: "Esto enviará un resumen diario para anular el comprobante.",
@@ -2811,7 +2967,7 @@ $.fn.sendSummaryNullable = async function(index) {
     }
 
     let id = allTransactions[index]._id;
-    
+
     if (allTransactions[index].sunat_state === 'null') {
         return Swal.fire(
             '¡Ups!',
@@ -2823,19 +2979,19 @@ $.fn.sendSummaryNullable = async function(index) {
     $.ajax({
         type: 'POST',
         url: api + "transactions/set-nullable/" + id
-    }).done(function(data){
+    }).done(function (data) {
 
         $.ajax({
             type: 'POST',
             url: api + "transactions/summary/" + id
-        }).done(function(data) {
+        }).done(function (data) {
             if (data.sunatResponse.success) {
                 Swal.fire(
                     '¡Resumen Diario!',
                     'Ticket generado: ' + data.sunatResponse.ticket,
                     'success'
                 )
-                
+
                 loadTransactions();
             } else {
                 Swal.fire(
@@ -2860,7 +3016,7 @@ $.fn.sendSummaryNullable = async function(index) {
     })
 }
 
-$.fn.statusSummary = async function(index) {
+$.fn.statusSummary = async function (index) {
     let confirmation = await Swal.fire({
         title: "¿Consultar Estado de Resumen?",
         text: "Esto consultará el estado del resumen diario.",
@@ -2874,14 +3030,14 @@ $.fn.statusSummary = async function(index) {
     if (!confirmation.isConfirmed) {
         return;
     }
-    
+
     let id = allTransactions[index]._id;
-    
+
     $.ajax({
         type: 'POST',
         url: api + "transactions/summary/" + id + "/status"
-    }).done(function(data){
-        
+    }).done(function (data) {
+
         if (data.success) {
             Swal.fire(
                 '¡Resumen Diario!',
@@ -2908,6 +3064,82 @@ $.fn.statusSummary = async function(index) {
     })
 }
 
+$.fn.exportBackup = async function () {
+
+    let confirmation = await Swal.fire({
+        title: "¿Desea generar una copia de seguridad?",
+        text: "Esto descargará un archivo zip que contiene toda su base de datos",
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: '¡Sí, Descargar!'
+    })
+
+    if (!confirmation.isConfirmed) {
+        return;
+    }
+
+    location.href = api + "settings/export";
+    // $.ajax({
+    //     xhrFields: {
+    //        responseType: 'blob'
+    //     },
+    //     type:'GET',
+    //     url:api + "settings/export"
+    // }).done(function(data){
+    //     console.log(data)
+    // });
+}
+
+$.fn.importBackup = async function () {
+    Swal.fire({
+        title: '¿Desea realizar una importacíón?',
+        html: 'Esto reemplazará la base de datos actual. Se recomienda hacer una copia de seguridad antes. <br/><br/>Seleccione un archivo zip.',
+        icon: 'question',
+        input: 'file',
+        inputAttributes: {
+            autocapitalize: 'off'
+        },
+        showCancelButton: true,
+        confirmButtonText: 'Importar',
+        cancelButtonText: 'Cancelar',
+        showLoaderOnConfirm: true,
+        preConfirm: (zip) => {
+
+            if (!zip) {
+                return false;
+            }
+
+            let formData = new FormData();
+            formData.append("file", zip);
+
+            return fetch(api + 'settings/import', { method: "POST", body: formData })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(response.statusText)
+                    }
+                    return response;
+                })
+                .catch(error => {
+                    Swal.showValidationMessage(
+                        `La importación ha falladdo: ${error}`
+                    )
+                })
+        },
+        allowOutsideClick: () => !Swal.isLoading()
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            await Swal.fire({
+                title: `Base de datos importada`
+            })
+            storage.delete('auth');
+            storage.delete('user');
+            ipcRenderer.send('app-relaunch', '');
+        }
+    })
+}
+
 
 $('#status').change(function () {
     by_status = $(this).find('option:selected').val();
@@ -2925,6 +3157,27 @@ $('#tills').change(function () {
 $('#users').change(function () {
     by_user = $(this).find('option:selected').val();
     loadTransactions();
+});
+
+$('#customer').change(function () {
+    let id = $('#customer').val();
+
+    if (id) {
+        $.get(api + 'customers/customer/' + id, function (customer) {
+            customerSelected = customer;
+
+            if (customer.document_type.number === '00000000' && customer.document_type.code === '0') {
+                $('#overWrite').show();
+            } else {
+                $('#overWrite').hide();
+                $('#overWrite').val('');
+            }
+        });
+    } else {
+        $('#overWrite').hide();
+        $('#overWrite').val('');
+    }
+
 });
 
 
@@ -3011,3 +3264,16 @@ $('#quit').click(function () {
 });
 
 
+// Events
+varWindowEventListenerSet('holdOrder', (oldVal, newVal) => {
+    if (newVal) {
+      $('#card-box').css('background-color', '#fff3f3');
+      $('#card-box .ribbon').show();
+
+      let order = holdOrderList.find(order => order._id === newVal);
+      $('#card-box .ribbon a').text(order.ref_number);
+    } else{
+      $('#card-box').css('background-color', '');
+      $('#card-box .ribbon').hide();
+    }
+})

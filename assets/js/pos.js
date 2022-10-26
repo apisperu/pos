@@ -2350,22 +2350,22 @@ function loadTransactions() {
                                             <span class="glyphicon glyphicon-option-vertical" aria-hidden="true"></span>
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-right">
-                                            <li><a href="#" onClick="$(this).viewTransaction('${index}')">Reimprimir</a></li>                                            <li role="separator" class="divider"></li>
-                                            <li><a href="#" onClick="$(this).downloadXML('${index}')">Descargar XML</a></li>
-                                            <li><a href="#" onClick="$(this).downloadPDF('${index}')">Descargar PDF</a></li>
-                                            <li><a href="#" onClick="$(this).downloadCDR('${index}')">Descargar CDR</a></li>
+                                            <li><a onClick="$(this).viewTransaction('${index}')">Reimprimir</a></li>                                            <li role="separator" class="divider"></li>
+                                            <li><a onClick="$(this).downloadXML('${index}')">Descargar XML</a></li>
+                                            <li><a onClick="$(this).downloadPDF('${index}')">Descargar PDF</a></li>
+                                            <li><a onClick="$(this).downloadCDR('${index}')">Descargar CDR</a></li>
                                             <li role="separator" class="divider"></li>
-                                            <!--<li><a href="#">Cambiar Estado</a></li>-->
-                                            ${trans.sunat_state !== 'success' && trans.sunat_state !== 'null' ? '<li><a href="#" onClick="$(this).resend(' + index + ')">Reenviar a Sunat</a></li> <li role="separator" class="divider"></li>' : ''}
+                                            <!--<li><a>Cambiar Estado</a></li>-->
+                                            ${trans.sunat_state !== 'success' && trans.sunat_state !== 'null' ? '<li><a onClick="$(this).resend(' + index + ')">Reenviar a Sunat</a></li> <li role="separator" class="divider"></li>' : ''}
 
-                                            ${trans.document_type.code === '01' && trans.sunat_state !== 'null' ? '<li><a href="#" onClick="$(this).sendVoided(' + index + ')">Comunicar Baja</a></li>' : ''}
-                                            ${trans.document_type.code === '01' ? '<li><a href="#" onClick="$(this).statusVoided(' + index + ')">Consultar Estado de Baja</a></li>' : ''}
+                                            ${trans.document_type.code === '01' && trans.sunat_state !== 'null' ? '<li><a onClick="$(this).sendVoided(' + index + ')">Comunicar Baja</a></li>' : ''}
+                                            ${trans.document_type.code === '01' ? '<li><a onClick="$(this).statusVoided(' + index + ')">Consultar Estado de Baja</a></li>' : ''}
 
-                                            ${trans.document_type.code === '03' && trans.sunat_state !== 'null' ? '<li><a href="#" onClick="$(this).sendSummaryNullable(' + index + ')">Anular Mediante Resumen</a></li><li role="separator" class="divider"></li>' : ''}
-                                            ${trans.document_type.code === '03' ? '<li><a href="#" onClick="$(this).statusSummary(' + index + ')">Consultar Estado de Resumen</a></li>' : ''}
+                                            ${trans.document_type.code === '03' && trans.sunat_state !== 'null' ? '<li><a onClick="$(this).sendSummaryNullable(' + index + ')">Anular Mediante Resumen</a></li><li role="separator" class="divider"></li>' : ''}
+                                            ${trans.document_type.code === '03' ? '<li><a onClick="$(this).statusSummary(' + index + ')">Consultar Estado de Resumen</a></li>' : ''}
 
                                             <li role="separator" class="divider"></li>
-                                            <li><a href="#"  onClick="$(this).viewLogs(${index})">Logs</a></li>
+                                            <li><a  onClick="$(this).viewLogs(${index})">Logs</a></li>
 
                                         </ul>
                                     </div>

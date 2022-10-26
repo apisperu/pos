@@ -459,6 +459,7 @@ a:focus {
   box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
 }
 .dropdown-menu > li > a {
+  cursor: pointer;
   padding: 6px 20px;
 }
 .dropdown-menu > .active > a,

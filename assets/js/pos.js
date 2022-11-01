@@ -971,7 +971,7 @@ if (auth == undefined) {
                             $.get(api + 'transactions/' + data._id + '/qr', function (data) {
                                 // $('#viewTransaction table').after('<br /><div style="text-align: center;">' + data + '</div>')
                                 $('#viewTransaction table').first().after('<br /><div style="text-align: center;"><img src="' + data + '" /></div>')
-                                receipt += '<br /><div style="text-align: center;">' + data + '</div>';
+                                receipt += '<br /><div style="text-align: center;"><img src="' + data + '" /></div>';
                             });
                         } catch (error) {
                             console.log(error)
@@ -2159,8 +2159,7 @@ if (auth == undefined) {
 
 
 $.fn.print = function () {
-
-    printJS({ printable: receipt, type: 'raw-html' });
+    printJS({ printable: receipt.replace(/\s+/g, ''), type: 'raw-html' });
 
 }
 
@@ -2665,7 +2664,7 @@ $.fn.viewTransaction = function (index) {
             $.get(api + 'transactions/' + allTransactions[index]._id + '/qr', function (data) {
                 // $('#viewTransaction table').after('<br /><div style="text-align: center;">' + data + '</div>')
                 $('#viewTransaction table').first().after('<br /><div style="text-align: center;"><img src="' + data + '" /></div>')
-                receipt += '<br /><div style="text-align: center;">' + data + '</div>';
+                receipt += '<br /><div style="text-align: center;"><img src="' + data + '" /></div>';
             });
         } catch (error) {
             console.log(error)

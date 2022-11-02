@@ -843,7 +843,7 @@ if (auth == undefined) {
 
             receipt = `<div style="font-size: 10px;">
         <p style="text-align: center;">
-        ${settings.img == "" ? settings.img : '<img style="max-width: 50px;max-width: 100px;" src ="' + settings.logo + '" /><br>'}
+        ${settings.logo ? '<img style="max-width: 50px;max-width: 100px;" src ="' + settings.logo + '" /><br>' : ''}
             <span style="font-size: 22px;">${settings.legal_name}</span> <br>
             ${settings.address.street} ${settings.address.district} ${settings.address.city} ${settings.address.state}<br>
             ${settings.contact != '' ? 'Teléfono: ' + settings.contact + '<br>' : ''}
@@ -2159,7 +2159,7 @@ if (auth == undefined) {
 
 
 $.fn.print = function () {
-    printJS({ printable: receipt.replace(/\s+/g, ''), type: 'raw-html' });
+    printJS({ printable: receipt.replace(/(\r\n|\n|\r)/gm, ""), type: 'raw-html' });
 
 }
 
@@ -2596,7 +2596,7 @@ $.fn.viewTransaction = function (index) {
 
     receipt = `<div style="font-size: 10px;">
         <p style="text-align: center;">
-        ${settings.img == "" ? settings.img : '<img style="max-width: 50px;max-width: 100px;" src ="' + settings.logo + '" /><br>'}
+        ${settings.logo ? '<img style="max-width: 50px;max-width: 100px;" src ="' + settings.logo + '" /><br>' : ''}
             <span style="font-size: 17px;">${settings.legal_name}</span> <br>
             ${settings.address.street} ${settings.address.district} ${settings.address.city} ${settings.address.state} <br>
             ${settings.contact != '' ? 'Teléfono: ' + settings.contact + '<br>' : ''}

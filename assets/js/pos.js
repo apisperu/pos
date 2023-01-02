@@ -38,7 +38,6 @@ let html2canvas = require('html2canvas');
 let JsBarcode = require('jsbarcode');
 let macaddress = require('macaddress');
 const { exit } = require('process');
-const { showCompletionScript } = require('yargs');
 let categories = [];
 let holdOrderList = [];
 let customerOrderList = [];
@@ -2355,8 +2354,6 @@ function loadTransactions() {
                                             <li><a onClick="$(this).downloadCDR('${index}')">Descargar CDR</a></li>
                                             <li role="separator" class="divider"></li>
                                             <!--<li><a>Cambiar Estado</a></li>-->
-                                            
-
                                             ${trans.sunat_state !== 'success' && trans.sunat_state !== 'null' ? '<li><a onClick="$(this).resend(' + index + ')">Reenviar a Sunat</a></li> <li role="separator" class="divider"></li>' : ''}
 
                                             ${trans.document_type.code === '01' && trans.sunat_state !== 'null' ? '<li><a onClick="$(this).sendVoided(' + index + ')">Comunicar Baja</a></li>' : ''}
@@ -2366,9 +2363,7 @@ function loadTransactions() {
                                             ${trans.document_type.code === '03' ? '<li><a onClick="$(this).statusSummary(' + index + ')">Consultar Estado de Resumen</a></li>' : ''}
                                             
                                             <li><a  onClick="$(this).changeStatus(${index})">Cambiar Estado</a></li>
-
                                             <li role="separator" class="divider"></li>
-                                            
                                             <li><a  onClick="$(this).viewLogs(${index})">Logs</a></li>
 
                                         </ul>
@@ -3286,11 +3281,9 @@ $.fn.changeStatus = async function (index) {
         if (result.isConfirmed) {
 
            let statusTransaction = $("#statusTransaction").val();
-           //console.log(statusTransaction);
            let id = allTransactions[index]._id;
-
-            let data ={
-                status: parseInt($("#statusTransaction").val()),
+           let data ={
+            status: parseInt($("#statusTransaction").val()),
             }
 
             $.ajax({
@@ -3299,19 +3292,15 @@ $.fn.changeStatus = async function (index) {
                 data: JSON.stringify(data),
                 contentType: 'application/json; charset=utf-8',
                 success: function(data){
-                    console.log(data)
                     Swal.fire('Guardado!', '', 'success')
                 }
             });
             
-          //Swal.fire('Guardado!', '', 'success')
-
         } else{
           Swal.fire('Los cambios no se guardaron', '', 'info')
         }
       })
-   
-}
+   }
 
 // Events
 varWindowEventListenerSet('holdOrder', (oldVal, newVal) => {

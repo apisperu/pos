@@ -280,20 +280,20 @@ app.post( "/delete", function ( req, res ) {
   });
 
 });
-app.put("/:transactionId", function(req, res){
-  let id = req.params.transactionId;
-  let newStatus = req.body;
-  //console.log(req.body.status)
 
-  transactionsDB.get(id).then(function(trans){
-    return transactionsDB.put({
-      ...trans,
-    status: req.body.status
+app.put("/:transactionId", function(req, res){
+    let id = req.params.transactionId;
+    let newStatus = req.body;
+
+    transactionsDB.get(id).then(function(trans){
+        return transactionsDB.put({
+        ...trans,
+        status: req.body.status
   });
     }).then(function(response) {
-    res.sendStatus( 200 );
+        res.sendStatus( 200 );
     }).catch(function (err) {
-    res.status( 500 ).send( err );
+        res.status( 500 ).send( err );
     console.log(err);
     });
   });

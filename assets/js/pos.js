@@ -30,8 +30,7 @@ let Swal = require('sweetalert2');
 let { ipcRenderer } = require('electron');
 let dotInterval = setInterval(function () { $(".dot").text('.') }, 3000);
 let Store = require('electron-store');
-const remote = require('electron').remote;
-const app = remote.app;
+
 let api = 'http://' + host + ':' + port + '/api/';
 let btoa = require('btoa');
 let jsPDF = require('jspdf');
@@ -39,6 +38,7 @@ let html2canvas = require('html2canvas');
 let JsBarcode = require('jsbarcode');
 let macaddress = require('macaddress');
 const { exit } = require('process');
+const { showCompletionScript } = require('yargs');
 let categories = [];
 let holdOrderList = [];
 let customerOrderList = [];
@@ -289,6 +289,7 @@ if (auth == undefined) {
                 });
             });
         }
+        
 
         function loadCustomers() {
 
@@ -455,8 +456,7 @@ if (auth == undefined) {
                 barcodeSearch(e);
             }
         });
-
-
+        
 
         $.fn.addProductToCart = function (data) {
             item = {
@@ -2355,6 +2355,8 @@ function loadTransactions() {
                                             <li><a onClick="$(this).downloadCDR('${index}')">Descargar CDR</a></li>
                                             <li role="separator" class="divider"></li>
                                             <!--<li><a>Cambiar Estado</a></li>-->
+                                            
+
                                             ${trans.sunat_state !== 'success' && trans.sunat_state !== 'null' ? '<li><a onClick="$(this).resend(' + index + ')">Reenviar a Sunat</a></li> <li role="separator" class="divider"></li>' : ''}
 
                                             ${trans.document_type.code === '01' && trans.sunat_state !== 'null' ? '<li><a onClick="$(this).sendVoided(' + index + ')">Comunicar Baja</a></li>' : ''}
@@ -2362,8 +2364,11 @@ function loadTransactions() {
 
                                             ${trans.document_type.code === '03' && trans.sunat_state !== 'null' ? '<li><a onClick="$(this).sendSummaryNullable(' + index + ')">Anular Mediante Resumen</a></li><li role="separator" class="divider"></li>' : ''}
                                             ${trans.document_type.code === '03' ? '<li><a onClick="$(this).statusSummary(' + index + ')">Consultar Estado de Resumen</a></li>' : ''}
+                                            
+                                            <li><a  onClick="$(this).changeStatus(${index})">Cambiar Estado</a></li>
 
                                             <li role="separator" class="divider"></li>
+                                            
                                             <li><a  onClick="$(this).viewLogs(${index})">Logs</a></li>
 
                                         </ul>
@@ -2371,6 +2376,8 @@ function loadTransactions() {
                                 </td>
                                 </tr>
                     `;
+
+                    
 
                 if (counter == transactions.length) {
                     $('#total_sales #counter').text(settings.symbol + parseFloat(sales).toFixed(2));
@@ -2790,7 +2797,7 @@ $.fn.sendVoided = async function (index) {
             'error'
         )
     }
-
+    
     $.ajax({
         type: 'POST',
         url: api + "transactions/voided/" + id
@@ -3262,6 +3269,49 @@ $('#quit').click(function () {
     });
 });
 
+//Cambiar estado
+
+$.fn.changeStatus = async function (index) {
+
+    let confirmation = await Swal.fire({
+        
+        title: '<h3>Cambiar Estado</h3>',
+        html:'<select id="statusTransaction" form="carform" class="form-control"> <option value="1">Pendiente</option><option value="2">Emitido</option><option value="0">Anulado</option></select>',
+        //showDenyButton: true,
+        showCancelButton: true,
+        confirmButtonText: 'Guardar'
+       
+      }).then((result) => {
+        /* Read more about isConfirmed, isDenied below */
+        if (result.isConfirmed) {
+
+           let statusTransaction = $("#statusTransaction").val();
+           //console.log(statusTransaction);
+           let id = allTransactions[index]._id;
+
+            let data ={
+                status: parseInt($("#statusTransaction").val()),
+            }
+
+            $.ajax({
+                type: 'put',
+                url: api + "transactions/" + id,
+                data: JSON.stringify(data),
+                contentType: 'application/json; charset=utf-8',
+                success: function(data){
+                    console.log(data)
+                    Swal.fire('Guardado!', '', 'success')
+                }
+            });
+            
+          //Swal.fire('Guardado!', '', 'success')
+
+        } else{
+          Swal.fire('Los cambios no se guardaron', '', 'info')
+        }
+      })
+   
+}
 
 // Events
 varWindowEventListenerSet('holdOrder', (oldVal, newVal) => {
@@ -3275,4 +3325,4 @@ varWindowEventListenerSet('holdOrder', (oldVal, newVal) => {
       $('#card-box').css('background-color', '');
       $('#card-box .ribbon').hide();
     }
-})
+});

@@ -283,12 +283,11 @@ app.post( "/delete", function ( req, res ) {
 
 app.put("/:transactionId", function(req, res){
     let id = req.params.transactionId;
-    let newStatus = req.body;
-
+    
     transactionsDB.get(id).then(function(trans){
         return transactionsDB.put({
         ...trans,
-        status: req.body.status
+        sunat_state: req.body.sunat_state
   });
     }).then(function(response) {
         res.sendStatus( 200 );

@@ -2362,7 +2362,7 @@ function loadTransactions() {
                                             ${trans.document_type.code === '03' && trans.sunat_state !== 'null' ? '<li><a onClick="$(this).sendSummaryNullable(' + index + ')">Anular Mediante Resumen</a></li><li role="separator" class="divider"></li>' : ''}
                                             ${trans.document_type.code === '03' ? '<li><a onClick="$(this).statusSummary(' + index + ')">Consultar Estado de Resumen</a></li>' : ''}
                                             
-                                            <li><a  onClick="$(this).changeStatus(${index})">Cambiar Estado</a></li>
+                                            <li><a  onClick="$(this).changeStatusSunat(${index})">Estado de Sunat</a></li>
                                             <li role="separator" class="divider"></li>
                                             <li><a  onClick="$(this).viewLogs(${index})">Logs</a></li>
 
@@ -3266,41 +3266,33 @@ $('#quit').click(function () {
 
 //Cambiar estado
 
-$.fn.changeStatus = async function (index) {
+$.fn.changeStatusSunat = async function (index) {
 
     let confirmation = await Swal.fire({
-        
-        title: '<h3>Cambiar Estado</h3>',
-        html:'<select id="statusTransaction" form="carform" class="form-control"> <option value="1">Pendiente</option><option value="2">Emitido</option><option value="0">Anulado</option></select>',
+        title: '<h3>Estado de Sunat</h3>',
+        html:'<select id="statusTransactionSunat" form="carform" class="form-control"> <option >Seleccione una opción</option> <option id="aceptado" value="success">Aceptado</option><option id="porAnular" value="nullable">Por Anular</option><option id="anulado" value="null">Anulado</option><option id="observado" value="observed">Observado</option><option id="enviado" value="send">Enviado</option></select>',
         //showDenyButton: true,
         showCancelButton: true,
         confirmButtonText: 'Guardar'
-       
-      }).then((result) => {
-        /* Read more about isConfirmed, isDenied below */
+    }).then((result) => {
         if (result.isConfirmed) {
-
-           let statusTransaction = $("#statusTransaction").val();
-           let id = allTransactions[index]._id;
-           let data ={
-            status: parseInt($("#statusTransaction").val()),
+            let id = allTransactions[index]._id;
+            let data ={
+                sunat_state: $("#statusTransactionSunat").val(),
             }
-
             $.ajax({
                 type: 'put',
                 url: api + "transactions/" + id,
                 data: JSON.stringify(data),
                 contentType: 'application/json; charset=utf-8',
                 success: function(data){
-                    Swal.fire('Guardado!', '', 'success')
+                    Swal.fire('Guardado!', '', 'success');
+                    loadTransactions();
                 }
             });
-            
-        } else{
-          Swal.fire('Los cambios no se guardaron', '', 'info')
         }
-      })
-   }
+    })
+}
 
 // Events
 varWindowEventListenerSet('holdOrder', (oldVal, newVal) => {

@@ -297,6 +297,21 @@ app.put("/:transactionId", function(req, res){
     });
   });
 
+app.delete( "/transaction/:transactionId", function ( req, res ) {
+  let id = req.params.transactionId;
+
+  transactionsDB.get(id).then(function(response) {
+    return transactionsDB.remove(response);
+  }).then(function (result) {
+    res.sendStatus( 200 );
+  }).catch(function (err) {
+    res.status( 500 ).send( err );
+    console.log(err);
+  });
+} ); 
+
+
+
 app.get("/:transactionId", function(req, res) {
   transactionsDB.find({ _id: req.params.transactionId }, function(err, doc) {
     if (doc) res.send(doc[0]);

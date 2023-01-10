@@ -2353,7 +2353,7 @@ function loadTransactions() {
                                             <li><a onClick="$(this).downloadPDF('${index}')">Descargar PDF</a></li>
                                             <li><a onClick="$(this).downloadCDR('${index}')">Descargar CDR</a></li>
                                             <li role="separator" class="divider"></li>
-                                            <!--<li><a>Cambiar Estado</a></li>-->
+                                            <li><a  onClick="$(this).changeStatusSunat(${index})">Camiar Estado de Sunat</a></li>
                                             ${trans.sunat_state !== 'success' && trans.sunat_state !== 'null' ? '<li><a onClick="$(this).resend(' + index + ')">Reenviar a Sunat</a></li> <li role="separator" class="divider"></li>' : ''}
 
                                             ${trans.document_type.code === '01' && trans.sunat_state !== 'null' ? '<li><a onClick="$(this).sendVoided(' + index + ')">Comunicar Baja</a></li>' : ''}
@@ -2362,10 +2362,9 @@ function loadTransactions() {
                                             ${trans.document_type.code === '03' && trans.sunat_state !== 'null' ? '<li><a onClick="$(this).sendSummaryNullable(' + index + ')">Anular Mediante Resumen</a></li><li role="separator" class="divider"></li>' : ''}
                                             ${trans.document_type.code === '03' ? '<li><a onClick="$(this).statusSummary(' + index + ')">Consultar Estado de Resumen</a></li>' : ''}
                                             
-                                            <li><a  onClick="$(this).changeStatusSunat(${index})">Estado de Sunat</a></li>
                                             <li role="separator" class="divider"></li>
-                                            <li><a  onClick="$(this).viewLogs(${index})">Logs</a></li>
-
+                                            <li><a onClick="$(this).viewLogs(${index})">Logs</a></li>
+                                            <li><a onClick="$(this).removeTransaction(${index})">Eliminar Transacción</a></li>
                                         </ul>
                                     </div>
                                 </td>
@@ -2429,6 +2428,9 @@ function loadTransactions() {
             });
         }
         else {
+            $('#transaction_list').empty();
+            $('#transactionList').DataTable().destroy();
+
             Swal.fire(
                 '¡Sin datos!',
                 'No hay transacciones disponibles dentro de los criterios seleccionados',
@@ -3141,6 +3143,49 @@ $.fn.importBackup = async function () {
     })
 }
 
+$.fn.removeTransaction = async function (index) {
+    let confirmation = await Swal.fire({
+        title: "¿Eliminar transacción?",
+        text: "Esta acción es irreversible y elimirá definitivamente la transacción.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: '¡Sí, Eliminar!'
+    })
+
+    if (!confirmation.isConfirmed) {
+        return;
+    }
+
+    let transaction = allTransactions[index];
+
+    if (transaction.sunat_state && transaction.sunat_state !== 'pending') {
+        Swal.fire(
+            '¡Error!',
+            'Solo se pueden eliminar las transacciones pendientes de emisión.',
+            'error'
+        );
+        return;
+    }
+
+    let id = transaction._id;
+    
+    $.ajax({
+        url: api + 'transactions/transaction/' + id,
+        type: 'DELETE',
+        success: function (result) {
+            Swal.fire(
+                '¡Hecho!',
+                'Transacción eliminada',
+                'success'
+            ).then(result => {
+                loadTransactions();
+            });
+        }
+    });
+}
+
 
 $('#status').change(function () {
     by_status = $(this).find('option:selected').val();
@@ -3270,7 +3315,7 @@ $.fn.changeStatusSunat = async function (index) {
 
     let confirmation = await Swal.fire({
         title: '<h3>Estado de Sunat</h3>',
-        html:'<select id="statusTransactionSunat" form="carform" class="form-control"> <option >Seleccione una opción</option> <option id="aceptado" value="success">Aceptado</option><option id="porAnular" value="nullable">Por Anular</option><option id="anulado" value="null">Anulado</option><option id="observado" value="observed">Observado</option><option id="enviado" value="send">Enviado</option></select>',
+        html:'<select id="statusTransactionSunat" form="carform" class="form-control"> <option >Seleccione una opción</option> <option value="pending">Pendiente</option> <option value="success">Aceptado</option> <option value="nullable">Por Anular</option><option value="null">Anulado</option><option value="observed">Observado</option><option value="send">Enviado</option></select>',
         //showDenyButton: true,
         showCancelButton: true,
         confirmButtonText: 'Guardar'

@@ -1734,11 +1734,13 @@ if (auth == undefined) {
                     $('#product_list').html(product_list);
                     products.forEach(pro => {
                         pro = pro.doc;
-                        $("#" + pro._id + "").JsBarcode(pro.barcode, {
-                            width: 2,
-                            height: 25,
-                            fontSize: 14
-                        });
+                        if (pro.barcode) {
+                            $("#" + pro._id + "").JsBarcode(pro.barcode, {
+                                width: 2,
+                                height: 25,
+                                fontSize: 14
+                            });
+                        }
                     });
 
                     $('#productList').DataTable({

@@ -61,6 +61,7 @@ let by_till = 0;
 let by_user = 0;
 let by_status = 1;
 
+window.storage = storage
 // definir variables que permitan escuchar eventos (get, set)
 varWindow('holdOrder');
 varWindow('customerSelected');
@@ -82,13 +83,27 @@ $(function () {
         timePickerSeconds: true,
         // minDate: '',
         ranges: {
-            'Today': [moment().startOf('day'), moment()],
-            'Yesterday': [moment().subtract(1, 'days').startOf('day'), moment().subtract(1, 'days').endOf('day')],
-            'Last 7 Days': [moment().subtract(6, 'days').startOf('day'), moment().endOf('day')],
-            'Last 30 Days': [moment().subtract(29, 'days').startOf('day'), moment().endOf('day')],
-            'This Month': [moment().startOf('month'), moment().endOf('month')],
-            'This Month': [moment().startOf('month'), moment()],
-            'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+            'Hoy': [moment().startOf('day'), moment()],
+            'Ayer': [moment().subtract(1, 'days').startOf('day'), moment().subtract(1, 'days').endOf('day')],
+            'Últimos 7 días': [moment().subtract(6, 'days').startOf('day'), moment().endOf('day')],
+            'Últimos 30 días': [moment().subtract(29, 'days').startOf('day'), moment().endOf('day')],
+            'Este mes': [moment().startOf('month'), moment().endOf('month')],
+            'Este mes': [moment().startOf('month'), moment()],
+            'El mes pasado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+        },
+        showCustomRangeLabel: true,
+        locale: {
+            applyLabel: 'Aplicar',
+            cancelLabel: 'Cancelar',
+            fromLabel: 'Desde',
+            toLabel: 'Hasta',
+            customRangeLabel: 'Rango Personalizado',
+            daysOfWeek: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+            monthNames: [
+                'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+            ],
+            firstDay: 1
         }
     }, cb);
 
@@ -288,7 +303,7 @@ if (auth == undefined) {
                 });
             });
         }
-        
+
 
         function loadCustomers() {
 
@@ -455,7 +470,7 @@ if (auth == undefined) {
                 barcodeSearch(e);
             }
         });
-        
+
 
         $.fn.addProductToCart = function (data) {
             item = {
@@ -772,7 +787,7 @@ if (auth == undefined) {
 
             if (dataCredit.length && !paid) {
                 let dues = '';
-                
+
                 for (let i = 0; i < dataCredit.length; i++) {
                     let due = dataCredit[i];
                     dues += '<tr>';
@@ -781,7 +796,7 @@ if (auth == undefined) {
                     dues += `<td>${due.amount}</td>`;
                     dues += '</tr>';
                 }
-                
+
                 payment = `<tr>
                             <td>Método</td>
                             <td>:</td>
@@ -949,7 +964,7 @@ if (auth == undefined) {
                 user_id: user._id,
                 document_type: documentType,
             }
-        
+
             data.dues = dataCredit;
 
             if (holdOrderRev) {
@@ -1011,8 +1026,8 @@ if (auth == undefined) {
             $("#refNumber").val('');
             $("#change").text('');
             $("#payment").val('');
-            $("#creditInfo .row.credit").remove(); 
-          
+            $("#creditInfo .row.credit").remove();
+
         }
 
 
@@ -2335,7 +2350,7 @@ function loadTransactions() {
                 transaction_list += `<tr class="${trClass}">
                                 <!--<td>${trans.order}</td>-->
                                 <td class="text-center"><b>${trans.serie}-${trans.correlative}</b></td>
-                                <td class="nobr">${moment(trans.date).format('YYYY MMM DD HH:mm:ss')}</td>
+                                <td class="nobr">${moment(trans.date).format('YYYY-MM-DD HH:mm:ss')}</td>
                                 <td>${settings.symbol + trans.total}</td>
                                 <!--<td>${trans.paid == "" ? "" : settings.symbol + trans.paid}</td>-->
                                 <!--<td>${trans.change ? settings.symbol + Math.abs(trans.change).toFixed(2) : ''}</td>-->
@@ -2373,7 +2388,7 @@ function loadTransactions() {
                                 </tr>
                     `;
 
-                    
+
 
                 if (counter == transactions.length) {
                     $('#total_sales #counter').text(settings.symbol + parseFloat(sales).toFixed(2));
@@ -2415,7 +2430,7 @@ function loadTransactions() {
 
 
                     $('#transaction_list').html(transaction_list);
-                    $('#transactionList').DataTable({
+                    var datatableTransaction = $('#transactionList').DataTable({
                         "order": [[1, "desc"]]
                         , "autoWidth": false
                         , "info": true
@@ -2423,7 +2438,66 @@ function loadTransactions() {
                         , "ordering": true
                         , "paging": true,
                         "dom": 'Bfrtip',
-                        "buttons": ['csv', 'excel', 'pdf',]
+                        "buttons": [
+                            {
+                                extend: 'csv',
+                                text: 'CSV',
+                                customize: function (csv) {
+                                    // Exclude column index 6
+                                    var excludeColumnIndex = 6;
+                                    var lines = csv.split('\n');
+
+                                    // Remove the excluded column from each line
+                                    lines.forEach(function (line, index) {
+                                        var values = line.split(',');
+                                        values.splice(excludeColumnIndex, 1);
+                                        lines[index] = values.join(',');
+                                    });
+
+                                    // Join the modified lines back into CSV string
+                                    var modifiedCsv = lines.join('\n');
+
+                                    var totalSum = datatableTransaction.column(2, { page: 'current' }).data().reduce(function(a, b) {
+                                        a = typeof a === 'number' ? a : a.replace(settings.symbol, '');
+                                        b = typeof b === 'number' ? b : b.replace(settings.symbol, '');
+                                        return parseFloat(a) + parseFloat(b);
+                                    }, 0);
+
+                                    return modifiedCsv + '\n,,' + settings.symbol + totalSum;
+                                }
+                            },
+                            {
+                                extend: 'pdf',
+                                text: 'PDF',
+                                customize: function (doc) {
+                                    var totalSum = datatableTransaction.column(2, { page: 'current' }).data().reduce(function(a, b) {
+                                        a = typeof a === 'number' ? a : a.replace(settings.symbol, '');
+                                        b = typeof b === 'number' ? b : b.replace(settings.symbol, '');
+                                        return parseFloat(a) + parseFloat(b);
+                                    }, 0);
+
+                                    doc.content.push({
+                                        text: 'Total: ' + settings.symbol + totalSum,
+                                        alignment: 'right',
+                                        margin: [0, 0, 0, 10]
+                                    });
+
+                                      
+                                    // Exclude column index 6
+                                    var excludeColumnIndex = 6;
+
+                                    doc.content[1].table.body.forEach(function (row) {
+                                        row.splice(excludeColumnIndex, 1);
+                                    });
+
+                                    // Obtén el número de columnas en la tabla y ajusta quitando una columna
+                                    var columnCount = datatableTransaction.columns().header().length;
+                                    var columnWidths = Array(columnCount - 1).fill('*');
+                                    doc.content[1].table.widths = columnWidths;
+                                }
+                            }
+                        ]
+
 
                     });
                 }
@@ -2521,7 +2595,7 @@ function tillFilter(tills) {
 $.fn.viewTransaction = function (index) {
 
     transaction_index = index;
-    
+
     let discount = allTransactions[index].discount;
     let customer = !allTransactions[index].customer ? 'Seleccione un cliente' : allTransactions[index].customer.username;
     let refNumber = allTransactions[index].ref_number != "" ? allTransactions[index].ref_number : allTransactions[index].order;
@@ -2557,7 +2631,7 @@ $.fn.viewTransaction = function (index) {
 
     if (allTransactions[index].dues.length && !allTransactions[index].paid) {
         let dues = '';
-        
+
         for (let i = 0; i < allTransactions[index].dues.length; i++) {
             let due = allTransactions[index].dues[i];
 
@@ -2796,7 +2870,7 @@ $.fn.sendVoided = async function (index) {
             'error'
         )
     }
-    
+
     $.ajax({
         type: 'POST',
         url: api + "transactions/voided/" + id
@@ -3172,7 +3246,7 @@ $.fn.removeTransaction = async function (index) {
     }
 
     let id = transaction._id;
-    
+
     $.ajax({
         url: api + 'transactions/transaction/' + id,
         type: 'DELETE',
@@ -3317,14 +3391,14 @@ $.fn.changeStatusSunat = async function (index) {
 
     let confirmation = await Swal.fire({
         title: '<h3>Estado de Sunat</h3>',
-        html:'<select id="statusTransactionSunat" form="carform" class="form-control"> <option >Seleccione una opción</option> <option value="pending">Pendiente</option> <option value="success">Aceptado</option> <option value="nullable">Por Anular</option><option value="null">Anulado</option><option value="observed">Observado</option><option value="send">Enviado</option></select>',
+        html: '<select id="statusTransactionSunat" form="carform" class="form-control"> <option >Seleccione una opción</option> <option value="pending">Pendiente</option> <option value="success">Aceptado</option> <option value="nullable">Por Anular</option><option value="null">Anulado</option><option value="observed">Observado</option><option value="send">Enviado</option></select>',
         //showDenyButton: true,
         showCancelButton: true,
         confirmButtonText: 'Guardar'
     }).then((result) => {
         if (result.isConfirmed) {
             let id = allTransactions[index]._id;
-            let data ={
+            let data = {
                 sunat_state: $("#statusTransactionSunat").val(),
             }
             $.ajax({
@@ -3332,7 +3406,7 @@ $.fn.changeStatusSunat = async function (index) {
                 url: api + "transactions/" + id,
                 data: JSON.stringify(data),
                 contentType: 'application/json; charset=utf-8',
-                success: function(data){
+                success: function (data) {
                     Swal.fire('Guardado!', '', 'success');
                     loadTransactions();
                 }
@@ -3344,13 +3418,13 @@ $.fn.changeStatusSunat = async function (index) {
 // Events
 varWindowEventListenerSet('holdOrder', (oldVal, newVal) => {
     if (newVal) {
-      $('#card-box').css('background-color', '#fff3f3');
-      $('#card-box .ribbon').show();
+        $('#card-box').css('background-color', '#fff3f3');
+        $('#card-box .ribbon').show();
 
-      let order = holdOrderList.find(order => order._id === newVal);
-      $('#card-box .ribbon a').text(order.ref_number);
-    } else{
-      $('#card-box').css('background-color', '');
-      $('#card-box .ribbon').hide();
+        let order = holdOrderList.find(order => order._id === newVal);
+        $('#card-box .ribbon a').text(order.ref_number);
+    } else {
+        $('#card-box').css('background-color', '');
+        $('#card-box .ribbon').hide();
     }
 });

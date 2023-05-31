@@ -281,13 +281,23 @@ if (auth == undefined) {
                     $('#parent').append(item_info);
                 });
 
-                categories.forEach(category => {
-                    let c = allCategories.filter(function (ctg) {
-                        return ctg.id == category;
+                // categories.forEach(category => {
+                //     let c = allCategories.filter(function (ctg) {
+                //         return ctg.id == category;
+                //     })
+
+                //     $('#categories').append(`<button type="button" id="${category}" class="btn btn-categories btn-white waves-effect waves-light">${c.length > 0 ? c[0].doc.name : ''}</button> `);
+                // });
+                allCategories.forEach(category => {
+                    let c = categories.filter(function (cat) {
+                        return cat == category.id;
                     })
 
-                    $('#categories').append(`<button type="button" id="${category}" class="btn btn-categories btn-white waves-effect waves-light">${c.length > 0 ? c[0].doc.name : ''}</button> `);
+                    if (c.length > 0) {
+                        $('#categories').append(`<button type="button" id="${category.id}" class="btn btn-categories btn-white waves-effect waves-light">${category.doc.name}</button> `);
+                    }
                 });
+
 
             });
 
@@ -1736,8 +1746,8 @@ if (auth == undefined) {
                 let category = allCategories.filter(category => category.id == product.category);
 
                 product_list += `<tr>
-            <td><img id="`+ product._id + `"></td>
-            <td style="text-align: center;"><img style="max-height: 50px; max-width: 50px; border: 1px solid #ddd;" src="${product.image}" id="product_img"></td>
+            <td><img id="`+ product._id + `"><span style="display:none;">`+ product.barcode + `</span></td>
+            <td style="text-align: center;"><img style="max-height: 50px; max-width: 50px; border: 1px solid #ddd;" src="${product.image}" id="product_img"><span style="display:none;">${btoa(product.image || '')}</span></td>
             <td>${product.name}</td>
             <td>${settings.symbol} ${product.price}</td>
             <td>${product.stock == 1 ? product.quantity : 'N/A'}</td>
@@ -1758,13 +1768,73 @@ if (auth == undefined) {
                         }
                     });
 
-                    $('#productList').DataTable({
+                    var datatableProductList = $('#productList').DataTable({
                         "order": [[1, "desc"]]
                         , "autoWidth": false
                         , "info": true
                         , "JQueryUI": true
                         , "ordering": true
                         , "paging": false
+                        , "dom": 'Bfrtip'
+                        , "buttons": [
+                            {
+                                extend: 'csv',
+                                text: 'CSV',
+                                customize: function (csv) {
+                                    // Exclude column index 6
+                                    var excludeColumnIndex = 6;
+                                    var lines = csv.split('\n');
+
+                                    // Remove the excluded column from each line
+                                    lines.forEach(function (line, index) {
+                                        var values = line.split(',');
+                                        values.splice(excludeColumnIndex, 1);
+
+                                        // remover imagen base64
+                                        values.splice(1, 1)
+
+                                        lines[index] = values.join(',');
+                                    });
+
+                                    // Join the modified lines back into CSV string
+                                    var modifiedCsv = lines.join('\n');
+                                    return modifiedCsv;
+                                }
+                            },
+                            {
+                                extend: 'pdf',
+                                text: 'PDF',
+                                customize: function (doc) {                         
+                                    // Exclude column index 6
+                                    var excludeColumnIndex = 6;
+
+                                    doc.content[1].table.body.forEach(function (row, index) {
+                                        if (index > 0) {
+                                            let image = atob(row[1].text || '');
+                                            
+                                            var regex = /^data:image\/(png|jpe?g|gif|svg\+xml);base64,/i;
+                                            if (regex.test(image)) {
+                                                row.splice(1, 1,  {
+                                                    image: image,
+                                                    width: 40, // Ajusta el ancho de la imagen según tus necesidades
+                                                    alignment: 'center'
+                                                })
+                                            } else {
+                                                row[1].text = '';
+                                            }
+
+                                        }
+                                        
+                                        row.splice(excludeColumnIndex, 1);
+                                    });
+
+                                    // Obtén el número de columnas en la tabla y ajusta quitando una columna
+                                    var columnCount = datatableProductList.columns().header().length;
+                                    var columnWidths = Array(columnCount - 1).fill('*');
+                                    doc.content[1].table.widths = columnWidths;
+                                }
+                            }
+                        ]
                     });
                 }
 
@@ -2096,38 +2166,79 @@ if (auth == undefined) {
     });
 
 
-    $('#print_list').click(function () {
+    // $('#print_list').click(function () {
 
-        $("#loading").show();
+    //     $(".loading").show();
 
-        $('#productList').DataTable().destroy();
+    //     $('#productList').DataTable().destroy();
 
-        const filename = 'productList.pdf';
+    //     const filename = 'productList.pdf';
 
-        html2canvas($('#all_products').get(0)).then(canvas => {
-            let height = canvas.height * (25.4 / 96);
-            let width = canvas.width * (25.4 / 96);
-            let pdf = new jsPDF('p', 'mm', 'a4');
-            pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, width, height);
+    //     // html2canvas($('#all_products').get(0)).then(canvas => {
+    //     //     let height = canvas.height * (25.4 / 96);
+    //     //     let width = canvas.width * (25.4 / 96);
 
-            $("#loading").hide();
-            pdf.save(filename);
-        });
+    //     //     let pdf = new jsPDF.jsPDF('p', 'mm', 'a4');
+    //     //     pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, width, height);
+
+    //     //     // $("#loading").hide();
+    //     //     console.log(pdf.save(filename));
+    //     // });
 
 
 
-        $('#productList').DataTable({
-            "order": [[1, "desc"]]
-            , "autoWidth": false
-            , "info": true
-            , "JQueryUI": true
-            , "ordering": true
-            , "paging": false
-        });
+    //     var datatableProductList = $('#productList').DataTable({
+    //         "order": [[1, "desc"]]
+    //         , "autoWidth": false
+    //         , "info": true
+    //         , "JQueryUI": true
+    //         , "ordering": true
+    //         , "paging": false
+    //         , "dom": 'Bfrtip'
+    //         , "buttons": [
+    //             {
+    //                 extend: 'csv',
+    //                 text: 'CSV',
+    //                 customize: function (csv) {
+    //                     // Exclude column index 6
+    //                     var excludeColumnIndex = 6;
+    //                     var lines = csv.split('\n');
 
-        $(".loading").hide();
+    //                     // Remove the excluded column from each line
+    //                     lines.forEach(function (line, index) {
+    //                         var values = line.split(',');
+    //                         values.splice(excludeColumnIndex, 1);
+    //                         lines[index] = values.join(',');
+    //                     });
 
-    });
+    //                     // Join the modified lines back into CSV string
+    //                     var modifiedCsv = lines.join('\n');
+    //                     return modifiedCsv;
+    //                 }
+    //             },
+    //             {
+    //                 extend: 'pdf',
+    //                 text: 'PDF',
+    //                 customize: function (doc) {                         
+    //                     // Exclude column index 6
+    //                     var excludeColumnIndex = 6;
+
+    //                     doc.content[1].table.body.forEach(function (row) {
+    //                         row.splice(excludeColumnIndex, 1);
+    //                     });
+
+    //                     // Obtén el número de columnas en la tabla y ajusta quitando una columna
+    //                     var columnCount = datatableProductList.columns().header().length;
+    //                     var columnWidths = Array(columnCount - 1).fill('*');
+    //                     doc.content[1].table.widths = columnWidths;
+    //                 }
+    //             }
+    //         ]
+    //     });
+
+    //     $(".loading").hide();
+
+    // });
 
     $('#document_number').on('keypress', async function (e) {
         if (e.which === 13) {
@@ -2347,9 +2458,13 @@ function loadTransactions() {
                 }
 
                 counter++;
+                
                 transaction_list += `<tr class="${trClass}">
                                 <!--<td>${trans.order}</td>-->
                                 <td class="text-center"><b>${trans.serie}-${trans.correlative}</b></td>
+                                <td class="text-center" style="display: none;">${trans.customer.document_type.number}</td>
+                                <td class="text-center" style="display: none;">${trans.customer.name}</td>
+
                                 <td class="nobr">${moment(trans.date).format('YYYY-MM-DD HH:mm:ss')}</td>
                                 <td>${settings.symbol + trans.total}</td>
                                 <!--<td>${trans.paid == "" ? "" : settings.symbol + trans.paid}</td>-->
@@ -2443,8 +2558,8 @@ function loadTransactions() {
                                 extend: 'csv',
                                 text: 'CSV',
                                 customize: function (csv) {
-                                    // Exclude column index 6
-                                    var excludeColumnIndex = 6;
+                                    // Exclude column index 8
+                                    var excludeColumnIndex = 8;
                                     var lines = csv.split('\n');
 
                                     // Remove the excluded column from each line
@@ -2457,20 +2572,20 @@ function loadTransactions() {
                                     // Join the modified lines back into CSV string
                                     var modifiedCsv = lines.join('\n');
 
-                                    var totalSum = datatableTransaction.column(2, { page: 'current' }).data().reduce(function(a, b) {
+                                    var totalSum = datatableTransaction.column(4, { page: 'current' }).data().reduce(function(a, b) {
                                         a = typeof a === 'number' ? a : a.replace(settings.symbol, '');
                                         b = typeof b === 'number' ? b : b.replace(settings.symbol, '');
                                         return parseFloat(a) + parseFloat(b);
                                     }, 0);
 
-                                    return modifiedCsv + '\n,,' + settings.symbol + totalSum;
+                                    return modifiedCsv + '\n,,,,' + settings.symbol + totalSum;
                                 }
                             },
                             {
                                 extend: 'pdf',
                                 text: 'PDF',
                                 customize: function (doc) {
-                                    var totalSum = datatableTransaction.column(2, { page: 'current' }).data().reduce(function(a, b) {
+                                    var totalSum = datatableTransaction.column(4, { page: 'current' }).data().reduce(function(a, b) {
                                         a = typeof a === 'number' ? a : a.replace(settings.symbol, '');
                                         b = typeof b === 'number' ? b : b.replace(settings.symbol, '');
                                         return parseFloat(a) + parseFloat(b);
@@ -2483,8 +2598,8 @@ function loadTransactions() {
                                     });
 
                                       
-                                    // Exclude column index 6
-                                    var excludeColumnIndex = 6;
+                                    // Exclude column index 8
+                                    var excludeColumnIndex = 8;
 
                                     doc.content[1].table.body.forEach(function (row) {
                                         row.splice(excludeColumnIndex, 1);

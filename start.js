@@ -12,6 +12,9 @@ const path = require('path')
 const contextMenu = require('electron-context-menu');
 var cron = require('node-cron');
 
+let Store = require('electron-store');
+let storage = new Store();
+
 let mainWindow
 
 function createWindow() {
@@ -34,6 +37,14 @@ function createWindow() {
   mainWindow.loadURL(
     `file://${path.join(__dirname, 'index.html')}`
   )
+
+  // Establecer el zoom utilizando webContents
+  mainWindow.webContents.on('did-finish-load', () => {
+    // Establecer el zoom una vez que el contenido esté cargado
+    const zoomFactor = storage.get('zoom') || 1; // Valor del zoom deseado
+    mainWindow.webContents.setZoomFactor(zoomFactor);
+  });
+
 
   mainWindow.on('closed', () => {
     mainWindow = null

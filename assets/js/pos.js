@@ -30,8 +30,7 @@ let Swal = require('sweetalert2');
 let { ipcRenderer } = require('electron');
 let dotInterval = setInterval(function () { $(".dot").text('.') }, 3000);
 let Store = require('electron-store');
-const remote = require('electron').remote;
-const app = remote.app;
+
 let api = 'http://' + host + ':' + port + '/api/';
 let btoa = require('btoa');
 let jsPDF = require('jspdf');
@@ -62,6 +61,8 @@ let by_till = 0;
 let by_user = 0;
 let by_status = 1;
 
+window.storage = storage
+
 // definir variables que permitan escuchar eventos (get, set)
 varWindow('holdOrder');
 varWindow('customerSelected');
@@ -83,13 +84,27 @@ $(function () {
         timePickerSeconds: true,
         // minDate: '',
         ranges: {
-            'Today': [moment().startOf('day'), moment()],
-            'Yesterday': [moment().subtract(1, 'days').startOf('day'), moment().subtract(1, 'days').endOf('day')],
-            'Last 7 Days': [moment().subtract(6, 'days').startOf('day'), moment().endOf('day')],
-            'Last 30 Days': [moment().subtract(29, 'days').startOf('day'), moment().endOf('day')],
-            'This Month': [moment().startOf('month'), moment().endOf('month')],
-            'This Month': [moment().startOf('month'), moment()],
-            'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+            'Hoy': [moment().startOf('day'), moment()],
+            'Ayer': [moment().subtract(1, 'days').startOf('day'), moment().subtract(1, 'days').endOf('day')],
+            'Últimos 7 días': [moment().subtract(6, 'days').startOf('day'), moment().endOf('day')],
+            'Últimos 30 días': [moment().subtract(29, 'days').startOf('day'), moment().endOf('day')],
+            'Este mes': [moment().startOf('month'), moment().endOf('month')],
+            'Este mes': [moment().startOf('month'), moment()],
+            'El mes pasado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+        },
+        showCustomRangeLabel: true,
+        locale: {
+            applyLabel: 'Aplicar',
+            cancelLabel: 'Cancelar',
+            fromLabel: 'Desde',
+            toLabel: 'Hasta',
+            customRangeLabel: 'Rango Personalizado',
+            daysOfWeek: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+            monthNames: [
+                'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+            ],
+            firstDay: 1
         }
     }, cb);
 
@@ -267,13 +282,23 @@ if (auth == undefined) {
                     $('#parent').append(item_info);
                 });
 
-                categories.forEach(category => {
-                    let c = allCategories.filter(function (ctg) {
-                        return ctg.id == category;
+                // categories.forEach(category => {
+                //     let c = allCategories.filter(function (ctg) {
+                //         return ctg.id == category;
+                //     })
+
+                //     $('#categories').append(`<button type="button" id="${category}" class="btn btn-categories btn-white waves-effect waves-light">${c.length > 0 ? c[0].doc.name : ''}</button> `);
+                // });
+                allCategories.forEach(category => {
+                    let c = categories.filter(function (cat) {
+                        return cat == category.id;
                     })
 
-                    $('#categories').append(`<button type="button" id="${category}" class="btn btn-categories btn-white waves-effect waves-light">${c.length > 0 ? c[0].doc.name : ''}</button> `);
+                    if (c.length > 0) {
+                        $('#categories').append(`<button type="button" id="${category.id}" class="btn btn-categories btn-white waves-effect waves-light">${category.doc.name}</button> `);
+                    }
                 });
+
 
             });
 
@@ -289,6 +314,7 @@ if (auth == undefined) {
                 });
             });
         }
+
 
         function loadCustomers() {
 
@@ -455,7 +481,6 @@ if (auth == undefined) {
                 barcodeSearch(e);
             }
         });
-
 
 
         $.fn.addProductToCart = function (data) {
@@ -773,7 +798,7 @@ if (auth == undefined) {
 
             if (dataCredit.length && !paid) {
                 let dues = '';
-                
+
                 for (let i = 0; i < dataCredit.length; i++) {
                     let due = dataCredit[i];
                     dues += '<tr>';
@@ -782,7 +807,7 @@ if (auth == undefined) {
                     dues += `<td>${due.amount}</td>`;
                     dues += '</tr>';
                 }
-                
+
                 payment = `<tr>
                             <td>Método</td>
                             <td>:</td>
@@ -843,7 +868,7 @@ if (auth == undefined) {
 
             receipt = `<div style="font-size: 10px;">
         <p style="text-align: center;">
-        ${settings.img == "" ? settings.img : '<img style="max-width: 50px;max-width: 100px;" src ="' + settings.logo + '" /><br>'}
+        ${settings.logo ? '<img style="max-width: 50px;max-width: 100px;" src ="' + settings.logo + '" /><br>' : ''}
             <span style="font-size: 22px;">${settings.legal_name}</span> <br>
             ${settings.address.street} ${settings.address.district} ${settings.address.city} ${settings.address.state}<br>
             ${settings.contact != '' ? 'Teléfono: ' + settings.contact + '<br>' : ''}
@@ -950,7 +975,7 @@ if (auth == undefined) {
                 user_id: user._id,
                 document_type: documentType,
             }
-        
+
             data.dues = dataCredit;
 
             if (holdOrderRev) {
@@ -971,7 +996,7 @@ if (auth == undefined) {
                             $.get(api + 'transactions/' + data._id + '/qr', function (data) {
                                 // $('#viewTransaction table').after('<br /><div style="text-align: center;">' + data + '</div>')
                                 $('#viewTransaction table').first().after('<br /><div style="text-align: center;"><img src="' + data + '" /></div>')
-                                receipt += '<br /><div style="text-align: center;">' + data + '</div>';
+                                receipt += '<br /><div style="text-align: center;"><img src="' + data + '" /></div>';
                             });
                         } catch (error) {
                             console.log(error)
@@ -1012,8 +1037,8 @@ if (auth == undefined) {
             $("#refNumber").val('');
             $("#change").text('');
             $("#payment").val('');
-            $("#creditInfo .row.credit").remove(); 
-          
+            $("#creditInfo .row.credit").remove();
+
         }
 
 
@@ -1722,8 +1747,8 @@ if (auth == undefined) {
                 let category = allCategories.filter(category => category.id == product.category);
 
                 product_list += `<tr>
-            <td><img id="`+ product._id + `"></td>
-            <td style="text-align: center;"><img style="max-height: 50px; max-width: 50px; border: 1px solid #ddd;" src="${product.image}" id="product_img"></td>
+            <td><img id="`+ product._id + `"><span style="display:none;">`+ product.barcode + `</span></td>
+            <td style="text-align: center;"><img style="max-height: 50px; max-width: 50px; border: 1px solid #ddd;" src="${product.image}" id="product_img"><span style="display:none;">${btoa(product.image || '')}</span></td>
             <td>${product.name}</td>
             <td>${settings.symbol} ${product.price}</td>
             <td>${product.stock == 1 ? product.quantity : 'N/A'}</td>
@@ -1735,20 +1760,82 @@ if (auth == undefined) {
                     $('#product_list').html(product_list);
                     products.forEach(pro => {
                         pro = pro.doc;
-                        $("#" + pro._id + "").JsBarcode(pro.barcode, {
-                            width: 2,
-                            height: 25,
-                            fontSize: 14
-                        });
+                        if (pro.barcode) {
+                            $("#" + pro._id + "").JsBarcode(pro.barcode, {
+                                width: 2,
+                                height: 25,
+                                fontSize: 14
+                            });
+                        }
                     });
 
-                    $('#productList').DataTable({
+                    var datatableProductList = $('#productList').DataTable({
                         "order": [[1, "desc"]]
                         , "autoWidth": false
                         , "info": true
                         , "JQueryUI": true
                         , "ordering": true
                         , "paging": false
+                        , "dom": 'Bfrtip'
+                        , "buttons": [
+                            {
+                                extend: 'csv',
+                                text: 'CSV',
+                                customize: function (csv) {
+                                    // Exclude column index 6
+                                    var excludeColumnIndex = 6;
+                                    var lines = csv.split('\n');
+
+                                    // Remove the excluded column from each line
+                                    lines.forEach(function (line, index) {
+                                        var values = line.split(',');
+                                        values.splice(excludeColumnIndex, 1);
+
+                                        // remover imagen base64
+                                        values.splice(1, 1)
+
+                                        lines[index] = values.join(',');
+                                    });
+
+                                    // Join the modified lines back into CSV string
+                                    var modifiedCsv = lines.join('\n');
+                                    return modifiedCsv;
+                                }
+                            },
+                            {
+                                extend: 'pdf',
+                                text: 'PDF',
+                                customize: function (doc) {                         
+                                    // Exclude column index 6
+                                    var excludeColumnIndex = 6;
+
+                                    doc.content[1].table.body.forEach(function (row, index) {
+                                        if (index > 0) {
+                                            let image = atob(row[1].text || '');
+                                            
+                                            var regex = /^data:image\/(png|jpe?g|gif|svg\+xml);base64,/i;
+                                            if (regex.test(image)) {
+                                                row.splice(1, 1,  {
+                                                    image: image,
+                                                    width: 40, // Ajusta el ancho de la imagen según tus necesidades
+                                                    alignment: 'center'
+                                                })
+                                            } else {
+                                                row[1].text = '';
+                                            }
+
+                                        }
+                                        
+                                        row.splice(excludeColumnIndex, 1);
+                                    });
+
+                                    // Obtén el número de columnas en la tabla y ajusta quitando una columna
+                                    var columnCount = datatableProductList.columns().header().length;
+                                    var columnWidths = Array(columnCount - 1).fill('*');
+                                    doc.content[1].table.widths = columnWidths;
+                                }
+                            }
+                        ]
                     });
                 }
 
@@ -2080,38 +2167,79 @@ if (auth == undefined) {
     });
 
 
-    $('#print_list').click(function () {
+    // $('#print_list').click(function () {
 
-        $("#loading").show();
+    //     $(".loading").show();
 
-        $('#productList').DataTable().destroy();
+    //     $('#productList').DataTable().destroy();
 
-        const filename = 'productList.pdf';
+    //     const filename = 'productList.pdf';
 
-        html2canvas($('#all_products').get(0)).then(canvas => {
-            let height = canvas.height * (25.4 / 96);
-            let width = canvas.width * (25.4 / 96);
-            let pdf = new jsPDF('p', 'mm', 'a4');
-            pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, width, height);
+    //     // html2canvas($('#all_products').get(0)).then(canvas => {
+    //     //     let height = canvas.height * (25.4 / 96);
+    //     //     let width = canvas.width * (25.4 / 96);
 
-            $("#loading").hide();
-            pdf.save(filename);
-        });
+    //     //     let pdf = new jsPDF.jsPDF('p', 'mm', 'a4');
+    //     //     pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, width, height);
+
+    //     //     // $("#loading").hide();
+    //     //     console.log(pdf.save(filename));
+    //     // });
 
 
 
-        $('#productList').DataTable({
-            "order": [[1, "desc"]]
-            , "autoWidth": false
-            , "info": true
-            , "JQueryUI": true
-            , "ordering": true
-            , "paging": false
-        });
+    //     var datatableProductList = $('#productList').DataTable({
+    //         "order": [[1, "desc"]]
+    //         , "autoWidth": false
+    //         , "info": true
+    //         , "JQueryUI": true
+    //         , "ordering": true
+    //         , "paging": false
+    //         , "dom": 'Bfrtip'
+    //         , "buttons": [
+    //             {
+    //                 extend: 'csv',
+    //                 text: 'CSV',
+    //                 customize: function (csv) {
+    //                     // Exclude column index 6
+    //                     var excludeColumnIndex = 6;
+    //                     var lines = csv.split('\n');
 
-        $(".loading").hide();
+    //                     // Remove the excluded column from each line
+    //                     lines.forEach(function (line, index) {
+    //                         var values = line.split(',');
+    //                         values.splice(excludeColumnIndex, 1);
+    //                         lines[index] = values.join(',');
+    //                     });
 
-    });
+    //                     // Join the modified lines back into CSV string
+    //                     var modifiedCsv = lines.join('\n');
+    //                     return modifiedCsv;
+    //                 }
+    //             },
+    //             {
+    //                 extend: 'pdf',
+    //                 text: 'PDF',
+    //                 customize: function (doc) {                         
+    //                     // Exclude column index 6
+    //                     var excludeColumnIndex = 6;
+
+    //                     doc.content[1].table.body.forEach(function (row) {
+    //                         row.splice(excludeColumnIndex, 1);
+    //                     });
+
+    //                     // Obtén el número de columnas en la tabla y ajusta quitando una columna
+    //                     var columnCount = datatableProductList.columns().header().length;
+    //                     var columnWidths = Array(columnCount - 1).fill('*');
+    //                     doc.content[1].table.widths = columnWidths;
+    //                 }
+    //             }
+    //         ]
+    //     });
+
+    //     $(".loading").hide();
+
+    // });
 
     $('#document_number').on('keypress', async function (e) {
         if (e.which === 13) {
@@ -2159,8 +2287,7 @@ if (auth == undefined) {
 
 
 $.fn.print = function () {
-
-    printJS({ printable: receipt, type: 'raw-html' });
+    printJS({ printable: receipt.replace(/(\r\n|\n|\r)/gm, ""), type: 'raw-html' });
 
 }
 
@@ -2332,10 +2459,14 @@ function loadTransactions() {
                 }
 
                 counter++;
+                
                 transaction_list += `<tr class="${trClass}">
                                 <!--<td>${trans.order}</td>-->
                                 <td class="text-center"><b>${trans.serie}-${trans.correlative}</b></td>
-                                <td class="nobr">${moment(trans.date).format('YYYY MMM DD HH:mm:ss')}</td>
+                                <td class="text-center" style="display: none;">${trans.customer.document_type.number}</td>
+                                <td class="text-center" style="display: none;">${trans.customer.name}</td>
+
+                                <td class="nobr">${moment(trans.date).format('YYYY-MM-DD HH:mm:ss')}</td>
                                 <td>${settings.symbol + trans.total}</td>
                                 <!--<td>${trans.paid == "" ? "" : settings.symbol + trans.paid}</td>-->
                                 <!--<td>${trans.change ? settings.symbol + Math.abs(trans.change).toFixed(2) : ''}</td>-->
@@ -2350,23 +2481,23 @@ function loadTransactions() {
                                             <span class="glyphicon glyphicon-option-vertical" aria-hidden="true"></span>
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-right">
-                                            <li><a href="#" onClick="$(this).viewTransaction('${index}')">Reimprimir</a></li>                                            <li role="separator" class="divider"></li>
-                                            <li><a href="#" onClick="$(this).downloadXML('${index}')">Descargar XML</a></li>
-                                            <li><a href="#" onClick="$(this).downloadPDF('${index}')">Descargar PDF</a></li>
-                                            <li><a href="#" onClick="$(this).downloadCDR('${index}')">Descargar CDR</a></li>
+                                            <li><a onClick="$(this).viewTransaction('${index}')">Reimprimir</a></li>                                            <li role="separator" class="divider"></li>
+                                            <li><a onClick="$(this).downloadXML('${index}')">Descargar XML</a></li>
+                                            <li><a onClick="$(this).downloadPDF('${index}')">Descargar PDF</a></li>
+                                            <li><a onClick="$(this).downloadCDR('${index}')">Descargar CDR</a></li>
                                             <li role="separator" class="divider"></li>
-                                            <!--<li><a href="#">Cambiar Estado</a></li>-->
-                                            ${trans.sunat_state !== 'success' && trans.sunat_state !== 'null' ? '<li><a href="#" onClick="$(this).resend(' + index + ')">Reenviar a Sunat</a></li> <li role="separator" class="divider"></li>' : ''}
+                                            <li><a  onClick="$(this).changeStatusSunat(${index})">Camiar Estado de Sunat</a></li>
+                                            ${trans.sunat_state !== 'success' && trans.sunat_state !== 'null' ? '<li><a onClick="$(this).resend(' + index + ')">Reenviar a Sunat</a></li> <li role="separator" class="divider"></li>' : ''}
 
-                                            ${trans.document_type.code === '01' && trans.sunat_state !== 'null' ? '<li><a href="#" onClick="$(this).sendVoided(' + index + ')">Comunicar Baja</a></li>' : ''}
-                                            ${trans.document_type.code === '01' ? '<li><a href="#" onClick="$(this).statusVoided(' + index + ')">Consultar Estado de Baja</a></li>' : ''}
+                                            ${trans.document_type.code === '01' && trans.sunat_state !== 'null' ? '<li><a onClick="$(this).sendVoided(' + index + ')">Comunicar Baja</a></li>' : ''}
+                                            ${trans.document_type.code === '01' ? '<li><a onClick="$(this).statusVoided(' + index + ')">Consultar Estado de Baja</a></li>' : ''}
 
-                                            ${trans.document_type.code === '03' && trans.sunat_state !== 'null' ? '<li><a href="#" onClick="$(this).sendSummaryNullable(' + index + ')">Anular Mediante Resumen</a></li><li role="separator" class="divider"></li>' : ''}
-                                            ${trans.document_type.code === '03' ? '<li><a href="#" onClick="$(this).statusSummary(' + index + ')">Consultar Estado de Resumen</a></li>' : ''}
-
+                                            ${trans.document_type.code === '03' && trans.sunat_state !== 'null' ? '<li><a onClick="$(this).sendSummaryNullable(' + index + ')">Anular Mediante Resumen</a></li><li role="separator" class="divider"></li>' : ''}
+                                            ${trans.document_type.code === '03' ? '<li><a onClick="$(this).statusSummary(' + index + ')">Consultar Estado de Resumen</a></li>' : ''}
+                                            
                                             <li role="separator" class="divider"></li>
-                                            <li><a href="#"  onClick="$(this).viewLogs(${index})">Logs</a></li>
-
+                                            <li><a onClick="$(this).viewLogs(${index})">Logs</a></li>
+                                            <li><a onClick="$(this).removeTransaction(${index})">Eliminar Transacción</a></li>
                                         </ul>
                                     </div>
                                 </td>
@@ -2413,7 +2544,7 @@ function loadTransactions() {
 
 
                     $('#transaction_list').html(transaction_list);
-                    $('#transactionList').DataTable({
+                    var datatableTransaction = $('#transactionList').DataTable({
                         "order": [[1, "desc"]]
                         , "autoWidth": false
                         , "info": true
@@ -2421,13 +2552,75 @@ function loadTransactions() {
                         , "ordering": true
                         , "paging": true,
                         "dom": 'Bfrtip',
-                        "buttons": ['csv', 'excel', 'pdf',]
+                        "buttons": [
+                            {
+                                extend: 'csv',
+                                text: 'CSV',
+                                customize: function (csv) {
+                                    // Exclude column index 8
+                                    var excludeColumnIndex = 8;
+                                    var lines = csv.split('\n');
+
+                                    // Remove the excluded column from each line
+                                    lines.forEach(function (line, index) {
+                                        var values = line.split(',');
+                                        values.splice(excludeColumnIndex, 1);
+                                        lines[index] = values.join(',');
+                                    });
+
+                                    // Join the modified lines back into CSV string
+                                    var modifiedCsv = lines.join('\n');
+
+                                    var totalSum = datatableTransaction.column(4, { page: 'current' }).data().reduce(function(a, b) {
+                                        a = typeof a === 'number' ? a : a.replace(settings.symbol, '');
+                                        b = typeof b === 'number' ? b : b.replace(settings.symbol, '');
+                                        return parseFloat(a) + parseFloat(b);
+                                    }, 0);
+
+                                    return modifiedCsv + '\n,,,,' + settings.symbol + totalSum;
+                                }
+                            },
+                            {
+                                extend: 'pdf',
+                                text: 'PDF',
+                                customize: function (doc) {
+                                    var totalSum = datatableTransaction.column(4, { page: 'current' }).data().reduce(function(a, b) {
+                                        a = typeof a === 'number' ? a : a.replace(settings.symbol, '');
+                                        b = typeof b === 'number' ? b : b.replace(settings.symbol, '');
+                                        return parseFloat(a) + parseFloat(b);
+                                    }, 0);
+
+                                    doc.content.push({
+                                        text: 'Total: ' + settings.symbol + totalSum,
+                                        alignment: 'right',
+                                        margin: [0, 0, 0, 10]
+                                    });
+
+                                      
+                                    // Exclude column index 8
+                                    var excludeColumnIndex = 8;
+
+                                    doc.content[1].table.body.forEach(function (row) {
+                                        row.splice(excludeColumnIndex, 1);
+                                    });
+
+                                    // Obtén el número de columnas en la tabla y ajusta quitando una columna
+                                    var columnCount = datatableTransaction.columns().header().length;
+                                    var columnWidths = Array(columnCount - 1).fill('*');
+                                    doc.content[1].table.widths = columnWidths;
+                                }
+                            }
+                        ]
+
 
                     });
                 }
             });
         }
         else {
+            $('#transaction_list').empty();
+            $('#transactionList').DataTable().destroy();
+
             Swal.fire(
                 '¡Sin datos!',
                 'No hay transacciones disponibles dentro de los criterios seleccionados',
@@ -2552,7 +2745,7 @@ $.fn.viewTransaction = function (index) {
 
     if (allTransactions[index].dues.length && !allTransactions[index].paid) {
         let dues = '';
-        
+
         for (let i = 0; i < allTransactions[index].dues.length; i++) {
             let due = allTransactions[index].dues[i];
 
@@ -2597,7 +2790,7 @@ $.fn.viewTransaction = function (index) {
 
     receipt = `<div style="font-size: 10px;">
         <p style="text-align: center;">
-        ${settings.img == "" ? settings.img : '<img style="max-width: 50px;max-width: 100px;" src ="' + settings.logo + '" /><br>'}
+        ${settings.logo ? '<img style="max-width: 50px;max-width: 100px;" src ="' + settings.logo + '" /><br>' : ''}
             <span style="font-size: 17px;">${settings.legal_name}</span> <br>
             ${settings.address.street} ${settings.address.district} ${settings.address.city} ${settings.address.state} <br>
             ${settings.contact != '' ? 'Teléfono: ' + settings.contact + '<br>' : ''}
@@ -2665,7 +2858,7 @@ $.fn.viewTransaction = function (index) {
             $.get(api + 'transactions/' + allTransactions[index]._id + '/qr', function (data) {
                 // $('#viewTransaction table').after('<br /><div style="text-align: center;">' + data + '</div>')
                 $('#viewTransaction table').first().after('<br /><div style="text-align: center;"><img src="' + data + '" /></div>')
-                receipt += '<br /><div style="text-align: center;">' + data + '</div>';
+                receipt += '<br /><div style="text-align: center;"><img src="' + data + '" /></div>';
             });
         } catch (error) {
             console.log(error)
@@ -3140,6 +3333,48 @@ $.fn.importBackup = async function () {
     })
 }
 
+$.fn.removeTransaction = async function (index) {
+    let confirmation = await Swal.fire({
+        title: "¿Eliminar transacción?",
+        text: "Esta acción es irreversible y elimirá definitivamente la transacción.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: '¡Sí, Eliminar!'
+    })
+
+    if (!confirmation.isConfirmed) {
+        return;
+    }
+
+    let transaction = allTransactions[index];
+
+    if (transaction.sunat_state && transaction.sunat_state !== 'pending') {
+        Swal.fire(
+            '¡Error!',
+            'Solo se pueden eliminar las transacciones pendientes de emisión.',
+            'error'
+        );
+        return;
+    }
+
+    let id = transaction._id;
+
+    $.ajax({
+        url: api + 'transactions/transaction/' + id,
+        type: 'DELETE',
+        success: function (result) {
+            Swal.fire(
+                '¡Hecho!',
+                'Transacción eliminada',
+                'success'
+            ).then(result => {
+                loadTransactions();
+            });
+        }
+    });
+}
 
 $('#status').change(function () {
     by_status = $(this).find('option:selected').val();
@@ -3263,17 +3498,46 @@ $('#quit').click(function () {
     });
 });
 
+//Cambiar estado
+
+$.fn.changeStatusSunat = async function (index) {
+    let confirmation = await Swal.fire({
+        title: '<h3>Estado de Sunat</h3>',
+        html: '<select id="statusTransactionSunat" form="carform" class="form-control"> <option >Seleccione una opción</option> <option value="pending">Pendiente</option> <option value="success">Aceptado</option> <option value="nullable">Por Anular</option><option value="null">Anulado</option><option value="observed">Observado</option><option value="send">Enviado</option></select>',
+        //showDenyButton: true,
+        showCancelButton: true,
+        confirmButtonText: 'Guardar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            let id = allTransactions[index]._id;
+            let data = {
+                sunat_state: $("#statusTransactionSunat").val(),
+            }
+            $.ajax({
+                type: 'put',
+                url: api + "transactions/" + id,
+                data: JSON.stringify(data),
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+                    Swal.fire('Guardado!', '', 'success');
+                    loadTransactions();
+                }
+            });
+        }
+    })
+}
 
 // Events
 varWindowEventListenerSet('holdOrder', (oldVal, newVal) => {
     if (newVal) {
-      $('#card-box').css('background-color', '#fff3f3');
-      $('#card-box .ribbon').show();
+        $('#card-box').css('background-color', '#fff3f3');
+        $('#card-box .ribbon').show();
 
-      let order = holdOrderList.find(order => order._id === newVal);
-      $('#card-box .ribbon a').text(order.ref_number);
-    } else{
-      $('#card-box').css('background-color', '');
-      $('#card-box .ribbon').hide();
+        let order = holdOrderList.find(order => order._id === newVal);
+        $('#card-box .ribbon a').text(order.ref_number);
+    } else {
+        $('#card-box').css('background-color', '');
+        $('#card-box .ribbon').hide();
     }
-})
+});
+

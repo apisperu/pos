@@ -150,7 +150,7 @@ margin-right: 30px;
 }
 
 .perms {
-  display: none;
+  /* display: none; */
 }
 
 #loading {

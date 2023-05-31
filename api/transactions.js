@@ -34,7 +34,6 @@ app.get("/", function(req, res) {
 
 
 
- 
 app.get("/on-hold", function(req, res) {
   transactionsDB.find({
     selector: { $and: [{ ref_number: {$ne: ""}}, { status: 0  }]}
@@ -281,6 +280,35 @@ app.post( "/delete", function ( req, res ) {
   });
 
 });
+
+app.put("/:transactionId", function(req, res){
+    let id = req.params.transactionId;
+    
+    transactionsDB.get(id).then(function(trans){
+        return transactionsDB.put({
+        ...trans,
+        sunat_state: req.body.sunat_state
+  });
+    }).then(function(response) {
+        res.sendStatus( 200 );
+    }).catch(function (err) {
+        res.status( 500 ).send( err );
+    console.log(err);
+    });
+  });
+
+app.delete( "/transaction/:transactionId", function ( req, res ) {
+  let id = req.params.transactionId;
+
+  transactionsDB.get(id).then(function(response) {
+    return transactionsDB.remove(response);
+  }).then(function (result) {
+    res.sendStatus( 200 );
+  }).catch(function (err) {
+    res.status( 500 ).send( err );
+    console.log(err);
+  });
+} ); 
 
 
 

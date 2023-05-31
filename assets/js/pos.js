@@ -62,6 +62,7 @@ let by_user = 0;
 let by_status = 1;
 
 window.storage = storage
+
 // definir variables que permitan escuchar eventos (get, set)
 varWindow('holdOrder');
 varWindow('customerSelected');
@@ -2503,8 +2504,6 @@ function loadTransactions() {
                                 </tr>
                     `;
 
-
-
                 if (counter == transactions.length) {
                     $('#total_sales #counter').text(settings.symbol + parseFloat(sales).toFixed(2));
                     $('#total_transactions #counter').text(transact);
@@ -2710,7 +2709,7 @@ function tillFilter(tills) {
 $.fn.viewTransaction = function (index) {
 
     transaction_index = index;
-
+    
     let discount = allTransactions[index].discount;
     let customer = !allTransactions[index].customer ? 'Seleccione un cliente' : allTransactions[index].customer.username;
     let refNumber = allTransactions[index].ref_number != "" ? allTransactions[index].ref_number : allTransactions[index].order;
@@ -3377,7 +3376,6 @@ $.fn.removeTransaction = async function (index) {
     });
 }
 
-
 $('#status').change(function () {
     by_status = $(this).find('option:selected').val();
     loadTransactions();
@@ -3503,7 +3501,6 @@ $('#quit').click(function () {
 //Cambiar estado
 
 $.fn.changeStatusSunat = async function (index) {
-
     let confirmation = await Swal.fire({
         title: '<h3>Estado de Sunat</h3>',
         html: '<select id="statusTransactionSunat" form="carform" class="form-control"> <option >Seleccione una opción</option> <option value="pending">Pendiente</option> <option value="success">Aceptado</option> <option value="nullable">Por Anular</option><option value="null">Anulado</option><option value="observed">Observado</option><option value="send">Enviado</option></select>',
@@ -3543,3 +3540,4 @@ varWindowEventListenerSet('holdOrder', (oldVal, newVal) => {
         $('#card-box .ribbon').hide();
     }
 });
+
